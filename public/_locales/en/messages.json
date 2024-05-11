@@ -1,0 +1,114 @@
+{
+  "app_desc": {
+    "message": "A tool to help you manage and switch your proxy profiles"
+  },
+
+
+  "nav_preference": {
+    "message": "Preference"
+  },
+  "nav_config": {
+    "message": "Config"
+  },
+  "nav_custome_profiles": {
+    "message": "Custom Profiles"
+  },
+
+
+  "theme_light_mode": {
+    "message": "Light mode"
+  },
+  "theme_dark_mode": {
+    "message": "Dark mode"
+  },
+  "theme_auto_mode": {
+    "message": "Follow system"
+  },
+
+
+  "mode_auto_switch": {
+    "message": "Auto Switch"
+  },
+  "mode_direct": {
+    "message": "Direct"
+  },
+  "mode_system": {
+    "message": "Use System Proxy"
+  },
+  "mode_profile_create": {
+    "message": "Create New Profile"
+  },
+
+
+  "config_proxy_type": {
+    "message": "Proxy Type"
+  },
+  "config_proxy_type_proxy": {
+    "message": "Proxy"
+  },
+  "config_proxy_type_pac": {
+    "message": "PAC Script"
+  },
+  "config_proxy_type_default": {
+    "message": "Same as Default"
+  },
+  "config_section_proxy_server": {
+    "message": "Proxy Server"
+  },
+  "config_section_proxy_server_default": {
+    "message": "Default Server"
+  },
+  "config_section_proxy_server_http": {
+    "message": "HTTP"
+  },
+  "config_section_proxy_server_https": {
+    "message": "HTTPS"
+  },
+  "config_section_proxy_server_ftp": {
+    "message": "FTP"
+  },
+  "config_section_bypass_list": {
+    "message": "Bypass List"
+  },
+  "config_section_advance": {
+    "message": "Advance Config"
+  },
+  "config_reference_bypass_list": {
+    "message": "Learn more about bypass list"
+  },
+
+  "config_action_edit": {
+    "message": "Edit"
+  },
+  "config_action_delete": {
+    "message": "Delete Profile"
+  },
+  "config_action_delete_double_confirm": {
+    "message": "Are you sure to delete the current profile"
+  },
+  "config_action_save": {
+    "message": "Save"
+  },
+  "config_action_cancel": {
+    "message": "Discard Change"
+  },
+
+  "config_feedback_saved": {
+    "message": "The profile had been saved"
+  },
+  "config_feedback_deleted": {
+    "message": "The profile had been deleted"
+  },
+  "config_feedback_error_occured": {
+    "message": "Error occured: $1"
+  },
+
+
+  "form_is_required": {
+    "message": "$1 is required"
+  },
+
+  "_": {
+    "message": "<DUMMY>"
+  }
+}
