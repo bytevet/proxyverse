@@ -1,10 +1,10 @@
 import { describe, expect, test } from '@jest/globals';
 import { genSimpleProxyCfg } from "@/models/proxy/proxyRules.ts"
-import { ProfileConfig } from '@/models/profile';
+import { ProfileConfig, SystemProfile } from '@/models/profile';
 
 describe('testing genSimpleProxyCfg for direct and system', () => {
   test('proxy config mode', () => {
-    const cfg = genSimpleProxyCfg('direct')
+    const cfg = genSimpleProxyCfg(SystemProfile.DIRECT)
     expect(cfg.mode).toBe('direct');
   });
 });

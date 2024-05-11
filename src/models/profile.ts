@@ -9,7 +9,13 @@ export type ProxyServer = (chrome.proxy.ProxyServer & {
   scheme: 'direct' | 'http' | 'https' | 'socks4' | 'socks5'
 })
 
-type ProxyConfigSimple = {
+type ProxyConfigMeta = {
+  profileID: string,
+  color: string,
+  profileName: string,
+}
+
+export type ProxyConfigSimple = ProxyConfigMeta & {
   proxyType: 'proxy' | 'pac',
   proxyRules: {
     default: ProxyServer,
@@ -21,12 +27,27 @@ type ProxyConfigSimple = {
   pacScript: chrome.proxy.PacScript
 }
 
-export type ProfileConfig = {
-  profileID: string,
-  color: string,
-  profileName: string,
+export type ProxyConfigPreset = ProxyConfigMeta & {
+  proxyType: 'system' | 'direct'
+}
 
-} & (ProxyConfigSimple)
+export type ProfileConfig = ProxyConfigSimple | ProxyConfigPreset
+
+
+export const SystemProfile: Record<string, ProfileConfig> = {
+  DIRECT: {
+    profileID: '367DEDBC-6750-4454-8321-4E4B088E20B1',
+    color: '#7ad39e',
+    profileName: 'DIRECT',
+    proxyType: 'direct'
+  },
+  SYSTEM: {
+    profileID: '4FDEF36F-F389-4AF3-9BBC-B2E01B3B09E6',
+    color: '#0000',
+    profileName: '', // no name needed for `system`
+    proxyType: 'system'
+  },
+}
 
 
 const keyProfileStorage = 'profiles'

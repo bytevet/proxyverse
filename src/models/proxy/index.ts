@@ -1,8 +1,6 @@
-import { ProfileConfig } from "../profile"
+import { ProfileConfig, SystemProfile } from "../profile"
 import { get, set } from "../store"
-import { SimpleProxyValue, genSimpleProxyCfg } from "./proxyRules"
-
-export type ProxyValue = SimpleProxyValue
+import { genSimpleProxyCfg } from "./proxyRules"
 
 export type ProxySetting = {
   activeProfile?: ProfileConfig
@@ -20,6 +18,15 @@ async function wrapProxySetting(setting: chrome.types.ChromeSettingGetResultDeta
     ret.activeProfile = await get<ProfileConfig>(keyActiveProfile) || undefined
   }
 
+  switch (setting.value?.mode) {
+    case 'system':
+      ret.activeProfile = SystemProfile.SYSTEM
+      break
+    case 'direct':
+      ret.activeProfile = SystemProfile.DIRECT
+      break
+  }
+
   return ret
 }
 
@@ -35,30 +42,30 @@ export function onCurrentProxySettingChanged(cb: (setting: ProxySetting) => void
   })
 }
 
-export async function setProxy(val: ProxyValue) {
-  switch (val) {
-    case 'system':
-    case 'direct':
-      await defaultSetProxy(genSimpleProxyCfg(val), val)
-      return
-  }
-
+export async function setProxy(val: ProfileConfig) {
   switch (val.proxyType) {
+    case 'system':
+      await defaultClearProxy()
+      break
+
+    case 'direct':
     case 'proxy':
     case 'pac':
-      await defaultSetProxy(genSimpleProxyCfg(val), val)
-      return
+      await defaultSetProxy(genSimpleProxyCfg(val))
+      break
   }
+
+  await set<ProfileConfig>(keyActiveProfile, val)
 }
 
 
-async function defaultSetProxy(cfg: chrome.proxy.ProxyConfig, meta: ProxyValue) {
+async function defaultSetProxy(cfg: chrome.proxy.ProxyConfig) {
   await chrome.proxy.settings.set({
     value: cfg,
     scope: "regular",
   })
+}
 
-  if (typeof meta != 'string' && meta.profileID) {
-    await set<ProfileConfig>(keyActiveProfile, meta)
-  }
+async function defaultClearProxy() {
+  await chrome.proxy.settings.clear({ scope: 'regular' })
 }

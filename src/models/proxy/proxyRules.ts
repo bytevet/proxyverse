@@ -1,29 +1,27 @@
 import { generate as generateJS } from 'escodegen'
 import { Program, FunctionDeclaration, Identifier, Statement, Literal, ReturnStatement, Expression, IfStatement, CallExpression, MemberExpression } from 'estree'
 import { IPv4, IPv6, isValidCIDR, parseCIDR } from "ipaddr.js";
-import { ProfileConfig, ProxyServer } from "../profile";
+import { ProxyConfigPreset, ProxyConfigSimple, ProxyServer } from "../profile";
 
-export type SimpleProxyValue = ProfileConfig | 'direct' | 'system'
 
-export function genSimpleProxyCfg(val: SimpleProxyValue): chrome.proxy.ProxyConfig {
-  switch (val) {
+export function genSimpleProxyCfg(val: ProxyConfigSimple | ProxyConfigPreset): chrome.proxy.ProxyConfig {
+  switch (val.proxyType) {
     case 'direct':
     case 'system':
-      return { mode: val }
-  }
+      return { mode: val.proxyType }
 
-  switch (val.proxyType) {
+    case 'pac':
+      return {
+        mode: 'pac_script',
+        pacScript: val.pacScript
+      }
+
     case 'proxy':
       if (containsDirectRules(val)) {
         // @ts-ignore
         return genComplexRuleForProfile(val)
       }
       return genFixServerRuleForProfile(val)
-    case 'pac':
-      return {
-        mode: 'pac_script',
-        pacScript: val.pacScript
-      }
   }
 
   // this case should never be happen
@@ -33,7 +31,7 @@ export function genSimpleProxyCfg(val: SimpleProxyValue): chrome.proxy.ProxyConf
 
 
 
-function genFixServerRuleForProfile(val: ProfileConfig): chrome.proxy.ProxyConfig {
+function genFixServerRuleForProfile(val: ProxyConfigSimple): chrome.proxy.ProxyConfig {
   const rules = val.proxyRules
   const ret: chrome.proxy.ProxyConfig & { rules: chrome.proxy.ProxyRules } = {
     mode: "fixed_servers",
@@ -57,7 +55,7 @@ function genFixServerRuleForProfile(val: ProfileConfig): chrome.proxy.ProxyConfi
   return ret
 }
 
-function containsDirectRules(val: ProfileConfig): boolean {
+function containsDirectRules(val: ProxyConfigSimple): boolean {
   return [
     val.proxyRules.default.scheme,
     val.proxyRules.ftp?.scheme,
@@ -66,7 +64,7 @@ function containsDirectRules(val: ProfileConfig): boolean {
   ].includes("direct")
 }
 
-function allDirectRules(val: ProfileConfig): boolean {
+function allDirectRules(val: ProxyConfigSimple): boolean {
   return [
     val.proxyRules.default.scheme,
     val.proxyRules.ftp?.scheme,
@@ -76,7 +74,7 @@ function allDirectRules(val: ProfileConfig): boolean {
 }
 
 
-function genComplexRuleForProfile(val: ProfileConfig & { proxyType: 'proxy' }): chrome.proxy.ProxyConfig {
+function genComplexRuleForProfile(val: ProxyConfigSimple & { proxyType: 'proxy' }): chrome.proxy.ProxyConfig {
   if (allDirectRules(val)) {
     return {
       mode: 'direct'
@@ -92,7 +90,7 @@ function genComplexRuleForProfile(val: ProfileConfig & { proxyType: 'proxy' }): 
 }
 
 
-class SimplePacScriptForProfile<T extends ProfileConfig & { proxyType: 'proxy' }> {
+class SimplePacScriptForProfile<T extends ProxyConfigSimple & { proxyType: 'proxy' }> {
   private newIdentifier(name: string): Identifier {
     return {
       type: "Identifier",

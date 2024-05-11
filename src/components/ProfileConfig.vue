@@ -151,7 +151,7 @@ const loadProfile = async (profileID: string) => {
 
   profileFirstLoaded = true
   Object.assign(profileConfig, profile)
-  if (profileConfig.proxyRules.ftp || profileConfig.proxyRules.http || profileConfig.proxyRules.https) {
+  if (profileConfig.proxyType == 'proxy' && (profileConfig.proxyRules.ftp || profileConfig.proxyRules.http || profileConfig.proxyRules.https)) {
     showAdvanceConfig.value = true
   }
 }
@@ -168,7 +168,7 @@ onMounted(() => {
         <a-color-picker v-model="profileConfig.color" disabledAlpha showPreset format="hex" />
         <a-typography-text editable :defaultEditing="newProfileMode" v-model:editText="profileConfig.profileName">{{
           profileConfig.profileName
-          }}</a-typography-text>
+        }}</a-typography-text>
       </a-space>
     </template>
     <template #extra>
