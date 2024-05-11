@@ -14,7 +14,7 @@ export default defineConfig({
   plugins: [
     vue(),
     vitePluginForArco({
-      style: true,
+      style: 'css',
     }),
     {
       name: 'manifest',
