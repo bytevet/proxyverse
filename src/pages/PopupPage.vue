@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { type RouteLocationRaw, useRouter } from 'vue-router';
 import ThemeSwitcher from '../components/controls/ThemeSwitcher.vue';
-import { ProfilesStorage, listProfiles } from '../models/profile';
+import { ProfilesStorage, listProfiles, SystemProfile, ProfileConfig } from '../models/profile';
 import { onMounted, ref, toRaw } from 'vue';
-import { type ProxyValue, setProxy, getCurrentProxySetting } from '../models/proxy';
+import { setProxy, getCurrentProxySetting } from '../models/proxy';
 import { Message } from '@arco-design/web-vue';
 import { transify } from '../models/i18n';
 
@@ -14,14 +14,6 @@ const selectedKeys = defineModel<string[]>()
 onMounted(async () => {
   profiles.value = await listProfiles();
   const proxy = await getCurrentProxySetting()
-  const curMode = proxy.setting.value?.mode
-  switch (curMode) {
-    case 'system':
-    case 'direct':
-      selectedKeys.value = [curMode]
-      return
-  }
-
   const profileID = proxy.activeProfile?.profileID
   if (profileID) {
     selectedKeys.value = [profileID]
@@ -35,7 +27,7 @@ const jumpTo = (to: RouteLocationRaw) => {
 }
 
 // actions
-const setProxyByProfile = async (val: ProxyValue) => {
+const setProxyByProfile = async (val: ProfileConfig) => {
   try {
     console.log(toRaw(val))
     await setProxy(toRaw(val))
@@ -57,13 +49,15 @@ const setProxyByProfile = async (val: ProxyValue) => {
     </a-layout-header>
     <a-layout-content class="profiles">
       <a-menu :selected-keys="selectedKeys">
-        <a-menu-item key="direct" @click.prevent="() => setProxyByProfile('direct')"
-          style="--indicator-color: rgb(var(--success-3))">
+        <a-menu-item :key="SystemProfile.DIRECT.profileID"
+          @click.prevent="() => setProxyByProfile(SystemProfile.DIRECT)"
+          :style="{ '--indicator-color': SystemProfile.DIRECT.color }">
           <template #icon><icon-swap /></template>
           {{ $t("mode_direct") }}
         </a-menu-item>
-        <a-menu-item key="system" @click.prevent="() => setProxyByProfile('system')"
-          style="--indicator-color: var(--color-border-4)">
+        <a-menu-item :key="SystemProfile.SYSTEM.profileID"
+          @click.prevent="() => setProxyByProfile(SystemProfile.SYSTEM)"
+          :style="{ '--indicator-color': SystemProfile.SYSTEM.color }">
           <template #icon><icon-desktop /></template>
           {{ $t("mode_system") }}
         </a-menu-item>

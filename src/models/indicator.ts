@@ -1,18 +1,22 @@
+import { SystemProfile } from "./profile";
 import { ProxySetting } from "./proxy";
 
 export async function setIndicator(proxy: ProxySetting) {
   const curMode = proxy.setting.value?.mode
+  let profile = proxy.activeProfile
 
+  // overide profile
   switch (curMode) {
     case 'system':
-      return await setBadge('', '#000000')
-
+      profile = SystemProfile.SYSTEM
+      break
     case 'direct':
-      return await setBadge('DIRECT', '#7ad39e')
+      profile = SystemProfile.DIRECT
+      break
   }
 
-  if (proxy.activeProfile) {
-    await setBadge(proxy.activeProfile.profileName, proxy.activeProfile.color)
+  if (profile) {
+    await setBadge(profile.profileName, profile.color)
   }
 }
 

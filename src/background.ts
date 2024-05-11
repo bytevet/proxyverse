@@ -11,3 +11,4 @@ async function initIndicator() {
 
 
 initIndicator().catch(console.error)
+chrome.proxy.onProxyError.addListener(console.warn)
