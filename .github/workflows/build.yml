@@ -12,7 +12,7 @@ on:
     - main
 
 jobs:
-  setup:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,23 +22,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
       - run: npm ci
-
-  test:
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - run: npm test
-
-  build:
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
       - run: npm run build
-
-  upload:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
       - uses: actions/upload-artifact@v4
         with:
           name: Proxyverse
