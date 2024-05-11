@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "test": "jest",
     "build:test": "vue-tsc && vite build",
     "build": "vue-tsc && vite build",
     "dist": "rm -f dist.zip && cd ./dist/ && zip -r ../dist.zip ./",
@@ -21,7 +22,7 @@
     "vue-router": "^4.3.2"
   },
   "devDependencies": {
-    "@arco-design/web-vue": "^2.55.1",
+    "@arco-design/web-vue": "^2.55.2",
     "@arco-plugins/vite-vue": "^1.4.5",
     "@jest/globals": "^29.7.0",
     "@types/chrome": "^0.0.266",
