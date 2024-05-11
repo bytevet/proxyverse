@@ -64,8 +64,6 @@ async function defaultSetProxy(cfg: chrome.proxy.ProxyConfig) {
     value: cfg,
     scope: "regular",
   })
-
-
 }
 
 async function defaultClearProxy() {
