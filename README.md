@@ -1,5 +1,8 @@
 ![Proxyverse](./public/full-logo.svg)
 
+[![Build Extension](https://github.com/bytevet/proxyverse/actions/workflows/build.yml/badge.svg)](https://github.com/bytevet/proxyverse/actions/workflows/build.yml)
+[![Test](https://github.com/bytevet/proxyverse/actions/workflows/test.yml/badge.svg)](https://github.com/bytevet/proxyverse/actions/workflows/test.yml)
+
 Proxyverse is a simple tool to help you switch between different proxy profiles.Proxyverse is an alternative extension to Proxy SwitchyOmega.
 
 Proxyverse is built with the latest dev stack that complies with the latest standard of Chrome web extension.
@@ -7,9 +10,12 @@ Proxyverse is built with the latest dev stack that complies with the latest stan
 It's still in the early development stage, and more features are still on the way, including but no limited to
 
 - [x] Basic profile switch support
+- [ ] Support proxy authentication
 - [ ] Support auto switch rules
 - [ ] Support more languages
 - [ ] Support customized preference
+- [ ] Support Safari
+- [ ] Support firefox
 
 
 

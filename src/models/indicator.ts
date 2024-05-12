@@ -3,7 +3,8 @@ import { ProxySetting } from "./proxy";
 
 export async function setIndicator(proxy: ProxySetting) {
   const curMode = proxy.setting.value?.mode
-  let profile = proxy.activeProfile
+  let profile = proxy.setting.levelOfControl == 'controlled_by_this_extension' ?
+    proxy.activeProfile : undefined
 
   // overide profile
   switch (curMode) {
@@ -17,6 +18,9 @@ export async function setIndicator(proxy: ProxySetting) {
 
   if (profile) {
     await setBadge(profile.profileName, profile.color)
+  } else {
+    // clear badge
+    await setBadge('', SystemProfile.SYSTEM.color)
   }
 }
 
