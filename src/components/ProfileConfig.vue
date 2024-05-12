@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, toRaw, watch } from 'vue';
+import { computed, onBeforeMount, reactive, ref, toRaw, watch } from 'vue';
 import { colors } from '@arco-design/web-vue/es/color-picker/colors'
 import ProxyServerInput from './configs/ProxyServerInput.vue'
 import ScriptInput from './configs/ScriptInput.vue'
@@ -13,7 +13,7 @@ const props = defineProps<{
   profileID?: string,
 }>()
 
-const chooseRandomeCoolor = () => {
+const chooseRandomeColor = () => {
   const idx = Math.floor(Math.random() * colors.length)
   return colors[idx]
 }
@@ -22,8 +22,8 @@ const chooseRandomeCoolor = () => {
 // forms
 const profileConfig = reactive<ProfileConfig>({
   profileID: props.profileID || crypto.randomUUID(),
-  color: chooseRandomeCoolor(),
-  profileName: 'Custom Profile',
+  color: chooseRandomeColor(),
+  profileName: props.profileID ? 'Custom Profile' : '',
 
   proxyType: 'proxy',
 
@@ -156,7 +156,7 @@ const loadProfile = async (profileID: string) => {
   }
 }
 
-onMounted(() => {
+onBeforeMount(() => {
   props.profileID && loadProfile(props.profileID)
 })
 </script>
@@ -168,7 +168,7 @@ onMounted(() => {
         <a-color-picker v-model="profileConfig.color" disabledAlpha showPreset format="hex" />
         <a-typography-text editable :defaultEditing="newProfileMode" v-model:editText="profileConfig.profileName">{{
           profileConfig.profileName
-        }}</a-typography-text>
+          }}</a-typography-text>
       </a-space>
     </template>
     <template #extra>
