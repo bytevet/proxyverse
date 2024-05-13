@@ -34,7 +34,8 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Set version
-        run: if [ "${{ github.ref_type }}" == "tag" ]; then echo "CRX_VER=${{ github.ref_name }}" >> $GITHUB_ENV; fi
+        if: ${{ github.ref_type == 'tag' }}
+        run: echo "CRX_VER=${{ github.ref_name }}" >> $GITHUB_ENV
 
       - name: Output version
         run: echo "Current version ${{ env.CRX_VER }}"
