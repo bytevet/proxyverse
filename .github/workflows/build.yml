@@ -6,10 +6,15 @@ name: Build Extension
 on:
   push:
     branches:
-    - main
+      - main
+    tags:
+      - 'v*.*.*'
   pull_request:
     branches:
-    - main
+      - main
+
+env:
+  CRX_VER: v0.0.0-${{ github.sha }}
 
 jobs:
   build:
@@ -28,6 +33,13 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
+      - name: Set version
+        if: ${{ github.ref_type == 'tag' }}
+        run: echo "CRX_VER=${{ github.ref_name }}" >> $GITHUB_ENV
+
+      - name: Output version
+        run: echo "Current version ${{ env.CRX_VER }}"
+
       - name: Rebuild the dist directory
         run: npm run build
 
@@ -36,3 +48,33 @@ jobs:
         with:
           name: Proxyverse
           path: ./dist/
+
+  release:
+    if: ${{ github.ref_type == 'tag' }}
+    runs-on: ubuntu-latest
+    needs:
+      - build
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Proxyverse
+          path: ./dist/
+
+      - name: Pack artifact
+        run: cd ./dist/ && zip -r ../Proxyverse.zip ./
+
+      - name: Upload to release page
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./Proxyverse.zip
+
+      - name: Upload to MS Edge
+        uses: wdzeng/edge-addon@v1
+        with:
+          product-id: 6fa97660-6c21-41e4-87e6-06a88509753f
+          zip-path: ./Proxyverse.zip
+          client-id: ${{ secrets.EDGE_CLIENT_ID }}
+          client-secret: ${{ secrets.EDGE_CLIENT_SECRET }}
+          access-token-url: ${{ secrets.EDGE_ACCESS_TOKEN_URL }}

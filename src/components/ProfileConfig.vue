@@ -23,7 +23,7 @@ const chooseRandomeColor = () => {
 const profileConfig = reactive<ProfileConfig>({
   profileID: props.profileID || crypto.randomUUID(),
   color: chooseRandomeColor(),
-  profileName: props.profileID ? 'Custom Profile' : '',
+  profileName: props.profileID ? '' : 'Custom Profile',
 
   proxyType: 'proxy',
 
