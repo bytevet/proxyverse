@@ -23,7 +23,7 @@ const chooseRandomeColor = () => {
 const profileConfig = reactive<ProfileConfig>({
   profileID: props.profileID || crypto.randomUUID(),
   color: chooseRandomeColor(),
-  profileName: props.profileID ? 'Custom Profile' : '',
+  profileName: props.profileID ? '' : 'Custom Profile',
 
   proxyType: 'proxy',
 
@@ -168,7 +168,7 @@ onBeforeMount(() => {
         <a-color-picker v-model="profileConfig.color" disabledAlpha showPreset format="hex" />
         <a-typography-text editable :defaultEditing="newProfileMode" v-model:editText="profileConfig.profileName">{{
           profileConfig.profileName
-          }}</a-typography-text>
+        }}</a-typography-text>
       </a-space>
     </template>
     <template #extra>
