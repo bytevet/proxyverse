@@ -22,8 +22,8 @@ onMounted(async () => {
 
 const jumpTo = (to: RouteLocationRaw) => {
   const path = router.resolve(to).fullPath
-  window.open(`/#${path}`, import.meta.url)
-  window.open(router.resolve(to).href, import.meta.url)
+  window.open(`/index.html#${path}`, import.meta.url)
+  // window.open(router.resolve(to).href, import.meta.url)
 }
 
 // actions
