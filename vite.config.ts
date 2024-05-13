@@ -9,6 +9,17 @@ if (process.env.npm_lifecycle_event?.endsWith(':test')) {
   sourcemap = true
 }
 
+const getCRXVersion = () => {
+  if (process.env.CRX_VER) {
+    let ver = process.env.CRX_VER
+    if (ver.startsWith('v')) {
+      ver = ver.slice(1)
+    }
+    return ver.slice(0, 14)
+  }
+  return '0.0.0-dev'
+}
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -21,7 +32,7 @@ export default defineConfig({
       generateBundle(outputOption, bundle) {
         const entry = Object.values(bundle).find(
           (chunk) => chunk.type == 'chunk' && chunk.isEntry && chunk.name == 'background');
-        manifest.version = process.env.npm_package_version || '0.0.0'
+        manifest.version = getCRXVersion()
         manifest.background.service_worker = (entry as any).fileName
 
         this.emitFile({
