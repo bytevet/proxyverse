@@ -56,9 +56,9 @@ jobs:
           name: Proxyverse
           path: ./release/*
 
-  release-edge:
-    name: Publish on Edge
-    # if: ${{ github.ref_type == 'tag' }}
+  release-github:
+    name: Publish on Github Release
+    if: ${{ github.ref_type == 'tag' }}
     runs-on: ubuntu-latest
     needs:
       - build
@@ -70,10 +70,25 @@ jobs:
           name: Proxyverse
           path: ./release/
 
-      # - name: Upload to release page
-      #   uses: softprops/action-gh-release@v2
-      #   with:
-      #     files: ./release/crx.zip
+      - name: Upload to release page
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./release/*
+
+
+  release-edge:
+    name: Publish on Edge
+    if: ${{ github.ref_type == 'tag' }}
+    runs-on: ubuntu-latest
+    needs:
+      - build
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Proxyverse
+          path: ./release/
 
       - name: Upload to MS Edge
         uses: wdzeng/edge-addon@v1
