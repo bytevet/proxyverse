@@ -7,7 +7,6 @@ on:
   push:
     branches:
       - main
-      - test/actions
     tags:
       - 'v*.*.*'
   pull_request:

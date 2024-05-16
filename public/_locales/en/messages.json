@@ -67,6 +67,19 @@
   "config_section_proxy_server_ftp": {
     "message": "FTP"
   },
+  "config_section_proxy_auth_tips": {
+    "message": "Set username and password if your proxy requires authentication"
+  },
+  "config_section_proxy_auth_title": {
+    "message": "Proxy Authentication"
+  },
+  "config_section_proxy_auth_username": {
+    "message": "Username"
+  },
+  "config_section_proxy_auth_password": {
+    "message": "Password"
+  },
+
   "config_section_bypass_list": {
     "message": "Bypass List"
   },
@@ -91,6 +104,9 @@
   },
   "config_action_cancel": {
     "message": "Discard Change"
+  },
+  "config_action_clear": {
+    "message": "Clear"
   },
 
   "config_feedback_saved": {
