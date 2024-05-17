@@ -48,10 +48,7 @@ jobs:
           args: push
 
       - name: Pull i18n files
-        uses: transifex/cli-action@v2
-        with:
-          token: ${{ secrets.TX_TOKEN }}
-          args: pull -a
+        run: npm run i18n:sync
 
       - name: Rebuild the dist directory
         run: npm run build
