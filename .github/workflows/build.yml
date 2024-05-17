@@ -41,6 +41,18 @@ jobs:
       - name: Output version
         run: echo "Current version ${{ env.CRX_VER }}"
 
+      - name: Push i18n source file
+        uses: transifex/cli-action@v2
+        with:
+          token: ${{ secrets.TX_TOKEN }}
+          args: push
+
+      - name: Pull i18n files
+        uses: transifex/cli-action@v2
+        with:
+          token: ${{ secrets.TX_TOKEN }}
+          args: pull -a
+
       - name: Rebuild the dist directory
         run: npm run build
 
