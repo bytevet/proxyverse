@@ -18,6 +18,10 @@ It's still in the early development stage, and more features are still on the w
 - [ ] Support firefox
 
 
+# How to download?
+
+- [Chrome](https://chromewebstore.google.com/detail/proxyverse/igknmaflmijecdmjpcgollghmipkfbho)
+
 
 # Making a Contribution
 

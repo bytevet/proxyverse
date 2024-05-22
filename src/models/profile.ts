@@ -1,11 +1,12 @@
 import { get, set } from "./store"
 
+export type ProxyAuthInfo = {
+  username: string,
+  password: string,
+}
 
 export type ProxyServer = (chrome.proxy.ProxyServer & {
-  auth?: {
-    username: string,
-    password: string,
-  },
+  auth?: ProxyAuthInfo,
   scheme: 'direct' | 'http' | 'https' | 'socks4' | 'socks5'
 })
 
