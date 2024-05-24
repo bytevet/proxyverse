@@ -2,6 +2,7 @@
   "manifest_version": 3,
   "name": "Proxyverse",
   "version": "<IN_PACKAGE_JSON>",
+  "version_name": "<IN_PACKAGE_JSON>",
   "description": "__MSG_app_desc__",
   "default_locale": "en",
   "icons": {
@@ -22,6 +23,7 @@
   "permissions": [
     "storage",
     "proxy",
+    "webRequest",
     "webRequestAuthProvider"
   ]
 }

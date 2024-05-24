@@ -1,7 +1,7 @@
 import { generate as generateJS } from 'escodegen'
 import { Program, FunctionDeclaration, Identifier, Statement, Literal, ReturnStatement, Expression, IfStatement, CallExpression, MemberExpression } from 'estree'
 import { IPv4, IPv6, isValidCIDR, parseCIDR } from "ipaddr.js";
-import { ProxyConfigPreset, ProxyConfigSimple, ProxyServer } from "../profile";
+import { ProxyConfigPreset, ProxyConfigSimple, ProxyServer, sanitizeProxyServer } from "../profile";
 
 
 export function genSimpleProxyCfg(val: ProxyConfigSimple | ProxyConfigPreset): chrome.proxy.ProxyConfig {
@@ -42,15 +42,15 @@ function genFixServerRuleForProfile(val: ProxyConfigSimple): chrome.proxy.ProxyC
 
   // simple proxy
   if (!rules.ftp && !rules.http && !rules.https) {
-    ret.rules.singleProxy = rules.default
+    ret.rules.singleProxy = sanitizeProxyServer(rules.default)
     return ret
   }
 
   // advanced setting
-  ret.rules.fallbackProxy = rules.default
-  if (rules.ftp) ret.rules.proxyForFtp = rules.ftp
-  if (rules.http) ret.rules.proxyForHttp = rules.http
-  if (rules.https) ret.rules.proxyForHttps = rules.https
+  ret.rules.fallbackProxy = sanitizeProxyServer(rules.default)
+  if (rules.ftp) ret.rules.proxyForFtp = sanitizeProxyServer(rules.ftp)
+  if (rules.http) ret.rules.proxyForHttp = sanitizeProxyServer(rules.http)
+  if (rules.https) ret.rules.proxyForHttps = sanitizeProxyServer(rules.https)
 
   return ret
 }

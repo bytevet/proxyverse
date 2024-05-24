@@ -10,7 +10,7 @@ Proxyverse is built with the latest dev stack that complies with the latest stan
 It's still in the early development stage, and more features are still on the way, including but no limited to
 
 - [x] Basic profile switch support
-- [ ] Support proxy authentication
+- [x] Support proxy authentication
 - [ ] Support auto switch rules
 - [x] Support more languages
 - [ ] Support customized preference

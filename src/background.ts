@@ -19,8 +19,8 @@ class ProxyAuthProvider {
   static requests: Record<string, number> = {}
 
   static onCompleted(details: chrome.webRequest.WebResponseDetails) {
-    if (this.requests[details.requestId]) {
-      delete this.requests[details.requestId]
+    if (ProxyAuthProvider.requests[details.requestId]) {
+      delete ProxyAuthProvider.requests[details.requestId]
     }
   }
 
@@ -32,15 +32,15 @@ class ProxyAuthProvider {
       return
     }
 
-    if (this.requests[details.requestId] === undefined) {
+    if (ProxyAuthProvider.requests[details.requestId] === undefined) {
       // 0 means the 1st attempt
-      this.requests[details.requestId] = 0
+      ProxyAuthProvider.requests[details.requestId] = 0
     } else {
-      this.requests[details.requestId]++
+      ProxyAuthProvider.requests[details.requestId]++
     }
 
     getAuthInfos(details.challenger.host, details.challenger.port).then((authInfos) => {
-      const auth = authInfos.at(this.requests[details.requestId])
+      const auth = authInfos.at(ProxyAuthProvider.requests[details.requestId])
       if (!auth) {
         callback && callback({ cancel: true })
         return

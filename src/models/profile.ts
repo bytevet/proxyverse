@@ -5,10 +5,17 @@ export type ProxyAuthInfo = {
   password: string,
 }
 
-export type ProxyServer = (chrome.proxy.ProxyServer & {
-  auth?: ProxyAuthInfo,
+export interface ProxyServer extends chrome.proxy.ProxyServer {
+  auth?: ProxyAuthInfo
   scheme: 'direct' | 'http' | 'https' | 'socks4' | 'socks5'
-})
+}
+
+export function sanitizeProxyServer(v: ProxyServer): chrome.proxy.ProxyServer {
+  return {
+    host: v.host,
+    port: v.port
+  }
+}
 
 type ProxyConfigMeta = {
   profileID: string,
