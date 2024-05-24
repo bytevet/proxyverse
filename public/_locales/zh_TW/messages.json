@@ -1,62 +1,62 @@
 {
   "app_desc": {
-    "message": "A tool to help you manage and switch your proxy profiles"
+    "message": "一个帮助您管理和切换代理配置文件的工具"
   },
 
 
   "nav_preference": {
-    "message": "Preference"
+    "message": "偏好设置"
   },
   "nav_config": {
-    "message": "Config"
+    "message": "配置"
   },
   "nav_custome_profiles": {
-    "message": "Custom Profiles"
+    "message": "自定义配置文件"
   },
 
 
   "theme_light_mode": {
-    "message": "Light mode"
+    "message": "浅色模式"
   },
   "theme_dark_mode": {
-    "message": "Dark mode"
+    "message": "暗黑模式"
   },
   "theme_auto_mode": {
-    "message": "Follow system"
+    "message": "跟随系统"
   },
 
 
   "mode_auto_switch": {
-    "message": "Auto Switch"
+    "message": "自动切换"
   },
   "mode_direct": {
-    "message": "Direct"
+    "message": "直接连接"
   },
   "mode_system": {
-    "message": "Use System Proxy"
+    "message": "使用系統代理"
   },
   "mode_profile_create": {
-    "message": "Create New Profile"
+    "message": "新建配置"
   },
 
 
   "config_proxy_type": {
-    "message": "Proxy Type"
+    "message": "代理類型"
   },
   "config_proxy_type_proxy": {
-    "message": "Proxy"
+    "message": "代理"
   },
   "config_proxy_type_pac": {
     "message": "PAC Script"
   },
   "config_proxy_type_default": {
-    "message": "Same as Default"
+    "message": "默认"
   },
   "config_section_proxy_server": {
-    "message": "Proxy Server"
+    "message": "代理伺服器"
   },
   "config_section_proxy_server_default": {
-    "message": "Default Server"
+    "message": "預設伺服器"
   },
   "config_section_proxy_server_http": {
     "message": "HTTP"
@@ -68,60 +68,60 @@
     "message": "FTP"
   },
   "config_section_proxy_auth_tips": {
-    "message": "Set username and password if your proxy requires authentication"
+    "message": "設定使用者名稱和密碼，如果您的代理需要驗證"
   },
   "config_section_proxy_auth_title": {
-    "message": "Proxy Authentication"
+    "message": "代理认证信息"
   },
   "config_section_proxy_auth_username": {
-    "message": "Username"
+    "message": "用户名"
   },
   "config_section_proxy_auth_password": {
-    "message": "Password"
+    "message": "密碼"
   },
 
   "config_section_bypass_list": {
-    "message": "Bypass List"
+    "message": "Bypass 列表"
   },
   "config_section_advance": {
-    "message": "Advance Config"
+    "message": "進階設定"
   },
   "config_reference_bypass_list": {
-    "message": "Learn more about bypass list"
+    "message": "详细了解 Bypass 列表"
   },
 
   "config_action_edit": {
-    "message": "Edit"
+    "message": "編輯"
   },
   "config_action_delete": {
-    "message": "Delete Profile"
+    "message": "删除配置"
   },
   "config_action_delete_double_confirm": {
-    "message": "Are you sure to delete the current profile"
+    "message": "您确定要删除当前的配置文件吗？"
   },
   "config_action_save": {
-    "message": "Save"
+    "message": "保存"
   },
   "config_action_cancel": {
-    "message": "Discard Change"
+    "message": "放棄變更"
   },
   "config_action_clear": {
-    "message": "Clear"
+    "message": "清除"
   },
 
   "config_feedback_saved": {
-    "message": "The profile had been saved"
+    "message": "配置已經被保存了"
   },
   "config_feedback_deleted": {
-    "message": "The profile had been deleted"
+    "message": "個人資料已被刪除"
   },
   "config_feedback_error_occured": {
-    "message": "Error occured: $1"
+    "message": "發生錯誤：$1"
   },
 
 
   "form_is_required": {
-    "message": "$1 is required"
+    "message": "$1是必填项"
   },
 
   "_": {

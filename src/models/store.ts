@@ -32,7 +32,7 @@ export async function get<T>(key: string): Promise<T | null> {
 
 export async function getWithDefault<T>(key: string, defaultVal: T): Promise<T> {
   const ret = await localGet(key)
-  if (ret == null && defaultVal) {
+  if (ret == null) {
     return defaultVal
   }
 

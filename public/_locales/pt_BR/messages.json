@@ -1,28 +1,28 @@
 {
   "app_desc": {
-    "message": "A tool to help you manage and switch your proxy profiles"
+    "message": "Uma ferramenta para ajudar você a gerenciar e alternar seus perfis de proxy"
   },
 
 
   "nav_preference": {
-    "message": "Preference"
+    "message": "Preferência"
   },
   "nav_config": {
     "message": "Config"
   },
   "nav_custome_profiles": {
-    "message": "Custom Profiles"
+    "message": "Perfis Personalizados"
   },
 
 
   "theme_light_mode": {
-    "message": "Light mode"
+    "message": "Modo claro"
   },
   "theme_dark_mode": {
-    "message": "Dark mode"
+    "message": "Modo escuro"
   },
   "theme_auto_mode": {
-    "message": "Follow system"
+    "message": "Siga o sistema"
   },
 
 
@@ -30,33 +30,33 @@
     "message": "Auto Switch"
   },
   "mode_direct": {
-    "message": "Direct"
+    "message": "Direto"
   },
   "mode_system": {
-    "message": "Use System Proxy"
+    "message": "Usar Proxy do Sistema"
   },
   "mode_profile_create": {
-    "message": "Create New Profile"
+    "message": "Criar Novo Perfil"
   },
 
 
   "config_proxy_type": {
-    "message": "Proxy Type"
+    "message": "Tipo de Proxy"
   },
   "config_proxy_type_proxy": {
     "message": "Proxy"
   },
   "config_proxy_type_pac": {
-    "message": "PAC Script"
+    "message": "Script PAC"
   },
   "config_proxy_type_default": {
-    "message": "Same as Default"
+    "message": "Mesmo como o Padrão"
   },
   "config_section_proxy_server": {
-    "message": "Proxy Server"
+    "message": "Servidor Proxy"
   },
   "config_section_proxy_server_default": {
-    "message": "Default Server"
+    "message": "Servidor Padrão"
   },
   "config_section_proxy_server_http": {
     "message": "HTTP"
@@ -68,60 +68,60 @@
     "message": "FTP"
   },
   "config_section_proxy_auth_tips": {
-    "message": "Set username and password if your proxy requires authentication"
+    "message": "Defina nome de usuário e senha se o seu proxy exigir autenticação"
   },
   "config_section_proxy_auth_title": {
-    "message": "Proxy Authentication"
+    "message": "Autenticação de Proxy"
   },
   "config_section_proxy_auth_username": {
-    "message": "Username"
+    "message": "Nome de usuário"
   },
   "config_section_proxy_auth_password": {
-    "message": "Password"
+    "message": "Senha"
   },
 
   "config_section_bypass_list": {
-    "message": "Bypass List"
+    "message": "Lista de Bypass"
   },
   "config_section_advance": {
-    "message": "Advance Config"
+    "message": "Configuração Avançada"
   },
   "config_reference_bypass_list": {
-    "message": "Learn more about bypass list"
+    "message": "Saiba mais sobre a lista de bypass."
   },
 
   "config_action_edit": {
-    "message": "Edit"
+    "message": "Editar"
   },
   "config_action_delete": {
-    "message": "Delete Profile"
+    "message": "Excluir Perfil"
   },
   "config_action_delete_double_confirm": {
-    "message": "Are you sure to delete the current profile"
+    "message": "Você tem certeza de que deseja excluir o perfil atual"
   },
   "config_action_save": {
-    "message": "Save"
+    "message": "Salvar"
   },
   "config_action_cancel": {
-    "message": "Discard Change"
+    "message": "Descartar alteração"
   },
   "config_action_clear": {
-    "message": "Clear"
+    "message": "Claro"
   },
 
   "config_feedback_saved": {
-    "message": "The profile had been saved"
+    "message": "O perfil foi salvo"
   },
   "config_feedback_deleted": {
-    "message": "The profile had been deleted"
+    "message": "O perfil foi deletado"
   },
   "config_feedback_error_occured": {
-    "message": "Error occured: $1"
+    "message": "Ocorreu um erro: $1"
   },
 
 
   "form_is_required": {
-    "message": "$1 is required"
+    "message": "$1 é necessário."
   },
 
   "_": {

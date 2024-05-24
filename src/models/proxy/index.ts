@@ -1,4 +1,4 @@
-import { ProfileConfig, SystemProfile } from "../profile"
+import { ProfileConfig, ProxyAuthInfo, SystemProfile } from "../profile"
 import { get, set } from "../store"
 import { genSimpleProxyCfg } from "./proxyRules"
 
@@ -68,4 +68,27 @@ async function defaultSetProxy(cfg: chrome.proxy.ProxyConfig) {
 
 async function defaultClearProxy() {
   await chrome.proxy.settings.clear({ scope: 'regular' })
+}
+
+
+
+export async function getAuthInfos(host: string, port: number): Promise<ProxyAuthInfo[]> {
+  const profile = await get<ProfileConfig>(keyActiveProfile)
+  if (!profile || profile.proxyType !== 'proxy') {
+    return []
+  }
+
+  const ret: ProxyAuthInfo[] = []
+  const auths = [profile.proxyRules.default, profile.proxyRules.ftp, profile.proxyRules.http, profile.proxyRules.https]
+
+  // check if there's any matching host and port
+  auths.map((item) => {
+    if (!item)   return
+
+    if (item.host == host && (item.port === undefined || item.port == port) && item.auth) {
+      ret.push(item.auth)
+    }
+  })
+
+  return ret
 }

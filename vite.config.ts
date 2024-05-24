@@ -32,7 +32,8 @@ export default defineConfig({
       generateBundle(outputOption, bundle) {
         const entry = Object.values(bundle).find(
           (chunk) => chunk.type == 'chunk' && chunk.isEntry && chunk.name == 'background');
-        manifest.version = getCRXVersion()
+        manifest.version = getCRXVersion().split('-', 1)[0]
+        manifest.version_name = getCRXVersion()
         manifest.background.service_worker = (entry as any).fileName
 
         this.emitFile({

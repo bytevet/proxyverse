@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "test": "jest",
+    "i18n:sync": "tx pull -a",
     "build:test": "vue-tsc && vite build",
     "build": "vue-tsc && vite build",
     "dist": "rm -f dist.zip && cd ./dist/ && zip -r ../dist.zip ./",
