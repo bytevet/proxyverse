@@ -15,17 +15,24 @@ It's still in the early development stage, and more features are still on the w
 - [x] Support more languages
 - [ ] Support customized preference
 - [ ] Support Safari
-- [ ] Support firefox
+- [ ] Support Firefox
 
 
 # How to download?
 
 - [Chrome](https://chromewebstore.google.com/detail/proxyverse/igknmaflmijecdmjpcgollghmipkfbho)
+- [Microsoft Edge](https://microsoftedge.microsoft.com/addons/detail/bpjcpinklkdfabcncofogcaigmmgjjbj)
 
 
 # Making a Contribution
+
+## Development
 
 1. Fork the repository and make changes.
 2. Write unit tests. If applicable, write unit tests for your changes to ensure they don't break existing functionality. Our project uses [ts-jest](https://jestjs.io/docs/getting-started#via-ts-jest) for unit testing.
 3. Make sure everything works perfectly before you make any pull request.
 
+
+## Translation & i18n
+
+Proxyverse is using [transifex](https://explore.transifex.com/bytevet/proxyverse/) for translations.
