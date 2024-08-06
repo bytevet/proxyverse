@@ -19,7 +19,7 @@
     "@highlightjs/vue-plugin": "^2.1.0",
     "escodegen": "^2.1.0",
     "ipaddr.js": "^2.2.0",
-    "vue": "^3.4.25",
+    "vue": "^3.4.35",
     "vue-router": "^4.3.2"
   },
   "devDependencies": {
