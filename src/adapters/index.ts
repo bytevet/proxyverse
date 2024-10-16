@@ -11,3 +11,10 @@ function chooseAdapter(): BaseAdapter {
 }
 
 export const Host = chooseAdapter();
+export type {
+  ProxyConfig,
+  WebAuthenticationChallengeDetails,
+  BlockingResponse,
+  WebResponseDetails,
+  ProxyErrorDetails,
+} from "./base";

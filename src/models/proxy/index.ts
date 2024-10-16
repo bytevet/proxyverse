@@ -51,28 +51,17 @@ export function onCurrentProxySettingChanged(
 export async function setProxy(val: ProfileConfig) {
   switch (val.proxyType) {
     case "system":
-      await defaultClearProxy();
+      await Host.clearProxy();
       break;
 
     case "direct":
     case "proxy":
     case "pac":
-      await defaultSetProxy(genSimpleProxyCfg(val));
+      await Host.setProxy(genSimpleProxyCfg(val));
       break;
   }
 
   await Host.set<ProfileConfig>(keyActiveProfile, val);
-}
-
-async function defaultSetProxy(cfg: chrome.proxy.ProxyConfig) {
-  await chrome.proxy.settings.set({
-    value: cfg,
-    scope: "regular",
-  });
-}
-
-async function defaultClearProxy() {
-  await chrome.proxy.settings.clear({ scope: "regular" });
 }
 
 export async function getAuthInfos(
