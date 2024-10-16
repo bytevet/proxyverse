@@ -1,23 +1,26 @@
 <script setup lang="ts">
-import hljs from 'highlight.js/lib/core';
-import javascript from 'highlight.js/lib/languages/javascript';
+import hljs from "highlight.js/lib/core";
+import javascript from "highlight.js/lib/languages/javascript";
 import hljsVuePlugin from "@highlightjs/vue-plugin";
 
-const highlightjs = hljsVuePlugin.component
-hljs.registerLanguage('javascript', javascript);
+const highlightjs = hljsVuePlugin.component;
+hljs.registerLanguage("javascript", javascript);
 
-const props = withDefaults(defineProps<{
-  placeholder?: string,
-  minRows?: number
-}>(), {
-  placeholder: `function FindProxyForURL(url, host) {
+const props = withDefaults(
+  defineProps<{
+    placeholder?: string;
+    minRows?: number;
+  }>(),
+  {
+    placeholder: `function FindProxyForURL(url, host) {
   // …
 }
 `,
-  minRows: 3,
-})
+    minRows: 3,
+  }
+);
 
-const model = defineModel<string>()
+const model = defineModel<string>();
 </script>
 
 <template>
@@ -26,10 +29,14 @@ const model = defineModel<string>()
       <highlightjs language="javascript" :code="model || ''" />
     </div>
 
-    <a-textarea :placeholder="props.placeholder" class="editor" v-model="model" :auto-size="{ minRows: props.minRows }" />
+    <a-textarea
+      :placeholder="props.placeholder"
+      class="editor"
+      v-model="model"
+      :auto-size="{ minRows: props.minRows }"
+    />
   </div>
 </template>
-
 
 <style lang="scss" scoped>
 @mixin unify-editor {
@@ -50,11 +57,11 @@ const model = defineModel<string>()
 
 .wrapper {
   :deep(.display) {
-    @import 'highlight.js/scss/stackoverflow-light.scss';
+    @import "highlight.js/scss/stackoverflow-light.scss";
   }
 
-  body[arco-theme=dark] & :deep(.display) {
-    @import 'highlight.js/scss/stackoverflow-dark.scss';
+  body[arco-theme="dark"] & :deep(.display) {
+    @import "highlight.js/scss/stackoverflow-dark.scss";
   }
 
   position: relative;
@@ -69,7 +76,7 @@ const model = defineModel<string>()
     top: 0;
     border: 1px solid transparent;
 
-    &>pre,
+    & > pre,
     :deep(.hljs) {
       box-sizing: border-box;
       display: block;
@@ -85,7 +92,7 @@ const model = defineModel<string>()
   }
 
   .editor {
-    background: transparent;
+    background-color: transparent !important;
 
     :deep(.arco-textarea) {
       @include unify-editor;
