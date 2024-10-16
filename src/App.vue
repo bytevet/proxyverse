@@ -5,8 +5,9 @@ import enUS from "@arco-design/web-vue/es/locale/lang/en-us";
 import zhCN from "@arco-design/web-vue/es/locale/lang/zh-cn";
 import zhTW from "@arco-design/web-vue/es/locale/lang/zh-tw";
 import ptPT from "@arco-design/web-vue/es/locale/lang/pt-pt";
-import { getDarkModeSetting, changeDarkMode } from "./models/preference";
+import { getDarkModeSetting, changeDarkMode } from "./services/preference";
 import { ArcoLang } from "@arco-design/web-vue/es/locale/interface";
+import { Host } from "./adapters";
 
 const i18nConfig: Record<string, ArcoLang> = {
   "en-US": enUS,
@@ -20,7 +21,7 @@ useLocale("en-US");
 
 // Choose the most suitable lang
 try {
-  let lang = chrome.i18n.getUILanguage();
+  let lang = Host.currentLocale();
   if (i18nConfig[lang]) {
     useLocale(lang);
   } else {

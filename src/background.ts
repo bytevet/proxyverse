@@ -4,12 +4,12 @@ import {
   WebAuthenticationChallengeDetails,
   WebResponseDetails,
 } from "./adapters";
-import { setIndicator } from "./models/indicator";
+import { setIndicator } from "./services/indicator";
 import {
   getAuthInfos,
   getCurrentProxySetting,
   onCurrentProxySettingChanged,
-} from "./models/proxy";
+} from "./services/proxy";
 
 // indicator
 async function initIndicator() {

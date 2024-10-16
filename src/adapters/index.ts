@@ -17,4 +17,8 @@ export type {
   BlockingResponse,
   WebResponseDetails,
   ProxyErrorDetails,
+  ProxySettingResultDetails,
+  SimpleProxyServer,
+  PacScript,
+  ProxyRules,
 } from "./base";

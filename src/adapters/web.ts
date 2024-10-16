@@ -5,6 +5,7 @@ import {
   BlockingResponse,
   ProxyConfig,
   ProxyErrorDetails,
+  ProxySettingResultDetails,
   WebAuthenticationChallengeDetails,
   WebResponseDetails,
 } from "./base";
@@ -33,9 +34,17 @@ export class WebBrowser extends BaseAdapter {
   clearProxy(): Promise<void> {
     throw new Error("Method not implemented.");
   }
+  getProxySettings(): Promise<ProxySettingResultDetails> {
+    throw new Error("Method not implemented.");
+  }
+
   onProxyError(_: (error: ProxyErrorDetails) => void): void {
     throw new Error("Method not implemented.");
   }
+  onProxyChanged(_: (setting: ProxySettingResultDetails) => void): void {
+    throw new Error("Method not implemented.");
+  }
+
   async setBadge(text: string, color: string): Promise<void> {
     return console.log(`Badge: ${text}, ${color}`);
   }

@@ -10,17 +10,20 @@ import {
 } from "vue";
 import { colors } from "@arco-design/web-vue/es/color-picker/colors";
 import ProxyServerInput from "./configs/ProxyServerInput.vue";
+import AutoSwitchInput from "./configs/AutoSwitchInput.vue";
 import ScriptInput from "./configs/ScriptInput.vue";
 import {
-  ProfileConfig,
+  ProxyConfigAutoSwitch,
+  ProxyConfigMeta,
+  ProxyConfigSimple,
   ProxyServer,
   deleteProfile,
   getProfile,
   saveProfile,
-} from "../models/profile";
+} from "../services/profile";
 import { FieldRule, Notification } from "@arco-design/web-vue";
 import { useRouter } from "vue-router";
-import { Host } from "@/adapters";
+import { Host, PacScript } from "@/adapters";
 
 const router = useRouter();
 const props = defineProps<{
@@ -33,13 +36,16 @@ const chooseRandomColor = () => {
 };
 
 // forms
-const profileConfig = reactive<ProfileConfig>({
+const profileConfig = reactive<
+  ProxyConfigMeta & ProxyConfigSimple & ProxyConfigAutoSwitch
+>({
   profileID: props.profileID || crypto.randomUUID(),
   color: chooseRandomColor(),
   profileName: props.profileID ? "" : "Custom Profile",
 
   proxyType: "proxy",
 
+  // simple proxy part
   proxyRules: {
     default: {
       host: "127.0.0.1",
@@ -50,12 +56,17 @@ const profileConfig = reactive<ProfileConfig>({
     bypassList: ["<local>", "127.0.0.1", "[::1]"],
   },
 
+  // pac part
   pacScript: {
     data: `function FindProxyForURL(url, host) {
   // …
   return 'DIRECT';
 }`,
   },
+
+  // auto switch part
+  rules: [],
+  defaultProfileID: "system",
 });
 
 const showAdvanceConfig = ref(false);
@@ -121,7 +132,7 @@ const proxyServerFieldRule = (
 const pacScriptFieldRule = (
   readable_name: string,
   required?: boolean
-): FieldRule<chrome.proxy.PacScript | undefined> => {
+): FieldRule<PacScript | undefined> => {
   return {
     type: "object",
     required: required,
@@ -280,6 +291,7 @@ onBeforeMount(() => {
         <a-radio-group type="button" v-model="profileConfig.proxyType">
           <a-radio value="proxy">{{ $t("config_proxy_type_proxy") }}</a-radio>
           <a-radio value="pac">{{ $t("config_proxy_type_pac") }}</a-radio>
+          <a-radio value="auto">{{ $t("config_proxy_type_auto") }}</a-radio>
         </a-radio-group>
       </a-form-item>
 
@@ -373,11 +385,20 @@ onBeforeMount(() => {
           <ScriptInput v-model="profileConfig.pacScript.data" :min-rows="4" />
         </a-form-item>
       </template>
+
+      <!-- Auto Switch Mode -->
+      <template v-else>
+        <a-divider orientation="left">{{
+          $t("config_section_auto_switch_rules")
+        }}</a-divider>
+
+        <AutoSwitchInput />
+      </template>
     </a-form>
   </a-page-header>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .profile-name {
   :deep(.arco-typography-edit-content) {
     margin: 0 0.5em;

@@ -1,6 +1,6 @@
 import { expect, test, describe } from "vitest";
-import { genSimpleProxyCfg } from "@/models/proxy/proxyRules.ts";
-import { ProfileConfig, SystemProfile } from "@/models/profile";
+import { genSimpleProxyCfg } from "@/services/proxy/proxyRules";
+import { ProxyProfile, SystemProfile } from "@/services/profile";
 
 describe("testing genSimpleProxyCfg for direct and system", () => {
   test("proxy config mode", () => {
@@ -11,7 +11,7 @@ describe("testing genSimpleProxyCfg for direct and system", () => {
 
 describe("testing bypass list", () => {
   test("bypass list with ipv6", () => {
-    const profile: ProfileConfig = {
+    const profile: ProxyProfile = {
       profileID: "",
       color: "",
       profileName: "",

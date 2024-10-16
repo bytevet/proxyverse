@@ -5,10 +5,10 @@ import {
   ProfilesStorage,
   listProfiles,
   SystemProfile,
-  ProfileConfig,
-} from "../models/profile";
+  ProxyProfile,
+} from "../services/profile";
 import { onMounted, ref, toRaw } from "vue";
-import { setProxy, getCurrentProxySetting } from "../models/proxy";
+import { setProxy, getCurrentProxySetting } from "../services/proxy";
 import { Message } from "@arco-design/web-vue";
 import { Host } from "@/adapters";
 
@@ -32,7 +32,7 @@ const jumpTo = (to: RouteLocationRaw) => {
 };
 
 // actions
-const setProxyByProfile = async (val: ProfileConfig) => {
+const setProxyByProfile = async (val: ProxyProfile) => {
   try {
     console.log(toRaw(val));
     await setProxy(toRaw(val));

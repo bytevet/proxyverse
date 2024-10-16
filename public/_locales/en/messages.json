@@ -49,6 +49,9 @@
   "config_proxy_type_pac": {
     "message": "PAC Script"
   },
+  "config_proxy_type_auto": {
+    "message": "Auto Switch"
+  },
   "config_proxy_type_default": {
     "message": "Same as Default"
   },
@@ -88,6 +91,46 @@
   },
   "config_reference_bypass_list": {
     "message": "Learn more about bypass list"
+  },
+
+  "config_section_auto_switch_rules": {
+    "message": "Auto Switch Rules"
+  },
+  "config_section_auto_switch_type": {
+    "message": "Condition Type"
+  },
+  "config_section_auto_switch_type_domain": {
+    "message": "Domain"
+  },
+  "config_section_auto_switch_type_url": {
+    "message": "URL"
+  },
+  "config_section_auto_switch_type_cidr": {
+    "message": "IP/CIDR"
+  },
+  "config_section_auto_switch_type_disabled": {
+    "message": "Temporarily Skip"
+  },
+  "config_section_auto_switch_condition": {
+    "message": "Condition"
+  },
+  "config_section_auto_switch_profile": {
+    "message": "Route to"
+  },
+  "config_section_auto_switch_actions": {
+    "message": "Actions"
+  },
+  "config_section_auto_switch_add_rule": {
+    "message": "Add Rule"
+  },
+  "config_section_auto_switch_delete_rule": {
+    "message": "Delete Current Rule"
+  },
+  "config_section_auto_switch_duplicate_rule": {
+    "message": "Duplicate Current Rule"
+  },
+  "config_section_auto_switch_default_profile": {
+    "message": "Default Profile"
   },
 
   "config_action_edit": {

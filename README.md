@@ -29,7 +29,7 @@ It's still in the early development stage, and more features are still on the w
 ## Development
 
 1. Fork the repository and make changes.
-2. Write unit tests. If applicable, write unit tests for your changes to ensure they don't break existing functionality. Our project uses [ts-jest](https://jestjs.io/docs/getting-started#via-ts-jest) for unit testing.
+2. Write unit tests. If applicable, write unit tests for your changes to ensure they don't break existing functionality. Our project uses [vitest](https://vitest.dev/) for unit testing.
 3. Make sure everything works perfectly before you make any pull request.
 
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref, watch } from "vue";
-import { ProxyServer } from "../../models/profile";
+import { ProxyServer } from "../../services/profile";
 import { Host } from "@/adapters";
 
 const props = defineProps<{

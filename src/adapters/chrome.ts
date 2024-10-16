@@ -1,8 +1,11 @@
+/// <reference types="@types/chrome" />
+
 import {
   BaseAdapter,
   BlockingResponse,
   ProxyConfig,
   ProxyErrorDetails,
+  ProxySettingResultDetails,
   WebAuthenticationChallengeDetails,
   WebResponseDetails,
 } from "./base";
@@ -30,8 +33,15 @@ export class Chrome extends BaseAdapter {
     await chrome.proxy.settings.clear({ scope: "regular" });
   }
 
+  async getProxySettings(): Promise<ProxySettingResultDetails> {
+    return (await chrome.proxy.settings.get({})) as any;
+  }
+
   onProxyError(callback: (error: ProxyErrorDetails) => void): void {
     chrome.proxy.onProxyError.addListener(callback);
+  }
+  onProxyChanged(callback: (setting: ProxySettingResultDetails) => void): void {
+    chrome.proxy.settings.onChange.addListener(callback);
   }
 
   async setBadge(text: string, color: string): Promise<void> {
