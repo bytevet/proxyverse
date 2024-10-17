@@ -10,7 +10,7 @@
   "nav_config": {
     "message": "Config"
   },
-  "nav_custome_profiles": {
+  "nav_custom_profiles": {
     "message": "Perfis Personalizados"
   },
 
@@ -115,7 +115,7 @@
   "config_feedback_deleted": {
     "message": "O perfil foi deletado"
   },
-  "config_feedback_error_occured": {
+  "config_feedback_error_occurred": {
     "message": "Ocorreu um erro: $1"
   },
 

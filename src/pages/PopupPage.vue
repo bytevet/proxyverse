@@ -39,7 +39,7 @@ const setProxyByProfile = async (val: ProxyProfile) => {
     selectedKeys.value = [typeof val == "string" ? val : val.profileID];
   } catch (e: any) {
     Message.error({
-      content: Host.getMessage("config_feedback_error_occured", e.toString()),
+      content: Host.getMessage("config_feedback_error_occurred", e.toString()),
     });
   }
 };
@@ -74,7 +74,7 @@ const setProxyByProfile = async (val: ProxyProfile) => {
         <a-divider>
           <a-space>
             <a-typography-text disabled style="white-space: nowrap">{{
-              $t("nav_custome_profiles")
+              $t("nav_custom_profiles")
             }}</a-typography-text>
 
             <a-button
@@ -124,7 +124,7 @@ const setProxyByProfile = async (val: ProxyProfile) => {
   </a-layout>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .popup {
   display: flex;
   flex-direction: column;
@@ -145,53 +145,40 @@ const setProxyByProfile = async (val: ProxyProfile) => {
       max-height: 2.6em;
     }
   }
-}
 
-.settings {
-  padding: 0 0.5em;
-  text-align: center;
-  border-top: var(--color-border-1) 1px solid;
-  background-color: var(--color-bg-5);
+  .settings {
+    padding: 0 0.5em;
+    text-align: center;
+    border-top: var(--color-border-1) 1px solid;
+    background-color: var(--color-bg-5);
 
-  .arco-btn {
-    color: var(--color-text-2);
-  }
-}
-
-.profiles {
-  --indicator-color: rgb(var(--primary-5));
-  overflow-y: auto;
-
-  :deep(.arco-menu-inner) {
-    padding-left: 0;
-    padding-right: 0;
-  }
-
-  :deep(.arco-menu-selected) {
-    &::after {
-      content: "";
-      display: block;
-      height: 100%;
-      width: 4px;
-      background-color: var(--indicator-color);
-
-      position: absolute;
-      left: 0;
-      top: 0;
+    .arco-btn {
+      color: var(--color-text-2);
     }
   }
-}
 
-.custom-profiles {
-  .color-indicator {
-    display: inline-block;
-    width: 1em;
-    height: 1em;
-    background-color: var(--indicator-color);
+  .profiles {
+    --indicator-color: rgb(var(--primary-5));
+    overflow-y: auto;
 
-    border-radius: 0.5em;
-    vertical-align: middle;
-    box-shadow: 0px 1px 4px var(--color-border-3);
+    .arco-menu-inner {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .arco-menu-selected {
+      &::after {
+        content: "";
+        display: block;
+        height: 100%;
+        width: 4px;
+        background-color: var(--indicator-color);
+
+        position: absolute;
+        left: 0;
+        top: 0;
+      }
+    }
   }
 }
 </style>

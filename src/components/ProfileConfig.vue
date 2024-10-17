@@ -178,7 +178,7 @@ const saveProfileEvent = async () => {
     editing.value = false;
   } catch (e: any) {
     Notification.error({
-      content: Host.getMessage("config_feedback_error_occured", e.toString()),
+      content: Host.getMessage("config_feedback_error_occurred", e.toString()),
     });
   }
 };
@@ -193,7 +193,7 @@ const deleteProfileEvent = async () => {
     router.replace({ name: "preference" });
   } catch (e: any) {
     Notification.error({
-      content: Host.getMessage("config_feedback_error_occured", e.toString()),
+      content: Host.getMessage("config_feedback_error_occurred", e.toString()),
     });
   }
 };
@@ -392,7 +392,7 @@ onBeforeMount(() => {
           $t("config_section_auto_switch_rules")
         }}</a-divider>
 
-        <AutoSwitchInput />
+        <AutoSwitchInput :currentProfileID="profileConfig.profileID" />
       </template>
     </a-form>
   </a-page-header>
@@ -400,7 +400,7 @@ onBeforeMount(() => {
 
 <style lang="scss">
 .profile-name {
-  :deep(.arco-typography-edit-content) {
+  .arco-typography-edit-content {
     margin: 0 0.5em;
 
     .arco-input {

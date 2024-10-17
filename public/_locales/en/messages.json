@@ -10,9 +10,13 @@
   "nav_config": {
     "message": "Config"
   },
-  "nav_custome_profiles": {
+  "nav_custom_profiles": {
     "message": "Custom Profiles"
   },
+  "nav_system_profiles": {
+    "message": "Presets"
+  },
+
 
 
   "theme_light_mode": {
@@ -158,8 +162,11 @@
   "config_feedback_deleted": {
     "message": "The profile had been deleted"
   },
-  "config_feedback_error_occured": {
-    "message": "Error occured: $1"
+  "config_feedback_unknown_profile": {
+    "message": "Unknown profile"
+  },
+  "config_feedback_error_occurred": {
+    "message": "Error occurred: $1"
   },
 
 

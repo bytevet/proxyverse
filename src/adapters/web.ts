@@ -34,8 +34,13 @@ export class WebBrowser extends BaseAdapter {
   clearProxy(): Promise<void> {
     throw new Error("Method not implemented.");
   }
-  getProxySettings(): Promise<ProxySettingResultDetails> {
-    throw new Error("Method not implemented.");
+  async getProxySettings(): Promise<ProxySettingResultDetails> {
+    return {
+      levelOfControl: "controlled_by_this_extension",
+      value: {
+        mode: "system",
+      },
+    };
   }
 
   onProxyError(_: (error: ProxyErrorDetails) => void): void {

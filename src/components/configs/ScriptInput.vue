@@ -24,7 +24,7 @@ const model = defineModel<string>();
 </script>
 
 <template>
-  <div class="wrapper">
+  <div class="script-editor-wrapper">
     <div class="display">
       <highlightjs language="javascript" :code="model || ''" />
     </div>
@@ -38,7 +38,7 @@ const model = defineModel<string>();
   </div>
 </template>
 
-<style lang="scss" scoped>
+<style lang="scss">
 @mixin unify-editor {
   box-sizing: border-box;
   font-size: 1em;
@@ -55,12 +55,12 @@ const model = defineModel<string>();
   white-space: break-spaces;
 }
 
-.wrapper {
-  :deep(.display) {
+.script-editor-wrapper {
+  .display {
     @import "highlight.js/scss/stackoverflow-light.scss";
   }
 
-  body[arco-theme="dark"] & :deep(.display) {
+  body[arco-theme="dark"] & .display {
     @import "highlight.js/scss/stackoverflow-dark.scss";
   }
 
@@ -77,7 +77,7 @@ const model = defineModel<string>();
     border: 1px solid transparent;
 
     & > pre,
-    :deep(.hljs) {
+    .hljs {
       box-sizing: border-box;
       display: block;
       width: 100%;
@@ -86,7 +86,7 @@ const model = defineModel<string>();
       padding: 0;
     }
 
-    :deep(.hljs) {
+    .hljs {
       @include unify-editor;
     }
   }
@@ -94,7 +94,7 @@ const model = defineModel<string>();
   .editor {
     background-color: transparent !important;
 
-    :deep(.arco-textarea) {
+    .arco-textarea {
       @include unify-editor;
       color: transparent;
       cursor: text;

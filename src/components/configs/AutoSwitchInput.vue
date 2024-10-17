@@ -6,9 +6,12 @@ import {
   ProxyConfigAutoSwitch,
   SystemProfile,
 } from "@/services/profile";
-import { reactive, ref } from "vue";
+import ProfileSelector from "./ProfileSelector.vue";
+import { ref } from "vue";
 
-const props = defineProps<{}>();
+const props = defineProps<{
+  currentProfileID?: string;
+}>();
 
 const config = ref<ProxyConfigAutoSwitch>({
   rules: [
@@ -38,7 +41,7 @@ const deleteRule = (index: number) => {
   config.value.rules = config.value.rules.filter((_, i) => i !== index);
 };
 
-const onDragged = (rules: AutoSwitchRule[]) => {
+const onDragged = (rules: any) => {
   config.value.rules = rules;
 };
 
@@ -88,8 +91,9 @@ const columns = [
   <a-table
     :columns="columns"
     :data="config.rules"
-    @change="onDragged as any"
-    :draggable="{ type: 'handle', width: 40 }"
+    :pagination="false"
+    @change="onDragged"
+    :draggable="{ type: 'handle' }"
   >
     <template #type="{ record }: { record: AutoSwitchRule }">
       <a-select :options="autoSwitchTypes" v-model="record.type" />
@@ -97,6 +101,13 @@ const columns = [
 
     <template #condition="{ record }: { record: AutoSwitchRule }">
       <a-input v-model="record.condition" />
+    </template>
+
+    <template #profile="{ record }: { record: AutoSwitchRule }">
+      <ProfileSelector
+        v-model="record.profileID"
+        :currentProfileID="props.currentProfileID"
+      />
     </template>
 
     <template
@@ -146,9 +157,10 @@ const columns = [
               Host.getMessage("config_section_auto_switch_default_profile")
             }}</a-typography-text
           >
-          <a-select
-            :options="autoSwitchTypes"
+          <!-- @TODO: filter out current profile ID -->
+          <ProfileSelector
             v-model="config.defaultProfileID"
+            :currentProfileID="props.currentProfileID"
           />
         </a-space>
       </div>

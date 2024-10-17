@@ -101,7 +101,7 @@ onMounted(async () => {
   </a-layout>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .config-layout {
   background-color: var(--color-bg-1);
 
@@ -161,7 +161,7 @@ onMounted(async () => {
     background-color: var(--indicator-color);
 
     border-radius: 0.5em;
-    vertical-align: middle;
+    vertical-align: top;
     box-shadow: 0px 1px 4px var(--color-border-3);
   }
 

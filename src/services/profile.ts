@@ -70,13 +70,13 @@ export const SystemProfile: Record<string, ProxyProfile> = {
   DIRECT: {
     profileID: "direct",
     color: "#7ad39e",
-    profileName: "DIRECT",
+    profileName: "Direct",
     proxyType: "direct",
   },
   SYSTEM: {
     profileID: "system",
     color: "#0000",
-    profileName: "", // no name needed for `system`
+    profileName: "System",
     proxyType: "system",
   },
 };
