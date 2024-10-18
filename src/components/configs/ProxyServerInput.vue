@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref, watch } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import { ProxyServer } from "../../services/profile";
 import { Host } from "@/adapters";
 
@@ -23,6 +23,10 @@ if (props.allowDefault) {
 const proxyType = ref(model.value?.scheme || options[0]);
 const proxyHost = ref(model.value?.host || "");
 const proxyPort = ref(model.value?.port);
+
+const supportAuth = computed(() => {
+  return ["http", "https"].includes(proxyType.value);
+});
 
 const proxyAuth = reactive({
   visible: false,
@@ -138,11 +142,15 @@ const onClearAuth = () => {
 
       <a-tooltip
         v-if="proxyType != optionDirect && proxyType != optionDefault"
-        :content="$t('config_section_proxy_auth_tips')"
+        :content="
+          supportAuth
+            ? $t('config_section_proxy_auth_tips')
+            : $t('config_section_proxy_auth_unsupported')
+        "
       >
         <a-button
           :type="model?.auth === undefined ? 'secondary' : 'primary'"
-          :disabled="!['http', 'https', undefined].includes(model?.scheme)"
+          :disabled="!supportAuth"
           @click="
             () => {
               proxyAuth.visible = true;

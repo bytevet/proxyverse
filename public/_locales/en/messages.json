@@ -77,6 +77,9 @@
   "config_section_proxy_auth_tips": {
     "message": "Set username and password if your proxy requires authentication"
   },
+  "config_section_proxy_auth_unsupported": {
+    "message": "The current proxy type does not support authentication"
+  },
   "config_section_proxy_auth_title": {
     "message": "Proxy Authentication"
   },
