@@ -1,6 +1,6 @@
 {
   "app_desc": {
-    "message": "Uma ferramenta para ajudar você a gerenciar e alternar seus perfis de proxy"
+    "message": "Uma ferramenta para ajudá-lo a gerenciar e alternar seus perfis de proxy"
   },
 
 
@@ -8,40 +8,44 @@
     "message": "Preferência"
   },
   "nav_config": {
-    "message": "Config"
+    "message": "Configuração"
   },
   "nav_custom_profiles": {
-    "message": "Perfis Personalizados"
+    "message": "Perfis personalizados"
   },
+  "nav_system_profiles": {
+    "message": "Predefinições"
+  },
+
 
 
   "theme_light_mode": {
-    "message": "Modo claro"
+    "message": "Modo de luz"
   },
   "theme_dark_mode": {
     "message": "Modo escuro"
   },
   "theme_auto_mode": {
-    "message": "Siga o sistema"
+    "message": "Seguir o sistema"
   },
 
 
   "mode_auto_switch": {
-    "message": "Auto Switch"
+    "message": "Comutação automática"
   },
   "mode_direct": {
     "message": "Direto"
   },
   "mode_system": {
-    "message": "Usar Proxy do Sistema"
+    "message": "Usar proxy do sistema"
   },
   "mode_profile_create": {
-    "message": "Criar Novo Perfil"
+    "message": "Criar novo perfil"
   },
 
 
   "config_proxy_type": {
-    "message": "Tipo de Proxy"
+    "message": "Tipo de proxy"
   },
   "config_proxy_type_proxy": {
     "message": "Proxy"
@@ -49,14 +53,17 @@
   "config_proxy_type_pac": {
     "message": "Script PAC"
   },
+  "config_proxy_type_auto": {
+    "message": "Comutação automática"
+  },
   "config_proxy_type_default": {
-    "message": "Mesmo como o Padrão"
+    "message": "Igual ao padrão"
   },
   "config_section_proxy_server": {
-    "message": "Servidor Proxy"
+    "message": "Servidor proxy"
   },
   "config_section_proxy_server_default": {
-    "message": "Servidor Padrão"
+    "message": "Servidor padrão"
   },
   "config_section_proxy_server_http": {
     "message": "HTTP"
@@ -68,10 +75,13 @@
     "message": "FTP"
   },
   "config_section_proxy_auth_tips": {
-    "message": "Defina nome de usuário e senha se o seu proxy exigir autenticação"
+    "message": "Defina o nome de usuário e a senha se o proxy exigir autenticação"
+  },
+  "config_section_proxy_auth_unsupported": {
+    "message": "O tipo de proxy atual não é compatível com a autenticação"
   },
   "config_section_proxy_auth_title": {
-    "message": "Autenticação de Proxy"
+    "message": "Autenticação de proxy"
   },
   "config_section_proxy_auth_username": {
     "message": "Nome de usuário"
@@ -81,39 +91,82 @@
   },
 
   "config_section_bypass_list": {
-    "message": "Lista de Bypass"
+    "message": "Lista de desvios"
   },
   "config_section_advance": {
-    "message": "Configuração Avançada"
+    "message": "Configuração avançada"
   },
   "config_reference_bypass_list": {
-    "message": "Saiba mais sobre a lista de bypass."
+    "message": "Saiba mais sobre a lista de bypass"
+  },
+
+  "config_section_auto_switch_rules": {
+    "message": "Regras de comutação automática"
+  },
+  "config_section_auto_switch_type": {
+    "message": "Tipo de condição"
+  },
+  "config_section_auto_switch_type_domain": {
+    "message": "Domínio"
+  },
+  "config_section_auto_switch_type_url": {
+    "message": "URL"
+  },
+  "config_section_auto_switch_type_cidr": {
+    "message": "IP/CIDR"
+  },
+  "config_section_auto_switch_type_disabled": {
+    "message": "Ignorar temporariamente"
+  },
+  "config_section_auto_switch_condition": {
+    "message": "Condição"
+  },
+  "config_section_auto_switch_profile": {
+    "message": "Rota para"
+  },
+  "config_section_auto_switch_actions": {
+    "message": "Ações"
+  },
+  "config_section_auto_switch_add_rule": {
+    "message": "Adicionar regra"
+  },
+  "config_section_auto_switch_delete_rule": {
+    "message": "Excluir regra atual"
+  },
+  "config_section_auto_switch_duplicate_rule": {
+    "message": "Duplicar regra atual"
+  },
+  "config_section_auto_switch_default_profile": {
+    "message": "Perfil padrão"
   },
 
   "config_action_edit": {
     "message": "Editar"
   },
   "config_action_delete": {
-    "message": "Excluir Perfil"
+    "message": "Excluir perfil"
   },
   "config_action_delete_double_confirm": {
-    "message": "Você tem certeza de que deseja excluir o perfil atual"
+    "message": "Tem certeza de que deseja excluir o perfil atual?"
   },
   "config_action_save": {
     "message": "Salvar"
   },
   "config_action_cancel": {
-    "message": "Descartar alteração"
+    "message": "Mudança de descarte"
   },
   "config_action_clear": {
-    "message": "Claro"
+    "message": "Limpo"
   },
 
   "config_feedback_saved": {
     "message": "O perfil foi salvo"
   },
   "config_feedback_deleted": {
-    "message": "O perfil foi deletado"
+    "message": "O perfil foi excluído"
+  },
+  "config_feedback_unknown_profile": {
+    "message": "Perfil desconhecido"
   },
   "config_feedback_error_occurred": {
     "message": "Ocorreu um erro: $1"
@@ -121,7 +174,7 @@
 
 
   "form_is_required": {
-    "message": "$1 é necessário."
+    "message": "$1 é necessário"
   },
 
   "_": {
