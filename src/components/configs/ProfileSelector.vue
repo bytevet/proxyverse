@@ -4,6 +4,7 @@ import { computed, onBeforeMount, ref } from "vue";
 
 const props = defineProps<{
   currentProfileID?: string; // exclude current profile to avoid recursive selection
+  disabled?: boolean;
 }>();
 
 const profileID = defineModel<string>();
@@ -45,7 +46,7 @@ onBeforeMount(() => {
 
 <template>
   <a-dropdown @select="handleSelect">
-    <a-button>
+    <a-button :disabled="disabled">
       <!-- current profile indicator -->
       <a-space
         v-if="selectedProfile"

@@ -7,6 +7,7 @@ import {
   toRaw,
   useTemplateRef,
   watch,
+  watchEffect,
 } from "vue";
 import { colors } from "@arco-design/web-vue/es/color-picker/colors";
 import ProxyServerInput from "./configs/ProxyServerInput.vue";
@@ -17,6 +18,7 @@ import {
   ProxyConfigMeta,
   ProxyConfigSimple,
   ProxyServer,
+  SystemProfile,
   deleteProfile,
   getProfile,
   saveProfile,
@@ -65,7 +67,13 @@ const profileConfig = reactive<
   },
 
   // auto switch part
-  rules: [],
+  rules: [
+    {
+      type: "domain",
+      condition: "example.com",
+      profileID: SystemProfile.SYSTEM.profileID,
+    },
+  ],
   defaultProfileID: "system",
 });
 
@@ -223,8 +231,10 @@ const loadProfile = async (profileID: string) => {
   }
 };
 
-onBeforeMount(() => {
-  props.profileID && loadProfile(props.profileID);
+watchEffect(async () => {
+  if (props.profileID) {
+    await loadProfile(props.profileID);
+  }
 });
 </script>
 
@@ -392,7 +402,10 @@ onBeforeMount(() => {
           $t("config_section_auto_switch_rules")
         }}</a-divider>
 
-        <AutoSwitchInput :currentProfileID="profileConfig.profileID" />
+        <AutoSwitchInput
+          :currentProfileID="profileConfig.profileID"
+          v-model="profileConfig"
+        />
       </template>
     </a-form>
   </a-page-header>

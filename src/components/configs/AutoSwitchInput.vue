@@ -7,22 +7,12 @@ import {
   SystemProfile,
 } from "@/services/profile";
 import ProfileSelector from "./ProfileSelector.vue";
-import { ref } from "vue";
 
 const props = defineProps<{
   currentProfileID?: string;
 }>();
 
-const config = ref<ProxyConfigAutoSwitch>({
-  rules: [
-    {
-      type: "domain",
-      condition: "example.com",
-      profileID: SystemProfile.SYSTEM.profileID,
-    },
-  ],
-  defaultProfileID: SystemProfile.SYSTEM.profileID,
-});
+const config = defineModel<ProxyConfigAutoSwitch>({ required: true });
 
 const newRule = (record?: AutoSwitchRule) => {
   if (record) {
@@ -100,13 +90,17 @@ const columns = [
     </template>
 
     <template #condition="{ record }: { record: AutoSwitchRule }">
-      <a-input v-model="record.condition" />
+      <a-input
+        v-model="record.condition"
+        :disabled="record.type === 'disabled'"
+      />
     </template>
 
     <template #profile="{ record }: { record: AutoSwitchRule }">
       <ProfileSelector
         v-model="record.profileID"
         :currentProfileID="props.currentProfileID"
+        :disabled="record.type === 'disabled'"
       />
     </template>
 

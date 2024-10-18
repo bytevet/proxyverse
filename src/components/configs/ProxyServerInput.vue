@@ -142,6 +142,7 @@ const onClearAuth = () => {
       >
         <a-button
           :type="model?.auth === undefined ? 'secondary' : 'primary'"
+          :disabled="!['http', 'https', undefined].includes(model?.scheme)"
           @click="
             () => {
               proxyAuth.visible = true;
