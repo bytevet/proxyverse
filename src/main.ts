@@ -4,6 +4,11 @@ import App from "./App.vue";
 import { router } from "./router";
 import { Host } from "./adapters";
 
+// Highlight.js
+import hljs from "highlight.js/lib/core";
+import javascript from "highlight.js/lib/languages/javascript";
+hljs.registerLanguage("javascript", javascript);
+
 const app = createApp(App);
 
 // i18n

@@ -11,8 +11,10 @@ import {
 import { colors } from "@arco-design/web-vue/es/color-picker/colors";
 import ProxyServerInput from "./configs/ProxyServerInput.vue";
 import AutoSwitchInput from "./configs/AutoSwitchInput.vue";
+import AutoSwitchPacPreview from "./configs/AutoSwitchPacPreview.vue";
 import ScriptInput from "./configs/ScriptInput.vue";
 import {
+  ProfileAuthSwitch,
   ProxyConfigAutoSwitch,
   ProxyConfigMeta,
   ProxyConfigSimple,
@@ -70,7 +72,7 @@ const profileConfig = reactive<
     {
       type: "domain",
       condition: "example.com",
-      profileID: SystemProfile.SYSTEM.profileID,
+      profileID: SystemProfile.DIRECT.profileID,
     },
     {
       type: "url",
@@ -78,7 +80,7 @@ const profileConfig = reactive<
       profileID: SystemProfile.DIRECT.profileID,
     },
   ],
-  defaultProfileID: "system",
+  defaultProfileID: SystemProfile.DIRECT.profileID,
 });
 
 const showAdvanceConfig = ref(false);
@@ -406,10 +408,17 @@ watchEffect(async () => {
           $t("config_section_auto_switch_rules")
         }}</a-divider>
 
-        <AutoSwitchInput
-          :currentProfileID="profileConfig.profileID"
-          v-model="profileConfig"
-        />
+        <a-space direction="vertical">
+          <AutoSwitchInput
+            :currentProfileID="profileConfig.profileID"
+            v-model="profileConfig"
+          />
+
+          <AutoSwitchPacPreview
+            v-if="profileConfig.proxyType == 'auto'"
+            v-model:model-value="(profileConfig as ProfileAuthSwitch)"
+          />
+        </a-space>
       </template>
     </a-form>
   </a-page-header>

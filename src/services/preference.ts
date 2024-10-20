@@ -45,10 +45,6 @@ export async function currentDarkMode(): Promise<
 }
 
 export async function changeDarkMode(newMode: DarkMode) {
-  //   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-  //     const newColorScheme = event.matches ? "dark" : "light";
-  // });
-
   await Host.set<DarkMode>(keyDarkMode, newMode);
 
   if (newMode == DarkMode.Default) {

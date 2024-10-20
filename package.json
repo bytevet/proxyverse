@@ -7,7 +7,6 @@
     "dev": "vite",
     "test": "vitest",
     "coverage": "vitest run --coverage",
-    "build:test": "vue-tsc && vite build",
     "build": "vue-tsc && vite build",
     "dist": "rm -f dist.zip && cd ./dist/ && zip -r ../dist.zip ./",
     "preview": "vite preview"
@@ -17,6 +16,7 @@
   },
   "dependencies": {
     "@highlightjs/vue-plugin": "^2.1.0",
+    "@vueuse/core": "^11.1.0",
     "escodegen": "^2.1.0",
     "esprima": "^4.0.1",
     "ipaddr.js": "^2.2.0",

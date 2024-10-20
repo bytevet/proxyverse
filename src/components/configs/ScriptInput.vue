@@ -1,10 +1,6 @@
 <script setup lang="ts">
-import hljs from "highlight.js/lib/core";
-import javascript from "highlight.js/lib/languages/javascript";
 import hljsVuePlugin from "@highlightjs/vue-plugin";
-
 const highlightjs = hljsVuePlugin.component;
-hljs.registerLanguage("javascript", javascript);
 
 const props = withDefaults(
   defineProps<{
@@ -25,7 +21,7 @@ const model = defineModel<string>();
 
 <template>
   <div class="script-editor-wrapper">
-    <div class="display">
+    <div class="script-display">
       <highlightjs language="javascript" :code="model || ''" />
     </div>
 
@@ -55,19 +51,33 @@ const model = defineModel<string>();
   white-space: break-spaces;
 }
 
+.script-display {
+  @import "highlight.js/scss/stackoverflow-light.scss";
+
+  & > pre,
+  .hljs {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .hljs {
+    @include unify-editor;
+  }
+}
+
+body[arco-theme="dark"] .script-display {
+  @import "highlight.js/scss/stackoverflow-dark.scss";
+}
+
 .script-editor-wrapper {
-  .display {
-    @import "highlight.js/scss/stackoverflow-light.scss";
-  }
-
-  body[arco-theme="dark"] & .display {
-    @import "highlight.js/scss/stackoverflow-dark.scss";
-  }
-
   position: relative;
   flex: 1;
 
-  .display {
+  .script-display {
     position: absolute;
     box-sizing: border-box;
     width: 100%;
@@ -75,20 +85,6 @@ const model = defineModel<string>();
     left: 0;
     top: 0;
     border: 1px solid transparent;
-
-    & > pre,
-    .hljs {
-      box-sizing: border-box;
-      display: block;
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      padding: 0;
-    }
-
-    .hljs {
-      @include unify-editor;
-    }
   }
 
   .editor {

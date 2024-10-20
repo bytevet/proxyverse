@@ -139,6 +139,9 @@
   "config_section_auto_switch_default_profile": {
     "message": "Default Profile"
   },
+  "config_section_auto_switch_pac_preview": {
+    "message": "Preview PAC Script"
+  },
 
   "config_action_edit": {
     "message": "Edit"
@@ -161,6 +164,9 @@
 
   "config_feedback_saved": {
     "message": "The profile had been saved"
+  },
+  "config_feedback_copied": {
+    "message": "Copied"
   },
   "config_feedback_deleted": {
     "message": "The profile had been deleted"

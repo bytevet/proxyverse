@@ -14,6 +14,19 @@ const props = defineProps<{
 
 const config = defineModel<ProxyConfigAutoSwitch>({ required: true });
 
+const getPlaceholder = (type: AutoSwitchType) => {
+  switch (type) {
+    case "domain":
+      return "*.example.com";
+    case "url":
+      return "http://example.com/api/*";
+    case "cidr":
+      return "192.168.1.1/24";
+    default:
+      return "";
+  }
+};
+
 const newRule = (record?: AutoSwitchRule) => {
   if (record) {
     config.value.rules.push(Object.assign({}, record));
@@ -22,7 +35,7 @@ const newRule = (record?: AutoSwitchRule) => {
 
   config.value.rules.push({
     type: "domain",
-    condition: "*.example.com",
+    condition: "",
     profileID: SystemProfile.DIRECT.profileID,
   });
 };
@@ -92,6 +105,7 @@ const columns = [
     <template #condition="{ record }: { record: AutoSwitchRule }">
       <a-input
         v-model="record.condition"
+        :placeholder="getPlaceholder(record.type)"
         :disabled="record.type === 'disabled'"
       />
     </template>
@@ -151,7 +165,6 @@ const columns = [
               Host.getMessage("config_section_auto_switch_default_profile")
             }}</a-typography-text
           >
-          <!-- @TODO: filter out current profile ID -->
           <ProfileSelector
             v-model="config.defaultProfileID"
             :currentProfileID="props.currentProfileID"
