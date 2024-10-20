@@ -73,7 +73,7 @@ export const SystemProfile: Record<string, ProxyProfile> = {
   SYSTEM: {
     profileID: "system",
     color: "#0000",
-    profileName: "System",
+    profileName: "", // should be empty
     proxyType: "system",
   },
 };
