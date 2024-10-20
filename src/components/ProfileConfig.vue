@@ -27,6 +27,7 @@ import {
 import { FieldRule, Notification } from "@arco-design/web-vue";
 import { useRouter } from "vue-router";
 import { Host, PacScript } from "@/adapters";
+import { refreshProxy } from "@/services/proxy";
 
 const router = useRouter();
 const props = defineProps<{
@@ -131,7 +132,6 @@ const proxyServerFieldRule = (
     type: "object",
     required: required,
     validator(value, callback) {
-      console.log(value);
       if (value == undefined || value.scheme == "direct") {
         return;
       }
@@ -182,6 +182,9 @@ const saveProfileEvent = async () => {
       content: Host.getMessage("config_feedback_saved"),
     });
 
+    // need to overwrite the current proxy settings
+    await refreshProxy();
+
     if (newProfileMode) {
       router.replace({
         name: "profile.custom",
@@ -189,6 +192,7 @@ const saveProfileEvent = async () => {
       });
       return;
     }
+
     editing.value = false;
   } catch (e: any) {
     Notification.error({

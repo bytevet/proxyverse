@@ -63,7 +63,6 @@ export class ProfileConverter {
    * @returns
    */
   async toClosure() {
-    console.log("toClosure", this.profile.profileID);
     const stmts = await this.genStatements();
     stmts.push(
       PACScriptHelper.newReturnStatement(

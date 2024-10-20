@@ -67,6 +67,27 @@ export async function setProxy(val: ProxyProfile) {
   await Host.set<ProxyProfile>(keyActiveProfile, val);
 }
 
+/**
+ * Refresh the current proxy setting. This is useful when the proxy setting is changed by user.
+ * @returns
+ */
+export async function refreshProxy() {
+  const current = await getCurrentProxySetting();
+
+  // if it's not controlled by this extension, then do nothing
+  if (!current.activeProfile) {
+    return;
+  }
+
+  // if it's preset profiles, then do nothing
+  if (current.activeProfile.proxyType in ["system", "direct"]) {
+    return;
+  }
+
+  const profile = new ProfileConverter(current.activeProfile, getProfile);
+  await Host.setProxy(await profile.toProxyConfig());
+}
+
 export async function previewAutoSwitchPac(val: ProfileAuthSwitch) {
   const profile = new ProfileConverter(val, getProfile);
   return await profile.toPAC();
