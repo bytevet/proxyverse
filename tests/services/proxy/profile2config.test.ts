@@ -28,6 +28,75 @@ const profiles: Record<string, ProxyProfile> = {
     },
     pacScript: {},
   },
+
+  pacProxy: {
+    profileID: "pacProxy",
+    color: "",
+    profileName: "",
+    proxyType: "pac",
+    proxyRules: {
+      default: {
+        scheme: "http",
+        host: "",
+      },
+      bypassList: [],
+    },
+    pacScript: {
+      data: "function FindProxyForURL(url, host) { return 'DIRECT'; }",
+    },
+  },
+
+  autoProxy: {
+    profileID: "autoProxy",
+    color: "",
+    profileName: "",
+    proxyType: "auto",
+    rules: [
+      {
+        type: "domain",
+        condition: "*.example.com",
+        profileID: "simpleProxy",
+      },
+      {
+        type: "url",
+        condition: "http://example.com/api/*",
+        profileID: "pacProxy",
+      },
+      {
+        type: "cidr",
+        condition: "192.168.10.1/24",
+        profileID: "simpleProxy",
+      },
+      {
+        type: "domain",
+        condition: "*.404.com",
+        profileID: "non-exists",
+      },
+    ],
+    defaultProfileID: "direct",
+  },
+
+  direct: {
+    profileID: "direct",
+    color: "",
+    profileName: "",
+    proxyType: "direct",
+  },
+
+  autoProxy2: {
+    profileID: "autoProxy2",
+    color: "",
+    profileName: "",
+    proxyType: "auto",
+    rules: [
+      {
+        type: "domain",
+        condition: "*.example.com",
+        profileID: "autoProxy",
+      },
+    ],
+    defaultProfileID: "direct",
+  },
 };
 
 describe("testing generating ProxyConfig for direct and system", () => {
@@ -54,5 +123,47 @@ describe("testing bypass list", () => {
     expect(cfg.pacScript?.data).toMatch(
       /.*?isInNet\(host, 'fefe:13::abc', 'ffff:ffff:8000:0:0:0:0:0'\).*?/
     );
+  });
+});
+
+describe("testing auto switch profile", () => {
+  test("auto switch profile", async () => {
+    const profile = new ProfileConverter(profiles.autoProxy, async (id) => {
+      return profiles[id];
+    });
+    const cfg = await profile.toProxyConfig();
+    expect(cfg.mode).toBe("pac_script");
+
+    expect(cfg.pacScript?.data).toContain(`
+register('pacProxy', function () {
+    function FindProxyForURL(url, host) {
+        return 'DIRECT';
+    }
+    return FindProxyForURL;
+}());`);
+
+    expect(cfg.pacScript?.data).toContain(`
+    if (isInNet(host, '192.168.10.1', '255.255.255.0')) {
+        return profiles['simpleProxy'](url, host);
+    }`);
+
+    expect(cfg.pacScript?.data).toContain(
+      `alert('Profile non-exists not found, skipped');`
+    );
+    expect(cfg.pacScript?.data).toContain(
+      `return profiles['direct'](url, host);`
+    );
+  });
+  test("nested auto switch profile", async () => {
+    const profile = new ProfileConverter(profiles.autoProxy2, async (id) => {
+      return profiles[id];
+    });
+    const cfg = await profile.toProxyConfig();
+    expect(cfg.mode).toBe("pac_script");
+
+    expect(cfg.pacScript?.data).toContain(`
+    if (shExpMatch(host, '*.example.com')) {
+        return profiles['autoProxy'](url, host);
+    }`);
   });
 });

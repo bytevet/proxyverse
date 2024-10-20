@@ -173,13 +173,14 @@ export class PACScriptHelper {
 
   static newMemberExpression(
     object: Expression,
-    property: Expression
+    property: Expression,
+    computed: boolean = false
   ): MemberExpression {
     return {
       type: "MemberExpression",
       object,
       property,
-      computed: false,
+      computed,
       optional: false,
     };
   }

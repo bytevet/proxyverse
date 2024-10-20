@@ -1,7 +1,11 @@
 import { generate as generateJS } from "escodegen";
-
-import { Expression, Program, Statement } from "estree";
-import { ProfileAuthSwitch, ProxyProfile, ProxyServer } from "../profile";
+import { Program, Statement } from "estree";
+import {
+  AutoSwitchRule,
+  ProfileAuthSwitch,
+  ProxyProfile,
+  ProxyServer,
+} from "../profile";
 import { IPv4, IPv6, isValidCIDR, parseCIDR } from "ipaddr.js";
 import {
   newProxyString,
@@ -59,6 +63,7 @@ export class ProfileConverter {
    * @returns
    */
   async toClosure() {
+    console.log("toClosure", this.profile.profileID);
     const stmts = await this.genStatements();
     stmts.push(
       PACScriptHelper.newReturnStatement(
@@ -143,12 +148,43 @@ export class ProfileConverter {
       throw new Error("this function should only be called for auto profile");
     }
 
-    const ret = await this.prepareAutoProfilePrecedence(this.profile);
+    const { stmt, loadedProfiles } = await this.prepareAutoProfilePrecedence(
+      this.profile
+    );
     const body: Statement[] = [];
 
-    // TODO: implement auto profile
+    // rules
+    this.profile.rules.forEach((rule) => {
+      switch (rule.type) {
+        case "disabled":
+          return; // skipped
+        default:
+          if (loadedProfiles.has(rule.profileID)) {
+            return body.push(this.genAutoProfileRule(rule));
+          }
+      }
 
-    ret.push(
+      // if a dependent profile is not loaded, skip it, and add some alerts
+      body.push(this.genAutoProfileMissingProfileAlert(rule.profileID));
+    });
+
+    // default profile
+    if (loadedProfiles.has(this.profile.defaultProfileID)) {
+      body.push(
+        PACScriptHelper.newReturnStatement(
+          this.genAutoProfileCallExpression(this.profile.defaultProfileID)
+        )
+      );
+    } else {
+      body.push(
+        this.genAutoProfileMissingProfileAlert(this.profile.defaultProfileID),
+        PACScriptHelper.newReturnStatement(
+          PACScriptHelper.newSimpleLiteral("DIRECT") // fallback to direct
+        )
+      );
+    }
+
+    stmt.push(
       PACScriptHelper.newFunctionDeclaration(
         "FindProxyForURL",
         ["url", "host"],
@@ -156,11 +192,115 @@ export class ProfileConverter {
       )
     );
 
-    return ret;
+    return stmt;
+  }
+
+  private genAutoProfileRule(rule: AutoSwitchRule): Statement {
+    switch (rule.type) {
+      case "domain":
+        return PACScriptHelper.newIfStatement(
+          PACScriptHelper.newCallExpression(
+            PACScriptHelper.newIdentifier("shExpMatch"),
+            [
+              PACScriptHelper.newIdentifier("host"),
+              PACScriptHelper.newSimpleLiteral(rule.condition),
+            ]
+          ),
+          [
+            PACScriptHelper.newReturnStatement(
+              this.genAutoProfileCallExpression(rule.profileID)
+            ),
+          ]
+        );
+
+      case "url":
+        return PACScriptHelper.newIfStatement(
+          PACScriptHelper.newCallExpression(
+            PACScriptHelper.newIdentifier("shExpMatch"),
+            [
+              PACScriptHelper.newIdentifier("url"),
+              PACScriptHelper.newSimpleLiteral(rule.condition),
+            ]
+          ),
+          [
+            PACScriptHelper.newReturnStatement(
+              this.genAutoProfileCallExpression(rule.profileID)
+            ),
+          ]
+        );
+
+      case "cidr":
+        // if it's a CIDR
+        if (isValidCIDR(rule.condition)) {
+          try {
+            const [ip, maskPrefixLen] = parseCIDR(rule.condition);
+            let mask = (
+              ip.kind() == "ipv4" ? IPv4 : IPv6
+            ).subnetMaskFromPrefixLength(maskPrefixLen);
+
+            return PACScriptHelper.newIfStatement(
+              PACScriptHelper.newCallExpression(
+                PACScriptHelper.newIdentifier("isInNet"),
+                [
+                  PACScriptHelper.newIdentifier("host"),
+                  PACScriptHelper.newSimpleLiteral(ip.toString()),
+                  PACScriptHelper.newSimpleLiteral(mask.toNormalizedString()),
+                ]
+              ),
+              [
+                PACScriptHelper.newReturnStatement(
+                  this.genAutoProfileCallExpression(rule.profileID)
+                ),
+              ]
+            );
+          } catch (e) {
+            console.error(e);
+          }
+        }
+    }
+
+    return PACScriptHelper.newExpressionStatement(
+      PACScriptHelper.newCallExpression(
+        PACScriptHelper.newIdentifier("alert"),
+        [
+          PACScriptHelper.newSimpleLiteral(
+            `Invalid condition ${rule.type}: ${rule.condition}, skipped`
+          ),
+        ]
+      )
+    );
+  }
+
+  private genAutoProfileCallExpression(profileID: string) {
+    return PACScriptHelper.newCallExpression(
+      PACScriptHelper.newMemberExpression(
+        PACScriptHelper.newIdentifier("profiles"),
+        PACScriptHelper.newSimpleLiteral(profileID),
+        true
+      ),
+      [
+        PACScriptHelper.newIdentifier("url"),
+        PACScriptHelper.newIdentifier("host"),
+      ]
+    );
+  }
+
+  private genAutoProfileMissingProfileAlert(profileID: string) {
+    return PACScriptHelper.newExpressionStatement(
+      PACScriptHelper.newCallExpression(
+        PACScriptHelper.newIdentifier("alert"),
+        [
+          PACScriptHelper.newSimpleLiteral(
+            `Profile ${profileID} not found, skipped`
+          ),
+        ]
+      )
+    );
   }
 
   private async prepareAutoProfilePrecedence(profile: ProfileAuthSwitch) {
-    const ret: Statement[] = [
+    const loadedProfiles = new Set<string>();
+    const stmt: Statement[] = [
       // var profiles = profiles || {};
       PACScriptHelper.newVariableDeclaration(
         "profiles",
@@ -185,7 +325,8 @@ export class ProfileConverter {
               "=",
               PACScriptHelper.newMemberExpression(
                 PACScriptHelper.newIdentifier("profiles"),
-                PACScriptHelper.newIdentifier("profileID")
+                PACScriptHelper.newIdentifier("profileID"),
+                true
               ),
               PACScriptHelper.newIdentifier("funcFindProxyForURL")
             )
@@ -196,16 +337,22 @@ export class ProfileConverter {
 
     // register all profiles
     const profileIDs = [
-      profile.profileID,
+      profile.defaultProfileID,
       ...profile.rules.map((r) => r.profileID),
     ];
-    profileIDs.forEach(async (profileID) => {
-      const profile = await this.loadProfile(profileID);
-      if (!profile) {
-        return;
+    for (let profileID of profileIDs) {
+      if (loadedProfiles.has(profileID)) {
+        continue;
       }
 
-      ret.push(
+      const profile = await this.loadProfile(profileID);
+      if (!profile) {
+        continue;
+      }
+
+      loadedProfiles.add(profileID);
+
+      stmt.push(
         PACScriptHelper.newExpressionStatement(
           PACScriptHelper.newCallExpression(
             PACScriptHelper.newIdentifier("register"),
@@ -216,15 +363,19 @@ export class ProfileConverter {
           )
         )
       );
-    });
+    }
 
-    return ret;
+    return { stmt, loadedProfiles };
   }
 
   private async loadProfile(
     profileID: string
   ): Promise<ProfileConverter | undefined> {
-    const profile = this.profileLoader && (await this.profileLoader(profileID));
+    if (!this.profileLoader) {
+      return;
+    }
+
+    const profile = await this.profileLoader(profileID);
     if (!profile) {
       return;
     }
