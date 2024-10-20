@@ -43,15 +43,6 @@ export async function getCurrentProxySetting() {
   return await wrapProxySetting(setting);
 }
 
-export function onCurrentProxySettingChanged(
-  cb: (setting: ProxySetting) => void
-) {
-  Host.onProxyChanged(async (setting) => {
-    const ret = await wrapProxySetting(setting);
-    cb(ret);
-  });
-}
-
 export async function setProxy(val: ProxyProfile) {
   switch (val.proxyType) {
     case "system":
