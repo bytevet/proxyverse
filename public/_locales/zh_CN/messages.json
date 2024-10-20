@@ -10,9 +10,13 @@
   "nav_config": {
     "message": "配置"
   },
-  "nav_custome_profiles": {
+  "nav_custom_profiles": {
     "message": "自定义配置文件"
   },
+  "nav_system_profiles": {
+    "message": "预设"
+  },
+
 
 
   "theme_light_mode": {
@@ -49,6 +53,9 @@
   "config_proxy_type_pac": {
     "message": "PAC 脚本"
   },
+  "config_proxy_type_auto": {
+    "message": "自动切换"
+  },
   "config_proxy_type_default": {
     "message": "默认"
   },
@@ -70,6 +77,9 @@
   "config_section_proxy_auth_tips": {
     "message": "如果您的代理需要身份验证，请设置用户名和密码"
   },
+  "config_section_proxy_auth_unsupported": {
+    "message": "当前代理类型暂不支持鉴权"
+  },
   "config_section_proxy_auth_title": {
     "message": "代理认证信息"
   },
@@ -88,6 +98,49 @@
   },
   "config_reference_bypass_list": {
     "message": "详细了解 Bypass 列表"
+  },
+
+  "config_section_auto_switch_rules": {
+    "message": "自动分流规则"
+  },
+  "config_section_auto_switch_type": {
+    "message": "匹配类型"
+  },
+  "config_section_auto_switch_type_domain": {
+    "message": "域名"
+  },
+  "config_section_auto_switch_type_url": {
+    "message": "URL"
+  },
+  "config_section_auto_switch_type_cidr": {
+    "message": "IP/网段"
+  },
+  "config_section_auto_switch_type_disabled": {
+    "message": "临时禁用"
+  },
+  "config_section_auto_switch_condition": {
+    "message": "匹配规则"
+  },
+  "config_section_auto_switch_profile": {
+    "message": "分流至"
+  },
+  "config_section_auto_switch_actions": {
+    "message": "动作"
+  },
+  "config_section_auto_switch_add_rule": {
+    "message": "添加规则"
+  },
+  "config_section_auto_switch_delete_rule": {
+    "message": "删除当前规则"
+  },
+  "config_section_auto_switch_duplicate_rule": {
+    "message": "复制当前规则"
+  },
+  "config_section_auto_switch_default_profile": {
+    "message": "默认配置"
+  },
+  "config_section_auto_switch_pac_preview": {
+    "message": "预览 PAC 脚本"
   },
 
   "config_action_edit": {
@@ -112,10 +165,16 @@
   "config_feedback_saved": {
     "message": "配置已保存"
   },
+  "config_feedback_copied": {
+    "message": "已复制"
+  },
   "config_feedback_deleted": {
     "message": "配置已删除"
   },
-  "config_feedback_error_occured": {
+  "config_feedback_unknown_profile": {
+    "message": "未知配置"
+  },
+  "config_feedback_error_occurred": {
     "message": "发生错误： $1"
   },
 

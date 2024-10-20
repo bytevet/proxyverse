@@ -1,73 +1,88 @@
 <script setup lang="ts">
-import { type RouteLocationRaw, useRouter } from 'vue-router';
-import ThemeSwitcher from '../components/controls/ThemeSwitcher.vue';
-import { ProfilesStorage, listProfiles, SystemProfile, ProfileConfig } from '../models/profile';
-import { onMounted, ref, toRaw } from 'vue';
-import { setProxy, getCurrentProxySetting } from '../models/proxy';
-import { Message } from '@arco-design/web-vue';
-import { transify } from '../models/i18n';
+import { type RouteLocationRaw, useRouter } from "vue-router";
+import ThemeSwitcher from "../components/controls/ThemeSwitcher.vue";
+import {
+  ProfilesStorage,
+  listProfiles,
+  SystemProfile,
+  ProxyProfile,
+} from "../services/profile";
+import { onMounted, ref, toRaw } from "vue";
+import { setProxy, getCurrentProxySetting } from "../services/proxy";
+import { Message } from "@arco-design/web-vue";
+import { Host } from "@/adapters";
 
-const router = useRouter()
-const profiles = ref<ProfilesStorage>({})
-const selectedKeys = defineModel<string[]>()
+const router = useRouter();
+const profiles = ref<ProfilesStorage>({});
+const selectedKeys = defineModel<string[]>();
 
 onMounted(async () => {
   profiles.value = await listProfiles();
-  const proxy = await getCurrentProxySetting()
-  const profileID = proxy.activeProfile?.profileID
+  const proxy = await getCurrentProxySetting();
+  const profileID = proxy.activeProfile?.profileID;
   if (profileID) {
-    selectedKeys.value = [profileID]
+    selectedKeys.value = [profileID];
   }
-})
+});
 
 const jumpTo = (to: RouteLocationRaw) => {
-  const path = router.resolve(to).fullPath
-  window.open(`/index.html#${path}`, import.meta.url)
+  const path = router.resolve(to).fullPath;
+  window.open(`/index.html#${path}`, import.meta.url);
   // window.open(router.resolve(to).href, import.meta.url)
-}
+};
 
 // actions
-const setProxyByProfile = async (val: ProfileConfig) => {
+const setProxyByProfile = async (val: ProxyProfile) => {
   try {
-    console.log(toRaw(val))
-    await setProxy(toRaw(val))
-    selectedKeys.value = [typeof val == 'string' ? val : val.profileID]
+    console.log(toRaw(val));
+    await setProxy(toRaw(val));
+    selectedKeys.value = [typeof val == "string" ? val : val.profileID];
   } catch (e: any) {
     Message.error({
-      content: transify('config_feedback_error_occured', e.toString())
-    })
+      content: Host.getMessage("config_feedback_error_occurred", e.toString()),
+    });
   }
-}
+};
 </script>
 
 <template>
   <a-layout class="popup">
     <a-layout-header>
       <section class="logo">
-        <img src="/full-logo.svg">
+        <img src="/full-logo.svg" />
       </section>
     </a-layout-header>
     <a-layout-content class="profiles">
       <a-menu :selected-keys="selectedKeys">
-        <a-menu-item :key="SystemProfile.DIRECT.profileID"
+        <a-menu-item
+          :key="SystemProfile.DIRECT.profileID"
           @click.prevent="() => setProxyByProfile(SystemProfile.DIRECT)"
-          :style="{ '--indicator-color': SystemProfile.DIRECT.color }">
+          :style="{ '--indicator-color': SystemProfile.DIRECT.color }"
+        >
           <template #icon><icon-swap /></template>
           {{ $t("mode_direct") }}
         </a-menu-item>
-        <a-menu-item :key="SystemProfile.SYSTEM.profileID"
+        <a-menu-item
+          :key="SystemProfile.SYSTEM.profileID"
           @click.prevent="() => setProxyByProfile(SystemProfile.SYSTEM)"
-          :style="{ '--indicator-color': SystemProfile.SYSTEM.color }">
+          :style="{ '--indicator-color': SystemProfile.SYSTEM.color }"
+        >
           <template #icon><icon-desktop /></template>
           {{ $t("mode_system") }}
         </a-menu-item>
 
         <a-divider>
           <a-space>
-            <a-typography-text disabled style="white-space: nowrap;">{{ $t('nav_custome_profiles')
-              }}</a-typography-text>
+            <a-typography-text disabled style="white-space: nowrap">{{
+              $t("nav_custom_profiles")
+            }}</a-typography-text>
 
-            <a-button type="secondary" shape="circle" size="mini" @click="jumpTo({ name: 'profile.create' })">
+            <a-button
+              type="secondary"
+              shape="circle"
+              size="mini"
+              @click="jumpTo({ name: 'profile.create' })"
+            >
               <icon-plus />
             </a-button>
           </a-space>
@@ -78,8 +93,13 @@ const setProxyByProfile = async (val: ProfileConfig) => {
           {{ $t("mode_auto_switch") }}
         </a-menu-item>
 
-        <a-menu-item v-for="(item, _) in profiles" :key="item.profileID" @click.prevent="() => setProxyByProfile(item)"
-          class="custom-profiles" :style="{ '--indicator-color': item.color }">
+        <a-menu-item
+          v-for="(item, _) in profiles"
+          :key="item.profileID"
+          @click.prevent="() => setProxyByProfile(item)"
+          class="custom-profiles"
+          :style="{ '--indicator-color': item.color }"
+        >
           <template #icon><span class="color-indicator"></span></template>
           {{ item.profileName }}
         </a-menu-item>
@@ -92,7 +112,7 @@ const setProxyByProfile = async (val: ProfileConfig) => {
             <template #icon>
               <icon-tool size="medium" />
             </template>
-            {{ $t('nav_config') }}
+            {{ $t("nav_config") }}
           </a-button>
 
           <a-divider direction="vertical" />
@@ -104,7 +124,7 @@ const setProxyByProfile = async (val: ProfileConfig) => {
   </a-layout>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .popup {
   display: flex;
   flex-direction: column;
@@ -118,60 +138,47 @@ const setProxyByProfile = async (val: ProfileConfig) => {
     text-align: center;
     border-bottom: var(--color-border-1) 1px solid;
     background-color: var(--color-bg-4);
-    padding: .5em .4em .4em;
+    padding: 0.5em 0.4em 0.4em;
 
     img {
       max-width: 100%;
       max-height: 2.6em;
     }
   }
-}
 
-.settings {
-  padding: 0 .5em;
-  text-align: center;
-  border-top: var(--color-border-1) 1px solid;
-  background-color: var(--color-bg-5);
+  .settings {
+    padding: 0 0.5em;
+    text-align: center;
+    border-top: var(--color-border-1) 1px solid;
+    background-color: var(--color-bg-5);
 
-  .arco-btn {
-    color: var(--color-text-2);
-  }
-}
-
-.profiles {
-  --indicator-color: rgb(var(--primary-5));
-  overflow-y: auto;
-
-  :deep(.arco-menu-inner) {
-    padding-left: 0;
-    padding-right: 0;
-  }
-
-  :deep(.arco-menu-selected) {
-    &::after {
-      content: "";
-      display: block;
-      height: 100%;
-      width: 4px;
-      background-color: var(--indicator-color);
-
-      position: absolute;
-      left: 0;
-      top: 0;
+    .arco-btn {
+      color: var(--color-text-2);
     }
   }
-}
 
-.custom-profiles {
-  .color-indicator {
-    display: inline-block;
-    width: 1em;
-    height: 1em;
-    background-color: var(--indicator-color);
+  .profiles {
+    --indicator-color: rgb(var(--primary-5));
+    overflow-y: auto;
 
-    border-radius: .5em;
-    vertical-align: middle;
-    box-shadow: 0px 1px 4px var(--color-border-3);
+    .arco-menu-inner {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .arco-menu-selected {
+      &::after {
+        content: "";
+        display: block;
+        height: 100%;
+        width: 4px;
+        background-color: var(--indicator-color);
+
+        position: absolute;
+        left: 0;
+        top: 0;
+      }
+    }
   }
 }
 </style>

@@ -1,42 +1,56 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { DarkMode, changeDarkMode, getDarkModeSetting, currentDarkMode } from '../../models/preference';
+import { onMounted, ref } from "vue";
+import {
+  DarkMode,
+  changeDarkMode,
+  getDarkModeSetting,
+  currentDarkMode,
+} from "../../services/preference";
 
 const props = defineProps<{
-  size?: 'mini' | 'small' | 'medium' | 'large'
-}>()
+  size?: "mini" | "small" | "medium" | "large";
+}>();
 
-const darkmode = ref<DarkMode>(DarkMode.Dark)
+const darkmode = ref<DarkMode>(DarkMode.Dark);
 
 onMounted(async () => {
-  darkmode.value = await getDarkModeSetting()
-})
+  darkmode.value = await getDarkModeSetting();
+});
 
 const onDarkModeChanged = (newMode: DarkMode) => {
-  changeDarkMode(newMode)
-  darkmode.value = newMode
-}
+  changeDarkMode(newMode);
+  darkmode.value = newMode;
+};
 
 const toggleDarkMode = async () => {
-  console.log(await currentDarkMode())
+  console.log(await currentDarkMode());
   switch (await currentDarkMode()) {
     case DarkMode.Dark:
-      onDarkModeChanged(DarkMode.Light)
-      break
+      onDarkModeChanged(DarkMode.Light);
+      break;
 
     default:
-      onDarkModeChanged(DarkMode.Dark)
-      break
+      onDarkModeChanged(DarkMode.Dark);
+      break;
   }
-}
+};
 </script>
 
 <template>
   <a-dropdown trigger="hover" @select="onDarkModeChanged as any">
-    <a-button type="text" status="normal" style="color: var(--color-text-2)" @click="toggleDarkMode" :size="props.size">
+    <a-button
+      type="text"
+      status="normal"
+      style="color: var(--color-text-2)"
+      @click="toggleDarkMode"
+      :size="props.size"
+    >
       <template #icon>
         <icon-sun-fill v-if="darkmode == DarkMode.Light" :size="props.size" />
-        <icon-moon-fill v-else-if="darkmode == DarkMode.Dark" :size="props.size" />
+        <icon-moon-fill
+          v-else-if="darkmode == DarkMode.Dark"
+          :size="props.size"
+        />
         <icon-bg-colors v-else :size="props.size" />
       </template>
     </a-button>

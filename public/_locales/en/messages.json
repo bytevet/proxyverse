@@ -10,9 +10,13 @@
   "nav_config": {
     "message": "Config"
   },
-  "nav_custome_profiles": {
+  "nav_custom_profiles": {
     "message": "Custom Profiles"
   },
+  "nav_system_profiles": {
+    "message": "Presets"
+  },
+
 
 
   "theme_light_mode": {
@@ -49,6 +53,9 @@
   "config_proxy_type_pac": {
     "message": "PAC Script"
   },
+  "config_proxy_type_auto": {
+    "message": "Auto Switch"
+  },
   "config_proxy_type_default": {
     "message": "Same as Default"
   },
@@ -70,6 +77,9 @@
   "config_section_proxy_auth_tips": {
     "message": "Set username and password if your proxy requires authentication"
   },
+  "config_section_proxy_auth_unsupported": {
+    "message": "The current proxy type does not support authentication"
+  },
   "config_section_proxy_auth_title": {
     "message": "Proxy Authentication"
   },
@@ -88,6 +98,49 @@
   },
   "config_reference_bypass_list": {
     "message": "Learn more about bypass list"
+  },
+
+  "config_section_auto_switch_rules": {
+    "message": "Auto Switch Rules"
+  },
+  "config_section_auto_switch_type": {
+    "message": "Condition Type"
+  },
+  "config_section_auto_switch_type_domain": {
+    "message": "Domain"
+  },
+  "config_section_auto_switch_type_url": {
+    "message": "URL"
+  },
+  "config_section_auto_switch_type_cidr": {
+    "message": "IP/CIDR"
+  },
+  "config_section_auto_switch_type_disabled": {
+    "message": "Temporarily Skip"
+  },
+  "config_section_auto_switch_condition": {
+    "message": "Condition"
+  },
+  "config_section_auto_switch_profile": {
+    "message": "Route to"
+  },
+  "config_section_auto_switch_actions": {
+    "message": "Actions"
+  },
+  "config_section_auto_switch_add_rule": {
+    "message": "Add Rule"
+  },
+  "config_section_auto_switch_delete_rule": {
+    "message": "Delete Current Rule"
+  },
+  "config_section_auto_switch_duplicate_rule": {
+    "message": "Duplicate Current Rule"
+  },
+  "config_section_auto_switch_default_profile": {
+    "message": "Default Profile"
+  },
+  "config_section_auto_switch_pac_preview": {
+    "message": "Preview PAC Script"
   },
 
   "config_action_edit": {
@@ -112,11 +165,17 @@
   "config_feedback_saved": {
     "message": "The profile had been saved"
   },
+  "config_feedback_copied": {
+    "message": "Copied"
+  },
   "config_feedback_deleted": {
     "message": "The profile had been deleted"
   },
-  "config_feedback_error_occured": {
-    "message": "Error occured: $1"
+  "config_feedback_unknown_profile": {
+    "message": "Unknown profile"
+  },
+  "config_feedback_error_occurred": {
+    "message": "Error occurred: $1"
   },
 
 

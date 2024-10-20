@@ -1,37 +1,40 @@
 <script setup lang="ts">
-import hljs from 'highlight.js/lib/core';
-import javascript from 'highlight.js/lib/languages/javascript';
 import hljsVuePlugin from "@highlightjs/vue-plugin";
+const highlightjs = hljsVuePlugin.component;
 
-const highlightjs = hljsVuePlugin.component
-hljs.registerLanguage('javascript', javascript);
-
-const props = withDefaults(defineProps<{
-  placeholder?: string,
-  minRows?: number
-}>(), {
-  placeholder: `function FindProxyForURL(url, host) {
+const props = withDefaults(
+  defineProps<{
+    placeholder?: string;
+    minRows?: number;
+  }>(),
+  {
+    placeholder: `function FindProxyForURL(url, host) {
   // …
 }
 `,
-  minRows: 3,
-})
+    minRows: 3,
+  }
+);
 
-const model = defineModel<string>()
+const model = defineModel<string>();
 </script>
 
 <template>
-  <div class="wrapper">
-    <div class="display">
+  <div class="script-editor-wrapper">
+    <div class="script-display">
       <highlightjs language="javascript" :code="model || ''" />
     </div>
 
-    <a-textarea :placeholder="props.placeholder" class="editor" v-model="model" :auto-size="{ minRows: props.minRows }" />
+    <a-textarea
+      :placeholder="props.placeholder"
+      class="editor"
+      v-model="model"
+      :auto-size="{ minRows: props.minRows }"
+    />
   </div>
 </template>
 
-
-<style lang="scss" scoped>
+<style lang="scss">
 @mixin unify-editor {
   box-sizing: border-box;
   font-size: 1em;
@@ -48,19 +51,33 @@ const model = defineModel<string>()
   white-space: break-spaces;
 }
 
-.wrapper {
-  :deep(.display) {
-    @import 'highlight.js/scss/stackoverflow-light.scss';
+.script-display {
+  @import "highlight.js/scss/stackoverflow-light.scss";
+
+  & > pre,
+  .hljs {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
   }
 
-  body[arco-theme=dark] & :deep(.display) {
-    @import 'highlight.js/scss/stackoverflow-dark.scss';
+  .hljs {
+    @include unify-editor;
   }
+}
 
+body[arco-theme="dark"] .script-display {
+  @import "highlight.js/scss/stackoverflow-dark.scss";
+}
+
+.script-editor-wrapper {
   position: relative;
   flex: 1;
 
-  .display {
+  .script-display {
     position: absolute;
     box-sizing: border-box;
     width: 100%;
@@ -68,26 +85,12 @@ const model = defineModel<string>()
     left: 0;
     top: 0;
     border: 1px solid transparent;
-
-    &>pre,
-    :deep(.hljs) {
-      box-sizing: border-box;
-      display: block;
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      padding: 0;
-    }
-
-    :deep(.hljs) {
-      @include unify-editor;
-    }
   }
 
   .editor {
-    background: transparent;
+    background-color: transparent !important;
 
-    :deep(.arco-textarea) {
+    .arco-textarea {
       @include unify-editor;
       color: transparent;
       cursor: text;

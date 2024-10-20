@@ -1,42 +1,46 @@
 {
   "app_desc": {
-    "message": "一个帮助您管理和切换代理配置文件的工具"
+    "message": "一個協助您管理和切換代理設定檔的工具"
   },
 
 
   "nav_preference": {
-    "message": "偏好设置"
+    "message": "偏好設定"
   },
   "nav_config": {
-    "message": "配置"
+    "message": "設定"
   },
-  "nav_custome_profiles": {
-    "message": "自定义配置文件"
+  "nav_custom_profiles": {
+    "message": "自訂檔案"
   },
+  "nav_system_profiles": {
+    "message": "預設"
+  },
+
 
 
   "theme_light_mode": {
-    "message": "浅色模式"
+    "message": "日間模式"
   },
   "theme_dark_mode": {
-    "message": "暗黑模式"
+    "message": "黑暗模式"
   },
   "theme_auto_mode": {
-    "message": "跟随系统"
+    "message": "遵循系統"
   },
 
 
   "mode_auto_switch": {
-    "message": "自动切换"
+    "message": "自動切換"
   },
   "mode_direct": {
-    "message": "直接连接"
+    "message": "直通模式"
   },
   "mode_system": {
     "message": "使用系統代理"
   },
   "mode_profile_create": {
-    "message": "新建配置"
+    "message": "建立新的檔案"
   },
 
 
@@ -47,10 +51,13 @@
     "message": "代理"
   },
   "config_proxy_type_pac": {
-    "message": "PAC Script"
+    "message": "PAC 腳本"
+  },
+  "config_proxy_type_auto": {
+    "message": "自動切換"
   },
   "config_proxy_type_default": {
-    "message": "默认"
+    "message": "與預設值相同"
   },
   "config_section_proxy_server": {
     "message": "代理伺服器"
@@ -68,60 +75,112 @@
     "message": "FTP"
   },
   "config_section_proxy_auth_tips": {
-    "message": "設定使用者名稱和密碼，如果您的代理需要驗證"
+    "message": "如果您的代理需要驗證，請設定使用者名稱和密碼"
+  },
+  "config_section_proxy_auth_unsupported": {
+    "message": "當前的代理類型不支援認證"
   },
   "config_section_proxy_auth_title": {
-    "message": "代理认证信息"
+    "message": "代理認證"
   },
   "config_section_proxy_auth_username": {
-    "message": "用户名"
+    "message": "使用者名稱"
   },
   "config_section_proxy_auth_password": {
     "message": "密碼"
   },
 
   "config_section_bypass_list": {
-    "message": "Bypass 列表"
+    "message": "旁路清單"
   },
   "config_section_advance": {
     "message": "進階設定"
   },
   "config_reference_bypass_list": {
-    "message": "详细了解 Bypass 列表"
+    "message": "進一步瞭解旁路清單"
+  },
+
+  "config_section_auto_switch_rules": {
+    "message": "自動切換規則"
+  },
+  "config_section_auto_switch_type": {
+    "message": "條件類型"
+  },
+  "config_section_auto_switch_type_domain": {
+    "message": "網域名稱"
+  },
+  "config_section_auto_switch_type_url": {
+    "message": "URL"
+  },
+  "config_section_auto_switch_type_cidr": {
+    "message": "IP/CIDR"
+  },
+  "config_section_auto_switch_type_disabled": {
+    "message": "暫時略過"
+  },
+  "config_section_auto_switch_condition": {
+    "message": "條件定義"
+  },
+  "config_section_auto_switch_profile": {
+    "message": "要路由到的設定檔"
+  },
+  "config_section_auto_switch_actions": {
+    "message": "動作"
+  },
+  "config_section_auto_switch_add_rule": {
+    "message": "新增規則"
+  },
+  "config_section_auto_switch_delete_rule": {
+    "message": "刪除當前規則"
+  },
+  "config_section_auto_switch_duplicate_rule": {
+    "message": "重複當前規則"
+  },
+  "config_section_auto_switch_default_profile": {
+    "message": "預設檔案"
+  },
+  "config_section_auto_switch_pac_preview": {
+    "message": "預覽 PAC 腳本"
   },
 
   "config_action_edit": {
     "message": "編輯"
   },
   "config_action_delete": {
-    "message": "删除配置"
+    "message": "刪除檔案"
   },
   "config_action_delete_double_confirm": {
-    "message": "您确定要删除当前的配置文件吗？"
+    "message": "您確定要刪除目前的設定檔嗎？"
   },
   "config_action_save": {
-    "message": "保存"
+    "message": "儲存"
   },
   "config_action_cancel": {
-    "message": "放棄變更"
+    "message": "捨棄變更"
   },
   "config_action_clear": {
     "message": "清除"
   },
 
   "config_feedback_saved": {
-    "message": "配置已經被保存了"
+    "message": "檔案已儲存"
+  },
+  "config_feedback_copied": {
+    "message": "已複製"
   },
   "config_feedback_deleted": {
-    "message": "個人資料已被刪除"
+    "message": "檔案已刪除"
   },
-  "config_feedback_error_occured": {
-    "message": "發生錯誤：$1"
+  "config_feedback_unknown_profile": {
+    "message": "不明檔案"
+  },
+  "config_feedback_error_occurred": {
+    "message": "發生錯誤： $1"
   },
 
 
   "form_is_required": {
-    "message": "$1是必填项"
+    "message": "$1 是必需的"
   },
 
   "_": {
