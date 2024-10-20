@@ -90,10 +90,9 @@ jobs:
           path: ./release/
 
       - name: Upload to MS Edge
-        uses: wdzeng/edge-addon@v1
+        uses: wdzeng/edge-addon@v2
         with:
           product-id: 6fa97660-6c21-41e4-87e6-06a88509753f
           zip-path: ./release/crx.zip
           client-id: ${{ secrets.EDGE_CLIENT_ID }}
-          client-secret: ${{ secrets.EDGE_CLIENT_SECRET }}
-          access-token-url: ${{ secrets.EDGE_ACCESS_TOKEN_URL }}
+          api-key: ${{ secrets.EDGE_API_KEY }}
