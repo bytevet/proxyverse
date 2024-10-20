@@ -13,7 +13,6 @@ import {
   Literal,
   LogicalExpression,
   MemberExpression,
-  ModuleDeclaration,
   ObjectExpression,
   Pattern,
   Property,
