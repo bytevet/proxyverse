@@ -11,7 +11,7 @@ It's still in the early development stage, and more features are still on the w
 
 - [x] Basic profile switch support
 - [x] Support proxy authentication
-- [ ] Support auto switch rules
+- [x] Support auto switch rules
 - [x] Support more languages
 - [ ] Support customized preference
 - [ ] Support Safari
