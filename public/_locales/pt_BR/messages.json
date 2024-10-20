@@ -139,6 +139,9 @@
   "config_section_auto_switch_default_profile": {
     "message": "Perfil padrão"
   },
+  "config_section_auto_switch_pac_preview": {
+    "message": "Visualizar o PAC Script"
+  },
 
   "config_action_edit": {
     "message": "Editar"
@@ -161,6 +164,9 @@
 
   "config_feedback_saved": {
     "message": "O perfil foi salvo"
+  },
+  "config_feedback_copied": {
+    "message": "Copiado"
   },
   "config_feedback_deleted": {
     "message": "O perfil foi excluído"
