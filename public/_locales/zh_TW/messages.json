@@ -139,6 +139,9 @@
   "config_section_auto_switch_default_profile": {
     "message": "預設檔案"
   },
+  "config_section_auto_switch_pac_preview": {
+    "message": "預覽 PAC 腳本"
+  },
 
   "config_action_edit": {
     "message": "編輯"
@@ -161,6 +164,9 @@
 
   "config_feedback_saved": {
     "message": "檔案已儲存"
+  },
+  "config_feedback_copied": {
+    "message": "已複製"
   },
   "config_feedback_deleted": {
     "message": "檔案已刪除"

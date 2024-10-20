@@ -139,6 +139,9 @@
   "config_section_auto_switch_default_profile": {
     "message": "默认配置"
   },
+  "config_section_auto_switch_pac_preview": {
+    "message": "预览 PAC 脚本"
+  },
 
   "config_action_edit": {
     "message": "编辑"
@@ -161,6 +164,9 @@
 
   "config_feedback_saved": {
     "message": "配置已保存"
+  },
+  "config_feedback_copied": {
+    "message": "已复制"
   },
   "config_feedback_deleted": {
     "message": "配置已删除"
