@@ -72,6 +72,11 @@ const profileConfig = reactive<
       condition: "example.com",
       profileID: SystemProfile.SYSTEM.profileID,
     },
+    {
+      type: "url",
+      condition: "http://example.com/api/*",
+      profileID: SystemProfile.DIRECT.profileID,
+    },
   ],
   defaultProfileID: "system",
 });
