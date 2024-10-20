@@ -5,17 +5,13 @@ import {
   WebResponseDetails,
 } from "./adapters";
 import { setIndicator } from "./services/indicator";
-import {
-  getAuthInfos,
-  getCurrentProxySetting,
-  onCurrentProxySettingChanged,
-} from "./services/proxy";
+import { getAuthInfos, getCurrentProxySetting } from "./services/proxy";
 
 // indicator
 async function initIndicator() {
   await setIndicator(await getCurrentProxySetting());
-  onCurrentProxySettingChanged(async (proxy) => {
-    await setIndicator(proxy);
+  Host.onProxyChanged(async () => {
+    await setIndicator(await getCurrentProxySetting());
   });
 }
 
