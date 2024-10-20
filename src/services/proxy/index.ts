@@ -1,7 +1,12 @@
 import { Host } from "@/adapters";
-import { ProxyProfile, ProxyAuthInfo, SystemProfile } from "../profile";
-import { genSimpleProxyCfg } from "./proxyRules";
+import {
+  ProxyProfile,
+  ProxyAuthInfo,
+  SystemProfile,
+  getProfile,
+} from "../profile";
 import { ProxySettingResultDetails } from "@/adapters";
+import { ProfileConverter } from "./profile2config";
 
 export type ProxySetting = {
   activeProfile?: ProxyProfile;
@@ -52,10 +57,9 @@ export async function setProxy(val: ProxyProfile) {
       await Host.clearProxy();
       break;
 
-    case "direct":
-    case "proxy":
-    case "pac":
-      await Host.setProxy(genSimpleProxyCfg(val));
+    default:
+      const profile = new ProfileConverter(val, getProfile);
+      await Host.setProxy(await profile.toProxyConfig());
       break;
   }
 

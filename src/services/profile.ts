@@ -53,7 +53,7 @@ export type ProfileSimple = ProxyConfigMeta & {
   proxyType: "proxy" | "pac";
 } & ProxyConfigSimple;
 
-export type ProfilePresetPreset = ProxyConfigMeta & {
+export type ProfilePreset = ProxyConfigMeta & {
   proxyType: "system" | "direct";
 };
 
@@ -61,10 +61,7 @@ export type ProfileAuthSwitch = ProxyConfigMeta & {
   proxyType: "auto";
 } & ProxyConfigAutoSwitch;
 
-export type ProxyProfile =
-  | ProfileSimple
-  | ProfilePresetPreset
-  | ProfileAuthSwitch;
+export type ProxyProfile = ProfileSimple | ProfilePreset | ProfileAuthSwitch;
 
 export const SystemProfile: Record<string, ProxyProfile> = {
   DIRECT: {

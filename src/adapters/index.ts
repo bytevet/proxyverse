@@ -3,7 +3,7 @@ import { Chrome } from "./chrome";
 import { WebBrowser } from "./web";
 
 function chooseAdapter(): BaseAdapter {
-  if (chrome?.proxy) {
+  if (globalThis.chrome?.proxy) {
     return new Chrome();
   }
 
