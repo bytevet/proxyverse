@@ -73,18 +73,19 @@ export async function setProxy(val: ProxyProfile) {
  */
 export async function refreshProxy() {
   const current = await getCurrentProxySetting();
-
   // if it's not controlled by this extension, then do nothing
   if (!current.activeProfile) {
     return;
   }
 
+  const newProfile = await getProfile(current.activeProfile.profileID);
+
   // if it's preset profiles, then do nothing
-  if (current.activeProfile.proxyType in ["system", "direct"]) {
+  if (!newProfile || current.activeProfile.proxyType in ["system", "direct"]) {
     return;
   }
 
-  const profile = new ProfileConverter(current.activeProfile, getProfile);
+  const profile = new ProfileConverter(newProfile, getProfile);
   await Host.setProxy(await profile.toProxyConfig());
 }
 
