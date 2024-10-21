@@ -24,8 +24,29 @@ export class Firefox extends BaseAdapter {
   }
 
   async setProxy(cfg: ProxyConfig): Promise<void> {
+    const proxyCfg: browser.proxy.ProxyConfig = {};
+
+    switch (cfg.mode) {
+      case "direct":
+        proxyCfg.proxyType = "none";
+        break;
+      case "auto_detect":
+        proxyCfg.proxyType = "autoDetect";
+        break;
+      case "pac_script":
+        proxyCfg.proxyType = "autoConfig";
+        proxyCfg.autoConfigUrl =
+          cfg.pacScript?.url ||
+          "data:text/javascript," +
+            encodeURIComponent(cfg.pacScript?.data || "");
+        break;
+      case "system":
+        proxyCfg.proxyType = "system";
+        break;
+    }
+
     await browser.proxy.settings.set({
-      value: cfg,
+      value: proxyCfg,
       scope: "regular",
     });
   }

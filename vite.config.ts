@@ -40,6 +40,10 @@ export default defineConfig({
         manifest.version_name = getCRXVersion();
         manifest.background.service_worker = (entry as any).fileName;
 
+        // To support firefox
+        // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/background#browser_support
+        manifest.background.scripts = [(entry as any).fileName];
+
         this.emitFile({
           type: "asset",
           fileName: "manifest.json",

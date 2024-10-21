@@ -10,7 +10,18 @@ export type WebRequestErrorOccurredDetails =
   | chrome.webRequest.WebResponseDetails
   | browser.webRequest._OnErrorOccurredDetails;
 
-export type ProxyConfig = chrome.proxy.ProxyConfig;
+export type ProxyConfig = {
+  /** Optional. The proxy auto-config (PAC) script for this configuration. Use this for 'pac_script' mode. */
+  pacScript?: PacScript;
+  /**
+   * 'direct' = Never use a proxy
+   * 'auto_detect' = Auto detect proxy settings
+   * 'pac_script' = Use specified PAC script
+   * 'system' = Use system proxy settings
+   */
+  mode: "direct" | "auto_detect" | "pac_script" | "system";
+};
+
 export type ProxyErrorDetails = chrome.proxy.ErrorDetails | Error;
 export type ProxySettingResultDetails = {
   /**
