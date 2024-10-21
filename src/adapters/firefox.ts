@@ -1,4 +1,4 @@
-/// <reference types="@types/chrome" />
+/// <reference types="@types/firefox-webext-browser" />
 
 import {
   BaseAdapter,
@@ -11,45 +11,45 @@ import {
   WebRequestErrorOccurredDetails,
 } from "./base";
 
-export class Chrome extends BaseAdapter {
+export class Firefox extends BaseAdapter {
   async set<T>(key: string, val: T): Promise<void> {
-    return await chrome.storage.local.set({
+    return await browser.storage.local.set({
       [key]: val,
     });
   }
 
   async get<T>(key: string): Promise<T | null> {
-    const ret = await chrome.storage.local.get(key);
+    const ret = await browser.storage.local.get(key);
     return ret[key];
   }
 
   async setProxy(cfg: ProxyConfig): Promise<void> {
-    await chrome.proxy.settings.set({
+    await browser.proxy.settings.set({
       value: cfg,
       scope: "regular",
     });
   }
 
   async clearProxy(): Promise<void> {
-    await chrome.proxy.settings.clear({ scope: "regular" });
+    await browser.proxy.settings.clear({ scope: "regular" });
   }
 
   async getProxySettings(): Promise<ProxySettingResultDetails> {
-    return (await chrome.proxy.settings.get({})) as any;
+    return (await browser.proxy.settings.get({})) as any;
   }
 
   onProxyError(callback: (error: ProxyErrorDetails) => void): void {
-    chrome.proxy.onProxyError.addListener(callback);
+    browser.proxy.onError.addListener(callback);
   }
   onProxyChanged(callback: (setting: ProxySettingResultDetails) => void): void {
-    chrome.proxy.settings.onChange.addListener(callback);
+    browser.proxy.settings.onChange.addListener(callback);
   }
 
   async setBadge(text: string, color: string): Promise<void> {
-    await chrome.action.setBadgeText({
+    await browser.action.setBadgeText({
       text: text.trimStart().substring(0, 2),
     });
-    await chrome.action.setBadgeBackgroundColor({
+    await browser.action.setBadgeBackgroundColor({
       color: color,
     });
   }
@@ -60,7 +60,7 @@ export class Chrome extends BaseAdapter {
       callback?: (response: BlockingResponse) => void
     ) => void
   ): void {
-    chrome.webRequest.onAuthRequired.addListener(
+    browser.webRequest.onAuthRequired.addListener(
       callback,
       { urls: ["<all_urls>"] },
       ["asyncBlocking"]
@@ -70,7 +70,7 @@ export class Chrome extends BaseAdapter {
   onWebRequestCompleted(
     callback: (details: WebRequestCompletedDetails) => void
   ): void {
-    chrome.webRequest.onCompleted.addListener(callback, {
+    browser.webRequest.onCompleted.addListener(callback, {
       urls: ["<all_urls>"],
     });
   }
@@ -78,14 +78,14 @@ export class Chrome extends BaseAdapter {
   onWebRequestErrorOccurred(
     callback: (details: WebRequestErrorOccurredDetails) => void
   ): void {
-    chrome.webRequest.onErrorOccurred.addListener(callback, {
+    browser.webRequest.onErrorOccurred.addListener(callback, {
       urls: ["<all_urls>"],
     });
   }
   currentLocale(): string {
-    return chrome.i18n.getUILanguage();
+    return browser.i18n.getUILanguage();
   }
   getMessage(key: string, substitutions?: string | string[]): string {
-    return chrome.i18n.getMessage(key, substitutions);
+    return browser.i18n.getMessage(key, substitutions);
   }
 }
