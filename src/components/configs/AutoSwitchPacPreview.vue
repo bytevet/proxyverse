@@ -7,7 +7,9 @@ import { previewAutoSwitchPac } from "@/services/proxy";
 import hljsVuePlugin from "@highlightjs/vue-plugin";
 const highlightjs = hljsVuePlugin.component;
 
-const profile = defineModel<ProfileAuthSwitch>({ required: true });
+const { profile } = defineProps<{
+  profile: ProfileAuthSwitch;
+}>();
 
 const pacScript = ref<string>("");
 const loading = ref(false);
@@ -17,18 +19,18 @@ const { copy, copied } = useClipboard({ source: pacScript });
 const updatePacScript = async () => {
   loading.value = true;
   try {
-    pacScript.value = await previewAutoSwitchPac(profile.value);
+    pacScript.value = await previewAutoSwitchPac(profile);
   } catch (e) {
     console.error(e);
   }
   loading.value = false;
 };
 
-watchDebounced(profile, updatePacScript, {
-  debounce: 500,
-  maxWait: 1000,
+watchDebounced(() => profile, updatePacScript, {
   immediate: true,
   deep: true,
+  debounce: 500,
+  maxWait: 1000,
 });
 </script>
 

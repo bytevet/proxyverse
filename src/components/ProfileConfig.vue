@@ -420,7 +420,7 @@ watchEffect(async () => {
 
           <AutoSwitchPacPreview
             v-if="profileConfig.proxyType == 'auto'"
-            v-model:model-value="(profileConfig as ProfileAuthSwitch)"
+            :profile="(profileConfig as ProfileAuthSwitch)"
           />
         </a-space>
       </template>
