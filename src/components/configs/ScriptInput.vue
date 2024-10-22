@@ -35,6 +35,8 @@ const model = defineModel<string>();
 </template>
 
 <style lang="scss">
+@use "sass:meta";
+
 @mixin unify-editor {
   box-sizing: border-box;
   font-size: 1em;
@@ -52,7 +54,7 @@ const model = defineModel<string>();
 }
 
 .script-display {
-  @import "highlight.js/scss/stackoverflow-light.scss";
+  @include meta.load-css("highlight.js/scss/stackoverflow-light.scss");
 
   & > pre,
   .hljs {
@@ -70,7 +72,7 @@ const model = defineModel<string>();
 }
 
 body[arco-theme="dark"] .script-display {
-  @import "highlight.js/scss/stackoverflow-dark.scss";
+  @include meta.load-css("highlight.js/scss/stackoverflow-dark.scss");
 }
 
 .script-editor-wrapper {

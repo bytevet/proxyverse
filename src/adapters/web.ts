@@ -7,7 +7,8 @@ import {
   ProxyErrorDetails,
   ProxySettingResultDetails,
   WebAuthenticationChallengeDetails,
-  WebResponseDetails,
+  WebRequestCompletedDetails,
+  WebRequestErrorOccurredDetails,
 } from "./base";
 
 import i18nData from "@/../public/_locales/en/messages.json?raw";
@@ -61,10 +62,14 @@ export class WebBrowser extends BaseAdapter {
   ): void {
     throw new Error("Method not implemented.");
   }
-  onWebRequestCompleted(_: (details: WebResponseDetails) => void): void {
+  onWebRequestCompleted(
+    _: (details: WebRequestCompletedDetails) => void
+  ): void {
     throw new Error("Method not implemented.");
   }
-  onWebRequestErrorOccurred(_: (details: WebResponseDetails) => void): void {
+  onWebRequestErrorOccurred(
+    _: (details: WebRequestErrorOccurredDetails) => void
+  ): void {
     throw new Error("Method not implemented.");
   }
   currentLocale(): string {

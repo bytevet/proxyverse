@@ -1,10 +1,28 @@
 export type WebAuthenticationChallengeDetails =
-  chrome.webRequest.WebAuthenticationChallengeDetails;
+  | chrome.webRequest.WebAuthenticationChallengeDetails
+  | browser.webRequest._OnAuthRequiredDetails;
 export type BlockingResponse = chrome.webRequest.BlockingResponse;
-export type WebResponseDetails = chrome.webRequest.WebResponseDetails;
+export type WebRequestCompletedDetails =
+  | chrome.webRequest.WebResponseDetails
+  | browser.webRequest._OnCompletedDetails;
 
-export type ProxyConfig = chrome.proxy.ProxyConfig;
-export type ProxyErrorDetails = chrome.proxy.ErrorDetails;
+export type WebRequestErrorOccurredDetails =
+  | chrome.webRequest.WebResponseDetails
+  | browser.webRequest._OnErrorOccurredDetails;
+
+export type ProxyConfig = {
+  /** Optional. The proxy auto-config (PAC) script for this configuration. Use this for 'pac_script' mode. */
+  pacScript?: PacScript;
+  /**
+   * 'direct' = Never use a proxy
+   * 'auto_detect' = Auto detect proxy settings
+   * 'pac_script' = Use specified PAC script
+   * 'system' = Use system proxy settings
+   */
+  mode: "direct" | "auto_detect" | "pac_script" | "system";
+};
+
+export type ProxyErrorDetails = chrome.proxy.ErrorDetails | Error;
 export type ProxySettingResultDetails = {
   /**
    * One of
@@ -65,10 +83,10 @@ export abstract class BaseAdapter {
     ) => void
   ): void;
   abstract onWebRequestCompleted(
-    callback: (details: WebResponseDetails) => void
+    callback: (details: WebRequestCompletedDetails) => void
   ): void;
   abstract onWebRequestErrorOccurred(
-    callback: (details: WebResponseDetails) => void
+    callback: (details: WebRequestErrorOccurredDetails) => void
   ): void;
 
   // i18n

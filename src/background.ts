@@ -4,6 +4,7 @@ import {
   WebAuthenticationChallengeDetails,
   WebResponseDetails,
 } from "./adapters";
+import { WebRequestErrorOccurredDetails } from "./adapters/base";
 import { setIndicator } from "./services/indicator";
 import { getAuthInfos, getCurrentProxySetting } from "./services/proxy";
 
@@ -22,7 +23,9 @@ class ProxyAuthProvider {
   // requests[requestID] = request attempts. 0 means the 1st attempt
   static requests: Record<string, number> = {};
 
-  static onCompleted(details: WebResponseDetails) {
+  static onCompleted(
+    details: WebResponseDetails | WebRequestErrorOccurredDetails
+  ) {
     if (ProxyAuthProvider.requests[details.requestId]) {
       delete ProxyAuthProvider.requests[details.requestId];
     }
