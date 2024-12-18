@@ -1,16 +1,16 @@
 [
-  {
-    "color": "blue",
-    "profileName": "example profile",
-    "proxyType": "proxy",
-    "proxyRules": {
-      "default": {
-        "host": "example.proxy.io",
-        "scheme": "https",
-        "port": 5555
-      },
-      "bypassList": []
-    },
-    "pacScript": {}
-  }
+  // {
+  //   "color": "blue",
+  //   "profileName": "example profile",
+  //   "proxyType": "proxy",
+  //   "proxyRules": {
+  //     "default": {
+  //       "host": "example.proxy.io",
+  //       "scheme": "https",
+  //       "port": 5555
+  //     },
+  //     "bypassList": []
+  //   },
+  //   "pacScript": {}
+  // }
 ]
