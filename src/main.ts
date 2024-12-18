@@ -7,7 +7,6 @@ import { Host } from "./adapters";
 // Highlight.js
 import hljs from "highlight.js/lib/core";
 import javascript from "highlight.js/lib/languages/javascript";
-import { initializePresetProfiles } from "./presets";
 hljs.registerLanguage("javascript", javascript);
 
 // i18n
@@ -17,10 +16,8 @@ declare module "@vue/runtime-core" {
   }
 }
 
-initializePresetProfiles().then(() => {
-  const app = createApp(App);
+const app = createApp(App);
 
-  app.config.globalProperties.$t = Host.getMessage;
+app.config.globalProperties.$t = Host.getMessage;
 
-  app.use(router).mount("#app");
-});
+app.use(router).mount("#app");

@@ -6,6 +6,7 @@ import {
 } from "./adapters";
 import { setIndicator } from "./services/indicator";
 import { getAuthInfos, getCurrentProxySetting } from "./services/proxy";
+import { initializePresetProfiles } from "./presets";
 
 // indicator
 async function initIndicator() {
@@ -70,3 +71,9 @@ Host.onWebRequestAuthRequired(ProxyAuthProvider.onAuthRequired);
 Host.onWebRequestCompleted(ProxyAuthProvider.onCompleted);
 Host.onWebRequestErrorOccurred(ProxyAuthProvider.onCompleted);
 Host.onProxyError(console.warn);
+
+chrome.runtime.onInstalled.addListener(() => {
+  void (async () => {
+    await initializePresetProfiles();
+  })();
+});

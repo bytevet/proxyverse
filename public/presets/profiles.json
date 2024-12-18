@@ -1,0 +1,30 @@
+[
+  {
+    "color": "blue",
+    "profileName": "zyx",
+    "proxyType": "proxy",
+    "proxyRules": {
+      "default": {
+        "host": "proxyA.io",
+        "scheme": "https",
+        "port": 5555
+      },
+      "bypassList": []
+    },
+    "pacScript": {}
+  },
+  {
+    "color": "blue",
+    "profileName": "ffff",
+    "proxyType": "proxy",
+    "proxyRules": {
+      "default": {
+        "host": "proxyB.io",
+        "scheme": "http",
+        "port": 4555
+      },
+      "bypassList": []
+    },
+    "pacScript": {}
+  }
+]
