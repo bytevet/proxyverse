@@ -1,27 +1,13 @@
 [
   {
     "color": "blue",
-    "profileName": "zyx",
+    "profileName": "example profile",
     "proxyType": "proxy",
     "proxyRules": {
       "default": {
-        "host": "proxyA.io",
+        "host": "example.proxy.io",
         "scheme": "https",
         "port": 5555
-      },
-      "bypassList": []
-    },
-    "pacScript": {}
-  },
-  {
-    "color": "blue",
-    "profileName": "ffff",
-    "proxyType": "proxy",
-    "proxyRules": {
-      "default": {
-        "host": "proxyB.io",
-        "scheme": "http",
-        "port": 4555
       },
       "bypassList": []
     },
