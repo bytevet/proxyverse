@@ -2,7 +2,7 @@ import { ProfileSimple } from "@/services/profile";
 
 export const PRESET_PROFILES: ProfileSimple[] = [
   {
-    profileID: "abcdefg",
+    profileID: crypto.randomUUID(),
     color: "blue",
     profileName: "abc",
     proxyType: "proxy",
@@ -17,7 +17,7 @@ export const PRESET_PROFILES: ProfileSimple[] = [
     pacScript: {},
   },
   {
-    profileID: "cdfghij",
+    profileID: crypto.randomUUID(),
     color: "blue",
     profileName: "def",
     proxyType: "proxy",
