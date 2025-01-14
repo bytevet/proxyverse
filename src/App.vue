@@ -6,7 +6,7 @@ import zhCN from "@arco-design/web-vue/es/locale/lang/zh-cn";
 import zhTW from "@arco-design/web-vue/es/locale/lang/zh-tw";
 import ptPT from "@arco-design/web-vue/es/locale/lang/pt-pt";
 import { getDarkModeSetting, changeDarkMode } from "./services/preference";
-import { ArcoLang } from "@arco-design/web-vue/es/locale/interface";
+import type { ArcoLang } from "@arco-design/web-vue/es/locale/interface";
 import { Host } from "./adapters";
 
 const i18nConfig: Record<string, ArcoLang> = {

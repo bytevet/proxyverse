@@ -7,6 +7,7 @@ import AutoImport from "unplugin-auto-import/vite";
 import Components from "unplugin-vue-components/vite";
 import { ArcoResolver } from "unplugin-vue-components/resolvers";
 import manifest from "./manifest.json";
+import { visualizer } from "rollup-plugin-visualizer";
 
 let sourcemap = false;
 if (process.env.npm_lifecycle_event?.endsWith(":test")) {
@@ -90,6 +91,12 @@ export default defineConfig({
           ],
         },
       },
+      plugins: [
+        visualizer({
+          filename: "stats.html",
+          open: true,
+        }),
+      ],
     },
     sourcemap,
   },

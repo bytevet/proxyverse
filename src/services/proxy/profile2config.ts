@@ -1,5 +1,5 @@
 import { generate as generateJS } from "escodegen";
-import { Program, Statement } from "estree";
+import type { Program, Statement } from "acorn";
 import {
   AutoSwitchRule,
   ProfileAuthSwitch,
@@ -49,6 +49,8 @@ export class ProfileConverter {
       type: "Program",
       sourceType: "script",
       body: await this.genStatements(),
+      start: 0, // dummy
+      end: 0, // dummy
     };
 
     return generateJS(astProgram);
