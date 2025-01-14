@@ -1,12 +1,18 @@
 <script setup lang="ts">
-import ThemeSwitcher from "../components/controls/ThemeSwitcher.vue";
 import "@arco-design/web-vue/es/resize-box/style/index.css";
+import {
+  IconSettings,
+  IconRelation,
+  IconPlus,
+  IconEdit,
+} from "@arco-design/web-vue/es/icon";
+import { onMounted, ref } from "vue";
 import {
   ProfilesStorage,
   listProfiles,
   onProfileUpdate,
 } from "../services/profile";
-import { onMounted, ref } from "vue";
+import ThemeSwitcher from "../components/controls/ThemeSwitcher.vue";
 
 const profiles = ref<ProfilesStorage>({});
 

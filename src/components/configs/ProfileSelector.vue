@@ -1,4 +1,10 @@
 <script setup lang="ts">
+import {
+  IconDesktop,
+  IconSwap,
+  IconExclamationPolygonFill,
+  IconDown,
+} from "@arco-design/web-vue/es/icon";
 import { listProfiles, ProxyProfile, SystemProfile } from "@/services/profile";
 import { computed, onBeforeMount, ref } from "vue";
 

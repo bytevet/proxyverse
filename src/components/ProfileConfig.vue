@@ -9,6 +9,9 @@ import {
   watchEffect,
 } from "vue";
 import { colors } from "@arco-design/web-vue/es/color-picker/colors";
+import { IconUndo, IconSave, IconDelete } from "@arco-design/web-vue/es/icon";
+import { FieldRule, Notification } from "@arco-design/web-vue";
+import { useRouter } from "vue-router";
 import ProxyServerInput from "./configs/ProxyServerInput.vue";
 import AutoSwitchInput from "./configs/AutoSwitchInput.vue";
 import AutoSwitchPacPreview from "./configs/AutoSwitchPacPreview.vue";
@@ -23,9 +26,7 @@ import {
   deleteProfile,
   getProfile,
   saveProfile,
-} from "../services/profile";
-import { FieldRule, Notification } from "@arco-design/web-vue";
-import { useRouter } from "vue-router";
+} from "@/services/profile";
 import { Host, PacScript } from "@/adapters";
 import { refreshProxy } from "@/services/proxy";
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from "vue";
+import { IconUser, IconEraser, IconSave } from "@arco-design/web-vue/es/icon";
 import { ProxyServer } from "../../services/profile";
 import { Host } from "@/adapters";
 

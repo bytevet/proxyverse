@@ -3,7 +3,9 @@
 import path, { resolve } from "path";
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
-import { vitePluginForArco } from "@arco-plugins/vite-vue";
+import AutoImport from "unplugin-auto-import/vite";
+import Components from "unplugin-vue-components/vite";
+import { ArcoResolver } from "unplugin-vue-components/resolvers";
 import manifest from "./manifest.json";
 
 let sourcemap = false;
@@ -26,8 +28,15 @@ const getCRXVersion = () => {
 export default defineConfig({
   plugins: [
     vue(),
-    vitePluginForArco({
-      style: "css",
+    AutoImport({
+      resolvers: [ArcoResolver()],
+    }),
+    Components({
+      resolvers: [
+        ArcoResolver({
+          sideEffect: true,
+        }),
+      ],
     }),
     {
       name: "manifest",
@@ -59,7 +68,6 @@ export default defineConfig({
       },
     },
   },
-  test: {},
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -71,6 +79,16 @@ export default defineConfig({
         index: resolve(__dirname, "index.html"),
         popup: resolve(__dirname, "popup.html"),
         background: "src/background.ts",
+      },
+      output: {
+        manualChunks: {
+          framework: [
+            "vue",
+            "vue-router",
+            "@arco-design/web-vue",
+            "@vueuse/core",
+          ],
+        },
       },
     },
     sourcemap,

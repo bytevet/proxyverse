@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { IconCopy, IconPlus, IconDelete } from "@arco-design/web-vue/es/icon";
+
 import { Host } from "@/adapters";
 import {
   AutoSwitchType,

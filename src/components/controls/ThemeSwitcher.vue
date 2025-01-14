@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import {
+  IconSunFill,
+  IconMoonFill,
+  IconBgColors,
+} from "@arco-design/web-vue/es/icon";
+import {
   DarkMode,
   changeDarkMode,
   getDarkModeSetting,

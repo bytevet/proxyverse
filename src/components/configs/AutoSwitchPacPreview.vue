@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { IconCopy } from "@arco-design/web-vue/es/icon";
 import { ProfileAuthSwitch } from "@/services/profile";
 import { useClipboard, watchDebounced } from "@vueuse/core";
 import { ref } from "vue";
