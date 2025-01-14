@@ -36,7 +36,7 @@ class ProxyAuthProvider {
     callback?: (response: BlockingResponse) => void
   ) {
     if (!details.isProxy) {
-      callback && callback({ cancel: true });
+      callback && callback({});
       return;
     }
 
