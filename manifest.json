@@ -14,17 +14,9 @@
   },
   "background": {
     "service_worker": "service-worker.js",
-    "scripts": ["service-worker.js"],
     "type": "module"
   },
 
   "host_permissions": ["<all_urls>"],
-  "permissions": ["storage", "proxy", "webRequest", "webRequestAuthProvider"],
-
-  "browser_specific_settings": {
-    "gecko": {
-      "id": "proxyverse@byte.vet",
-      "strict_min_version": "91.1.0"
-    }
-  }
+  "permissions": ["storage", "proxy", "webRequest", "webRequestAuthProvider"]
 }

@@ -6,11 +6,11 @@ name: Test
 on:
   push:
     branches:
-    - main
+      - main
   pull_request:
     branches:
-    - main
-    - develop
+      - main
+      - develop
 
 jobs:
   test:
@@ -22,8 +22,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 'latest'
-          cache: 'npm'
+          node-version: "latest"
+          cache: "npm"
           cache-dependency-path: package-lock.json
 
       - name: Install dependencies

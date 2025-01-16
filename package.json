@@ -8,6 +8,7 @@
     "test": "vitest",
     "coverage": "vitest run --coverage",
     "build": "vue-tsc && vite build",
+    "build:firefox": "vue-tsc && vite build -m firefox",
     "dist": "rm -f dist.zip && cd ./dist/ && zip -r ../dist.zip ./",
     "preview": "vite preview"
   },
