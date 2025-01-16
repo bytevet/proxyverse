@@ -122,7 +122,7 @@ const TRANSFORMER_CONFIG: Record<string, Transformer> = {
       manifest.browser_specific_settings = {
         gecko: {
           id: "proxyverse@byte.vet",
-          strict_min_version: "91.1.0",
+          strict_min_version: "109.0",
         },
       };
     },
