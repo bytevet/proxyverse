@@ -122,6 +122,7 @@ jobs:
           addon-guid: proxyverse@byte.vet
           xpi-path: ${{ github.workspace }}/release/firefox.zip
           source-file-path: ${{ github.workspace }}/release/source.tar.gz
+          license: MIT
           self-hosted: false
           jwt-issuer: ${{ secrets.FIREFOX_JWT_ISSUER }}
           jwt-secret: ${{ secrets.FIREFOX_JWT_SECRET }}
