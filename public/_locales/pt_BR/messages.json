@@ -183,6 +183,14 @@
     "message": "$1 é necessário"
   },
 
+  "feedback_error": {
+    "message": "Algo errado"
+  },
+
+  "firefox_incognito_access_error_html": {
+    "message": "<div class=\"arco-typography\"> Devido às limitações do Firefox, o Proxyverse não funciona corretamente, pois não é executado em janelas de navegação privada.</div>\n<div class=\"arco-typography\"> Ative a extensão em janelas privadas. </div>\n<div class=\"arco-typography\"><a class=\"arco-link arco-link-status-normal\" href=\"https://mzl.la/3pbGH96\">Saiba mais</a></div>"
+  },
+
   "_": {
     "message": "<DUMMY>"
   }
