@@ -183,6 +183,14 @@
     "message": "$1 是必需的"
   },
 
+  "feedback_error": {
+    "message": "出現問題"
+  },
+
+  "firefox_incognito_access_error_html": {
+    "message": "<div class=\"arco-typography\"> 由於 Firefox 的限制，Proxyverse 無法在私人瀏覽視窗中執行，因此無法正常運作。</div>\n<div class=\"arco-typography\"> 請在私人視窗中啟用擴充套件。 </div>\n<div class=\"arco-typography\"><a class=\"arco-link arco-link-status-normal\" href=\"https://mzl.la/3pbGH96\">瞭解更多資訊</a></div>"
+  },
+
   "_": {
     "message": "<DUMMY>"
   }
