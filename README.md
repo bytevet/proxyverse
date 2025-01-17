@@ -15,13 +15,14 @@ It's still in the early development stage, and more features are still on the w
 - [x] Support more languages
 - [ ] Support customized preference
 - [ ] Support Safari
-- [ ] Support Firefox
+- [x] Support Firefox
 
 
 # How to download?
 
 - [Chrome](https://chromewebstore.google.com/detail/proxyverse/igknmaflmijecdmjpcgollghmipkfbho)
 - [Microsoft Edge](https://microsoftedge.microsoft.com/addons/detail/bpjcpinklkdfabcncofogcaigmmgjjbj)
+- [Firefox](https://addons.mozilla.org/en-US/firefox/addon/proxyverse/)
 
 
 # Making a Contribution

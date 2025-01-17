@@ -7,7 +7,8 @@ import {
   ProxyErrorDetails,
   ProxySettingResultDetails,
   WebAuthenticationChallengeDetails,
-  WebResponseDetails,
+  WebRequestCompletedDetails,
+  WebRequestErrorOccurredDetails,
 } from "./base";
 
 export class Chrome extends BaseAdapter {
@@ -17,7 +18,7 @@ export class Chrome extends BaseAdapter {
     });
   }
 
-  async get<T>(key: string): Promise<T | null> {
+  async get<T>(key: string): Promise<T | undefined> {
     const ret = await chrome.storage.local.get(key);
     return ret[key];
   }
@@ -66,14 +67,16 @@ export class Chrome extends BaseAdapter {
     );
   }
 
-  onWebRequestCompleted(callback: (details: WebResponseDetails) => void): void {
+  onWebRequestCompleted(
+    callback: (details: WebRequestCompletedDetails) => void
+  ): void {
     chrome.webRequest.onCompleted.addListener(callback, {
       urls: ["<all_urls>"],
     });
   }
 
   onWebRequestErrorOccurred(
-    callback: (details: WebResponseDetails) => void
+    callback: (details: WebRequestErrorOccurredDetails) => void
   ): void {
     chrome.webRequest.onErrorOccurred.addListener(callback, {
       urls: ["<all_urls>"],
