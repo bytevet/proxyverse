@@ -11,6 +11,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/",
     component: ConfigPage,
+    name: "page.config",
     children: [
       { path: "", name: "profile.autoswitch", redirect: "profiles/new" },
       {
@@ -32,6 +33,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: "/popup",
+    name: "page.popup",
     component: PopupPage,
   },
 ];

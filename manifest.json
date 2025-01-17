@@ -17,13 +17,6 @@
     "type": "module"
   },
 
-  "host_permissions": [
-    "<all_urls>"
-  ],
-  "permissions": [
-    "storage",
-    "proxy",
-    "webRequest",
-    "webRequestAuthProvider"
-  ]
+  "host_permissions": ["<all_urls>"],
+  "permissions": ["storage", "proxy", "webRequest", "webRequestAuthProvider"]
 }

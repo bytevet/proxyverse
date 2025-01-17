@@ -7,22 +7,23 @@ import {
   ProxyErrorDetails,
   ProxySettingResultDetails,
   WebAuthenticationChallengeDetails,
-  WebResponseDetails,
+  WebRequestCompletedDetails,
+  WebRequestErrorOccurredDetails,
 } from "./base";
 
-import i18nData from "@/../public/_locales/en/messages.json?raw";
+import i18nData from "@/../public/_locales/en/messages.json";
 
 const _i18n: {
   [key: string]: {
     message: string;
   };
-} = JSON.parse(i18nData);
+} = i18nData;
 
 export class WebBrowser extends BaseAdapter {
   async set<T>(key: string, val: T): Promise<void> {
     localStorage.setItem(key, JSON.stringify(val));
   }
-  async get<T>(key: string): Promise<T | null> {
+  async get<T>(key: string): Promise<T | undefined> {
     let s: any;
     s = localStorage.getItem(key);
     return s && JSON.parse(s);
@@ -61,10 +62,14 @@ export class WebBrowser extends BaseAdapter {
   ): void {
     throw new Error("Method not implemented.");
   }
-  onWebRequestCompleted(_: (details: WebResponseDetails) => void): void {
+  onWebRequestCompleted(
+    _: (details: WebRequestCompletedDetails) => void
+  ): void {
     throw new Error("Method not implemented.");
   }
-  onWebRequestErrorOccurred(_: (details: WebResponseDetails) => void): void {
+  onWebRequestErrorOccurred(
+    _: (details: WebRequestErrorOccurredDetails) => void
+  ): void {
     throw new Error("Method not implemented.");
   }
   currentLocale(): string {

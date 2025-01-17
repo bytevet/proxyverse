@@ -1,5 +1,14 @@
 <script setup lang="ts">
 import { type RouteLocationRaw, useRouter } from "vue-router";
+import { Message } from "@arco-design/web-vue";
+import { onMounted, ref, toRaw } from "vue";
+import {
+  IconDesktop,
+  IconSwap,
+  IconRelation,
+  IconPlus,
+  IconTool,
+} from "@arco-design/web-vue/es/icon";
 import ThemeSwitcher from "../components/controls/ThemeSwitcher.vue";
 import {
   ProfilesStorage,
@@ -7,9 +16,7 @@ import {
   SystemProfile,
   ProxyProfile,
 } from "../services/profile";
-import { onMounted, ref, toRaw } from "vue";
 import { setProxy, getCurrentProxySetting } from "../services/proxy";
-import { Message } from "@arco-design/web-vue";
 import { Host } from "@/adapters";
 
 const router = useRouter();

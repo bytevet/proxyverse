@@ -8,7 +8,7 @@ on:
     branches:
       - main
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
   pull_request:
     branches:
       - main
@@ -28,8 +28,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 'latest'
-          cache: 'npm'
+          node-version: "latest"
+          cache: "npm"
           cache-dependency-path: package-lock.json
 
       - name: Install dependencies
@@ -39,22 +39,27 @@ jobs:
         if: ${{ github.ref_type == 'tag' }}
         run: echo "CRX_VER=${{ github.ref_name }}" >> $GITHUB_ENV
 
-      - name: Output version
-        run: echo "Current version ${{ env.CRX_VER }}"
-
-      - name: Rebuild the dist directory
-        run: npm run build
-
-      - name: Pack artifacts
+      - name: Preparing
         run: |
-          mkdir ./release/
-          cd ./dist/ && zip -r ../release/crx.zip ./
+          echo "Current version ${{ env.CRX_VER }}"
+          mkdir "${{ github.workspace }}/release/"
+          git archive --format tar.gz HEAD -o "${{ github.workspace }}/release/source.tar.gz"
+
+      - name: Build Chrome Extension
+        run: |
+          npm run build
+          cd "${{ github.workspace }}/dist/" && zip -r "${{ github.workspace }}/release/crx.zip" ./
+
+      - name: Build Firefox Add-ons
+        run: |
+          npm run build:firefox
+          cd "${{ github.workspace }}/dist/" && zip -r "${{ github.workspace }}/release/firefox.zip" ./
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: Proxyverse
-          path: ./release/*
+          path: ${{ github.workspace }}/release/*
 
   release-github:
     name: Publish on Github Release
@@ -68,13 +73,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: Proxyverse
-          path: ./release/
+          path: ${{ github.workspace }}/release/
 
       - name: Upload to release page
         uses: softprops/action-gh-release@v2
         with:
-          files: ./release/*
-
+          files: ${{ github.workspace }}/release/*
 
   release-edge:
     name: Publish on Edge
@@ -88,12 +92,37 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: Proxyverse
-          path: ./release/
+          path: ${{ github.workspace }}/release/
 
       - name: Upload to MS Edge
         uses: wdzeng/edge-addon@v2
         with:
           product-id: 6fa97660-6c21-41e4-87e6-06a88509753f
-          zip-path: ./release/crx.zip
+          zip-path: ${{ github.workspace }}/release/crx.zip
           client-id: ${{ secrets.EDGE_CLIENT_ID }}
           api-key: ${{ secrets.EDGE_API_KEY }}
+
+  release-firefox:
+    name: Publish on Firefox
+    if: ${{ github.ref_type == 'tag' }}
+    runs-on: ubuntu-latest
+    needs:
+      - build
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Proxyverse
+          path: ${{ github.workspace }}/release/
+
+      - name: Upload to Firefox
+        uses: wdzeng/firefox-addon@v1
+        with:
+          addon-guid: proxyverse@byte.vet
+          xpi-path: ${{ github.workspace }}/release/firefox.zip
+          source-file-path: ${{ github.workspace }}/release/source.tar.gz
+          license: MIT
+          self-hosted: false
+          jwt-issuer: ${{ secrets.FIREFOX_JWT_ISSUER }}
+          jwt-secret: ${{ secrets.FIREFOX_JWT_SECRET }}

@@ -1,9 +1,8 @@
-import { parseScript } from "esprima";
-import {
+import { parse } from "espree";
+import type {
   AssignmentExpression,
   AssignmentOperator,
   CallExpression,
-  Directive,
   Expression,
   ExpressionStatement,
   FunctionDeclaration,
@@ -20,13 +19,13 @@ import {
   SpreadElement,
   Statement,
   VariableDeclaration,
-} from "estree";
+} from "acorn";
 import { ProxyServer } from "../profile";
 
 export function parsePACScript(script: string): Statement[] {
-  const program = parseScript(script);
+  const program = parse(script);
 
-  const ret: (Statement | Directive)[] = [];
+  const ret: Statement[] = [];
   for (const stmt of program.body) {
     switch (stmt.type) {
       case "ImportDeclaration":
@@ -72,12 +71,16 @@ export class PACScriptHelper {
       operator,
       left,
       right,
+      start: 0, // dummy
+      end: 0, // dummy
     };
   }
   static newExpressionStatement(expression: Expression): ExpressionStatement {
     return {
       type: "ExpressionStatement",
       expression,
+      start: 0, // dummy
+      end: 0, // dummy
     };
   }
   static newVariableDeclaration(
@@ -92,8 +95,12 @@ export class PACScriptHelper {
           type: "VariableDeclarator",
           id: this.newIdentifier(name),
           init: init,
+          start: 0, // dummy
+          end: 0, // dummy
         },
       ],
+      start: 0, // dummy
+      end: 0, // dummy
     };
   }
 
@@ -107,6 +114,8 @@ export class PACScriptHelper {
       operator,
       left,
       right,
+      start: 0, // dummy
+      end: 0, // dummy
     };
   }
 
@@ -116,6 +125,8 @@ export class PACScriptHelper {
     return {
       type: "ObjectExpression",
       properties,
+      start: 0, // dummy
+      end: 0, // dummy
     };
   }
 
@@ -123,6 +134,8 @@ export class PACScriptHelper {
     return {
       type: "Identifier",
       name: name,
+      start: 0, // dummy
+      end: 0, // dummy
     };
   }
 
@@ -130,6 +143,8 @@ export class PACScriptHelper {
     return {
       type: "Literal",
       value: value,
+      start: 0, // dummy
+      end: 0, // dummy
     };
   }
 
@@ -145,7 +160,14 @@ export class PACScriptHelper {
       body: {
         type: "BlockStatement",
         body: body,
+        start: 0, // dummy
+        end: 0, // dummy
       },
+      generator: false,
+      expression: false,
+      async: false,
+      start: 0, // dummy
+      end: 0, // dummy
     };
   }
 
@@ -159,7 +181,14 @@ export class PACScriptHelper {
       body: {
         type: "BlockStatement",
         body: body,
+        start: 0, // dummy
+        end: 0, // dummy
       },
+      generator: false,
+      expression: false,
+      async: false,
+      start: 0, // dummy
+      end: 0, // dummy
     };
   }
 
@@ -167,6 +196,8 @@ export class PACScriptHelper {
     return {
       type: "ReturnStatement",
       argument,
+      start: 0, // dummy
+      end: 0, // dummy
     };
   }
 
@@ -181,6 +212,8 @@ export class PACScriptHelper {
       property,
       computed,
       optional: false,
+      start: 0, // dummy
+      end: 0, // dummy
     };
   }
 
@@ -193,6 +226,8 @@ export class PACScriptHelper {
       optional: false,
       callee,
       arguments: _arguments,
+      start: 0, // dummy
+      end: 0, // dummy
     };
   }
 
@@ -207,8 +242,12 @@ export class PACScriptHelper {
       consequent: {
         type: "BlockStatement",
         body: consequent,
+        start: 0, // dummy
+        end: 0, // dummy
       },
       alternate,
+      start: 0, // dummy
+      end: 0, // dummy
     };
   }
 }
