@@ -53,10 +53,10 @@ export type ProxyRules = chrome.proxy.ProxyRules;
 export abstract class BaseAdapter {
   // local storage
   abstract set<T>(key: string, val: T): Promise<void>;
-  abstract get<T>(key: string): Promise<T | null>;
+  abstract get<T>(key: string): Promise<T | undefined>;
   async getWithDefault<T>(key: string, defaultVal: T): Promise<T> {
     const ret = await this.get<T>(key);
-    if (ret === null) {
+    if (ret === undefined) {
       return defaultVal;
     }
 
@@ -92,4 +92,9 @@ export abstract class BaseAdapter {
   // i18n
   abstract currentLocale(): string;
   abstract getMessage(key: string, substitutions?: string | string[]): string;
+
+  // compatible issues, return an error message in HTML format
+  async error(): Promise<string | undefined> {
+    return;
+  }
 }

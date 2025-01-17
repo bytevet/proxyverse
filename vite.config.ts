@@ -9,11 +9,6 @@ import { ArcoResolver } from "unplugin-vue-components/resolvers";
 import manifest from "./manifest.json";
 import { visualizer } from "rollup-plugin-visualizer";
 
-let sourcemap = false;
-if (process.env.npm_lifecycle_event?.endsWith(":test")) {
-  sourcemap = true;
-}
-
 const getCRXVersion = () => {
   if (process.env.CRX_VER) {
     let ver = process.env.CRX_VER;
@@ -86,14 +81,15 @@ export default defineConfig(({ mode }) => {
           background: "src/background.ts",
         },
         output: {
-          manualChunks: {
-            framework: [
-              "vue",
-              "vue-router",
-              "@arco-design/web-vue",
-              "@vueuse/core",
-            ],
-          },
+          // cannot enable this config cuz https://github.com/vitejs/vite/issues/5189
+          // manualChunks: {
+          //   framework: [
+          //     "vue",
+          //     "vue-router",
+          //     "@arco-design/web-vue",
+          //     "@vueuse/core",
+          //   ],
+          // },
         },
         plugins: [
           visualizer({
@@ -102,7 +98,6 @@ export default defineConfig(({ mode }) => {
           }),
         ],
       },
-      sourcemap,
     },
   };
 });
@@ -118,6 +113,8 @@ const TRANSFORMER_CONFIG: Record<string, Transformer> = {
       // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/background#browser_support
       manifest.background.scripts = [manifest.background.service_worker];
       delete manifest.background.service_worker;
+
+      delete manifest.version_name;
 
       manifest.browser_specific_settings = {
         gecko: {

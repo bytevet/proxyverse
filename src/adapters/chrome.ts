@@ -18,7 +18,7 @@ export class Chrome extends BaseAdapter {
     });
   }
 
-  async get<T>(key: string): Promise<T | null> {
+  async get<T>(key: string): Promise<T | undefined> {
     const ret = await chrome.storage.local.get(key);
     return ret[key];
   }

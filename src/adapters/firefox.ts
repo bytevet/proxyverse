@@ -18,7 +18,7 @@ export class Firefox extends BaseAdapter {
     });
   }
 
-  async get<T>(key: string): Promise<T | null> {
+  async get<T>(key: string): Promise<T | undefined> {
     const ret = await browser.storage.local.get(key);
     return ret[key];
   }
@@ -108,5 +108,15 @@ export class Firefox extends BaseAdapter {
   }
   getMessage(key: string, substitutions?: string | string[]): string {
     return browser.i18n.getMessage(key, substitutions);
+  }
+
+  // compatible issues
+  async error(): Promise<string | undefined> {
+    // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/proxy/settings
+    if (!(await browser.extension.isAllowedIncognitoAccess())) {
+      return browser.i18n.getMessage("firefox_incognito_access_error_html");
+    }
+
+    return;
   }
 }

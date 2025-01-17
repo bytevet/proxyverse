@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onBeforeMount } from "vue";
+import { h, onBeforeMount, onMounted } from "vue";
+import { Modal } from "@arco-design/web-vue";
 import { useLocale, addI18nMessages } from "@arco-design/web-vue/es/locale";
 import enUS from "@arco-design/web-vue/es/locale/lang/en-us";
 import zhCN from "@arco-design/web-vue/es/locale/lang/zh-cn";
@@ -8,7 +9,9 @@ import ptPT from "@arco-design/web-vue/es/locale/lang/pt-pt";
 import { getDarkModeSetting, changeDarkMode } from "./services/preference";
 import type { ArcoLang } from "@arco-design/web-vue/es/locale/interface";
 import { Host } from "./adapters";
+import { useRoute } from "vue-router";
 
+const route = useRoute();
 const i18nConfig: Record<string, ArcoLang> = {
   "en-US": enUS,
   "zh-CN": zhCN,
@@ -38,6 +41,17 @@ try {
 }
 
 onBeforeMount(async () => changeDarkMode(await getDarkModeSetting()));
+onMounted(async () => {
+  const err = await Host.error();
+  if (err) {
+    Modal.error({
+      title: Host.getMessage("feedback_error"),
+      content: () => h("div", { innerHTML: err }),
+      width: "auto",
+      fullscreen: route.name === "page.popup",
+    });
+  }
+});
 </script>
 
 <template>

@@ -11,19 +11,19 @@ import {
   WebRequestErrorOccurredDetails,
 } from "./base";
 
-import i18nData from "@/../public/_locales/en/messages.json?raw";
+import i18nData from "@/../public/_locales/en/messages.json";
 
 const _i18n: {
   [key: string]: {
     message: string;
   };
-} = JSON.parse(i18nData);
+} = i18nData;
 
 export class WebBrowser extends BaseAdapter {
   async set<T>(key: string, val: T): Promise<void> {
     localStorage.setItem(key, JSON.stringify(val));
   }
-  async get<T>(key: string): Promise<T | null> {
+  async get<T>(key: string): Promise<T | undefined> {
     let s: any;
     s = localStorage.getItem(key);
     return s && JSON.parse(s);
