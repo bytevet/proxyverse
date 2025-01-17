@@ -188,7 +188,7 @@
   },
 
   "firefox_incognito_access_error_html": {
-    "message": "<div class=\"arco-typography\"> Due to Firefox's restrictions, Proxyverse cannot function in private windows.</div>\n<div class=\"arco-typography\"> Please enable the extension in private windows. </div>\n<div class=\"arco-typography\"><a class=\"arco-link arco-link-status-normal\" href=\"https://mzl.la/3pbGH96\">Learn more</a></div>"
+    "message": "<div class=\"arco-typography\"> Due to Firefox's restrictions, Proxyverse does not work properly as it's not enabled in private browsing windows. </div>\n<div class=\"arco-typography\"> Please enable the extension in private windows. </div>\n<div class=\"arco-typography\"><a class=\"arco-link arco-link-status-normal\" href=\"https://mzl.la/3pbGH96\">Learn more</a></div>"
   },
 
   "_": {
