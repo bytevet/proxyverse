@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@highlightjs/vue-plugin": "^2.1.0",
+    "@sentry/vue": "^8.51.0",
     "@vueuse/core": "^12.4.0",
     "acorn": "^8.14.0",
     "escodegen": "^2.1.0",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "@arco-design/web-vue": "^2.56.3",
+    "@sentry/vite-plugin": "^3.0.0",
     "@types/chrome": "^0.0.266",
     "@types/escodegen": "^0.0.10",
     "@types/espree": "^10.1.0",
