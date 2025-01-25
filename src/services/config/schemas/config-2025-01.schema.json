@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "https://byte.vet/proxyverse/config-2025-01.schema.json",
+  "title": "Proxyverse Config (2025-01)",
+  "type": "object",
+  "properties": {
+    "version": { "const": "2025-01" },
+    "profiles": {
+      "type": "array",
+      "description": "The list of profiles to export/import.",
+      "items": {
+        "allOf": [
+          { "$ref": "#/$defs/ProxyProfileMeta" },
+          { "$ref": "#/$defs/ProxyProfile" }
+        ]
+      },
+      "minItems": 1
+    }
+  },
+
+  "required": ["version", "profiles"],
+
+  "$defs": {
+    "ProxyProfileMeta": {
+      "type": "object",
+      "properties": {
+        "profileID": { "type": "string" },
+        "color": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6})$"
+        },
+        "profileName": { "type": "string" }
+      },
+      "required": ["profileID", "color", "profileName"]
+    },
+    "ProxyProfile": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "proxyType": { "type": "string", "enum": ["proxy", "pac"] },
+            "proxyRules": {
+              "type": "object",
+              "properties": {
+                "default": {
+                  "$ref": "#/$defs/ProxyServer"
+                },
+                "http": {
+                  "$ref": "#/$defs/ProxyServer"
+                },
+                "https": {
+                  "$ref": "#/$defs/ProxyServer"
+                },
+                "ftp": {
+                  "$ref": "#/$defs/ProxyServer"
+                },
+                "bypassList": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              },
+              "required": ["default", "bypassList"]
+            },
+            "pacScript": {
+              "type": "object",
+              "properties": {
+                "data": { "type": "string" },
+                "url": { "type": "string" }
+              },
+              "required": ["data"]
+            }
+          },
+          "required": ["proxyType", "proxyRules", "pacScript"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "proxyType": { "type": "string", "enum": ["system", "direct"] }
+          },
+          "required": ["proxyType"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "proxyType": { "type": "string", "enum": ["auto"] },
+            "rules": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["domain", "cidr", "url", "disabled"]
+                  },
+                  "condition": { "type": "string" },
+                  "profileID": { "type": "string" }
+                },
+                "required": ["type", "condition", "profileID"]
+              }
+            },
+            "defaultProfileID": { "type": "string" }
+          },
+          "required": ["proxyType", "rules", "defaultProfileID"]
+        }
+      ]
+    },
+    "ProxyServer": {
+      "type": "object",
+      "properties": {
+        "host": { "type": "string" },
+        "port": { "type": "number", "minimum": 1, "maximum": 65535 },
+        "auth": {
+          "type": "object",
+          "properties": {
+            "username": { "type": "string" },
+            "password": { "type": "string" }
+          },
+          "required": ["username", "password"]
+        },
+        "scheme": {
+          "type": "string",
+          "enum": ["direct", "http", "https", "socks4", "socks5"]
+        }
+      },
+      "required": ["host", "scheme"]
+    }
+  }
+}

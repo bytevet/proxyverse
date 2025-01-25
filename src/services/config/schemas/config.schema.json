@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "https://byte.vet/proxyverse/config.schema.json",
+  "title": "Proxyverse Config",
+  "description": "The configuration for Proxyverse, used to export/import proxy settings.",
+  "type": "object",
+
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}$",
+      "description": "The version of the configuration schema, in 2025-01 format."
+    }
+  },
+
+  "oneOf": [
+    {
+      "$ref": "./config-2025-01.schema.json"
+    },
+    {
+      "properties": {
+        "version": { "const": "not_supported" }
+      }
+    }
+  ],
+
+  "required": ["version"]
+}
