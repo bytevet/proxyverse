@@ -1,4 +1,30 @@
 import * as t from "io-ts";
+import { pipe } from "fp-ts/function";
+import { fold } from "fp-ts/Either";
+
+export const getPaths = <A>(v: t.Validation<A>): Array<string> => {
+  let lastActual: any;
+  return pipe(
+    v,
+    fold(
+      (errors) =>
+        errors.map((error) =>
+          error.context
+            .map((ctx) => {
+              if (ctx.actual === lastActual) {
+                return;
+              }
+
+              lastActual = ctx.actual;
+              return ctx.key;
+            })
+            .filter((x) => x !== undefined)
+            .join(".")
+        ),
+      () => ["no errors"]
+    )
+  );
+};
 
 // branded types
 export type Port = t.Branded<number, { readonly Port: unique symbol }>;

@@ -1,13 +1,6 @@
+import { isLeft } from "fp-ts/Either";
 import * as inner from "@/services/profile";
-import {
-  ConfigFile,
-  HexedColor,
-  Port,
-  ProfileAuthSwitch,
-  ProfileSimple,
-  ProxyProfile,
-  ProxyServer,
-} from "./definition";
+import { ConfigFile, getPaths, ProxyProfile } from "./definition";
 
 /**
  * Convert the raw profiles to JSON string.
@@ -27,71 +20,27 @@ export const config2json = (rawProfiles: inner.ProfilesStorage): string => {
 };
 
 const exportProfile = (p: inner.ProxyProfile): ProxyProfile | undefined => {
-  let ret: ProxyProfile | undefined = undefined;
-  const hexedColor = p.color as HexedColor;
-  switch (p.proxyType) {
-    case "pac":
-      ret = {
-        ...p,
-        color: hexedColor,
-        proxyType: "pac",
-        pacScript: {
-          data: p.pacScript.data || "",
-        },
-      } as ProfileSimple;
-      break;
-    case "proxy":
-      ret = {
-        ...p,
-        color: hexedColor,
-        proxyType: "proxy",
-        proxyRules: {
-          bypassList: p.proxyRules.bypassList,
-          default: exportProxyServer(p.proxyRules.default),
-
-          http: p.proxyRules.http && exportProxyServer(p.proxyRules.http),
-          https: p.proxyRules.https && exportProxyServer(p.proxyRules.https),
-          ftp: p.proxyRules.ftp && exportProxyServer(p.proxyRules.ftp),
-        },
-      } as ProfileSimple;
-      break;
-
-    case "auto":
-      ret = {
-        ...p,
-        color: hexedColor,
-        proxyType: "auto",
-        rules: p.rules.map((r) => ({
-          type: r.type,
-          condition: r.condition,
-          profileID: r.profileID,
-        })),
-        defaultProfileID: p.defaultProfileID,
-      } as ProfileAuthSwitch;
-      break;
-
-    default:
-    // not supported, just ignore
+  const decoded = ProxyProfile.decode(p);
+  if (isLeft(decoded)) {
+    console.error("Failed to decode profile", p, decoded.left);
+    return;
   }
 
-  return ret;
+  return decoded.right;
 };
 
-const exportProxyServer = (p: inner.ProxyServer): ProxyServer => {
-  const ret: ProxyServer = {
-    host: p.host,
-    scheme: p.scheme,
-  };
-
-  if (p.port) {
-    ret.port = p.port as Port;
+export const json2config = (json: string): inner.ProxyProfile[] => {
+  // might throw error for malformed JSON
+  let obj: any;
+  try {
+    obj = JSON.parse(json);
+  } catch {
+    throw Error("Invalid config data");
   }
-  if (p.auth) {
-    ret.auth = {
-      username: p.auth.username,
-      password: p.auth.password,
-    };
+  const decoded = ConfigFile.decode(obj);
+  if (isLeft(decoded)) {
+    throw Error(`Could not validate data: ${getPaths(decoded).join(", ")}`);
   }
 
-  return ret;
+  return decoded.right.profiles.map((p) => ProxyProfile.encode(p));
 };

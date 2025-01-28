@@ -21,6 +21,7 @@ Sentry.init({
     Sentry.browserTracingIntegration({ router }),
     Sentry.replayIntegration(),
     Sentry.browserSessionIntegration(),
+    Sentry.captureConsoleIntegration({ levels: ["error"] }),
   ],
 
   // Set tracesSampleRate to 1.0 to capture 100%
