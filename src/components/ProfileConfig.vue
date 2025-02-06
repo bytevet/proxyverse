@@ -18,9 +18,7 @@ import AutoSwitchPacPreview from "./configs/AutoSwitchPacPreview.vue";
 import ScriptInput from "./configs/ScriptInput.vue";
 import {
   ProfileAuthSwitch,
-  ProxyConfigAutoSwitch,
-  ProxyConfigMeta,
-  ProxyConfigSimple,
+  ProfileSimple,
   ProxyServer,
   SystemProfile,
   deleteProfile,
@@ -40,10 +38,12 @@ const chooseRandomColor = () => {
   return colors[idx];
 };
 
+type ConfigState = (ProfileSimple | ProfileAuthSwitch) & {
+  [key: string]: any;
+};
+
 // forms
-const profileConfig = reactive<
-  ProxyConfigMeta & ProxyConfigSimple & ProxyConfigAutoSwitch
->({
+const profileConfig = reactive<ConfigState>({
   profileID: props.profileID || crypto.randomUUID(),
   color: chooseRandomColor(),
   profileName: props.profileID ? "" : "Custom Profile",
@@ -113,7 +113,7 @@ const bypassList = computed({
   },
 
   set: (val) => {
-    if (profileConfig.proxyType != "proxy") {
+    if (profileConfig.proxyType != "proxy" || !val) {
       return;
     }
     profileConfig.proxyRules.bypassList = val
