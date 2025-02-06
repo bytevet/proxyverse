@@ -25,16 +25,29 @@ export type ProxyConfigMeta = {
 };
 
 // the basic proxy config, with authentication and pac script support
-export type ProxyConfigSimple = {
-  proxyRules: {
-    default: ProxyServer;
-    http?: ProxyServer;
-    https?: ProxyServer;
-    ftp?: ProxyServer;
-    bypassList: string[];
-  };
-  pacScript: PacScript;
-};
+export type ProxyConfigSimple =
+  | {
+      proxyType: "proxy";
+      proxyRules: {
+        default: ProxyServer;
+        http?: ProxyServer;
+        https?: ProxyServer;
+        ftp?: ProxyServer;
+        bypassList: string[];
+      };
+      pacScript?: PacScript;
+    }
+  | {
+      proxyType: "pac";
+      proxyRules?: {
+        default: ProxyServer;
+        http?: ProxyServer;
+        https?: ProxyServer;
+        ftp?: ProxyServer;
+        bypassList: string[];
+      };
+      pacScript: PacScript;
+    };
 
 // advanced proxy config, with auto switch support
 export type AutoSwitchType = "domain" | "cidr" | "url" | "disabled";
@@ -49,9 +62,7 @@ export type ProxyConfigAutoSwitch = {
   defaultProfileID: string;
 };
 
-export type ProfileSimple = ProxyConfigMeta & {
-  proxyType: "proxy" | "pac";
-} & ProxyConfigSimple;
+export type ProfileSimple = ProxyConfigMeta & ProxyConfigSimple;
 
 export type ProfilePreset = ProxyConfigMeta & {
   proxyType: "system" | "direct";
@@ -79,9 +90,7 @@ export const SystemProfile: Record<string, ProxyProfile> = {
 };
 
 const keyProfileStorage = "profiles";
-export type ProfilesStorage = {
-  [key: string]: ProxyProfile;
-};
+export type ProfilesStorage = Record<string, ProxyProfile>;
 const onProfileUpdateListeners: ((p: ProfilesStorage) => void)[] = [];
 
 // list all user defined profiles. System profiles are not included

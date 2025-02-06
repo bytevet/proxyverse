@@ -6,6 +6,7 @@ import {
 import ProfileConfig from "./components/ProfileConfig.vue";
 import ConfigPage from "./pages/ConfigPage.vue";
 import PopupPage from "./pages/PopupPage.vue";
+import PreferencePage from "./components/PreferencePage.vue";
 
 const routes: RouteRecordRaw[] = [
   {
@@ -13,7 +14,7 @@ const routes: RouteRecordRaw[] = [
     component: ConfigPage,
     name: "page.config",
     children: [
-      { path: "", name: "profile.autoswitch", redirect: "profiles/new" },
+      { path: "", name: "profile.home", redirect: "profiles/new" },
       {
         path: "profiles/new",
         name: "profile.create",
@@ -27,7 +28,7 @@ const routes: RouteRecordRaw[] = [
         props: (route) => ({ profileID: route.params.id }),
       },
 
-      // { path: 'preference', name: 'preference', component: HelloWorld },
+      { path: "preference", name: "preference", component: PreferencePage },
       { path: "/:pathMatch(.*)*", name: "NotFound", redirect: "/" },
     ],
   },

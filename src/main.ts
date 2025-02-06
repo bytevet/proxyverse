@@ -2,6 +2,8 @@ import { createApp } from "vue";
 import * as Sentry from "@sentry/vue";
 import "./style.css";
 import "@arco-design/web-vue/es/message/style/css.js";
+import "@arco-design/web-vue/es/notification/style/css.js";
+
 import App from "./App.vue";
 import { router } from "./router";
 import { Host } from "./adapters";
@@ -21,6 +23,7 @@ Sentry.init({
     Sentry.browserTracingIntegration({ router }),
     Sentry.replayIntegration(),
     Sentry.browserSessionIntegration(),
+    Sentry.captureConsoleIntegration({ levels: ["error"] }),
   ],
 
   // Set tracesSampleRate to 1.0 to capture 100%
