@@ -32,11 +32,7 @@ onMounted(async () => {
 
         <section class="settings">
           <a-button-group type="text" size="large">
-            <a-tooltip
-              :content="$t('nav_preference')"
-              position="bottom"
-              v-if="false"
-            >
+            <a-tooltip :content="$t('nav_preference')" position="bottom">
               <a-button @click="$router.push({ name: 'preference' })">
                 <template #icon>
                   <icon-settings size="large" />
@@ -49,9 +45,9 @@ onMounted(async () => {
 
         <section class="menu">
           <a-menu :selected-keys="[$route.path]">
-            <RouterLink :to="{ name: 'profile.autoswitch' }" v-if="false">
+            <RouterLink :to="{ name: 'profile.home' }" v-if="false">
               <a-menu-item
-                :key="$router.resolve({ name: 'profile.autoswitch' }).path"
+                :key="$router.resolve({ name: 'profile.home' }).path"
               >
                 <template #icon><icon-relation /></template>
                 {{ $t("mode_auto_switch") }}

@@ -3,7 +3,6 @@
     "message": "A tool to help you manage and switch your proxy profiles"
   },
 
-
   "nav_preference": {
     "message": "Preference"
   },
@@ -17,8 +16,6 @@
     "message": "Presets"
   },
 
-
-
   "theme_light_mode": {
     "message": "Light mode"
   },
@@ -28,7 +25,6 @@
   "theme_auto_mode": {
     "message": "Follow system"
   },
-
 
   "mode_auto_switch": {
     "message": "Auto Switch"
@@ -42,7 +38,6 @@
   "mode_profile_create": {
     "message": "Create New Profile"
   },
-
 
   "config_proxy_type": {
     "message": "Proxy Type"
@@ -176,6 +171,34 @@
   },
   "config_feedback_error_occurred": {
     "message": "Error occurred: $1"
+  },
+
+  "preferences_section_import_export": {
+    "message": "Import & Export"
+  },
+
+  "preferences_section_import_export_desc": {
+    "message": "Export your proxy profiles to a file for backup or sharing, and import them to restore or share with others."
+  },
+
+  "preferences_action_profile_export": {
+    "message": "Export Profiles"
+  },
+
+  "preferences_action_profile_import": {
+    "message": "Import Profiles"
+  },
+
+  "preferences_feedback_no_profile_to_be_exported": {
+    "message": "No valid profile to be exported"
+  },
+
+  "preferences_tips_profile_overwrite": {
+    "message": "Some profile(s) might be overwritten after the import. Are you sure you want to continue?"
+  },
+
+  "preferences_feedback_n_profiles_being_imported": {
+    "message": "$1 profiles have been imported"
   },
 
 

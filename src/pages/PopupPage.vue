@@ -115,7 +115,7 @@ const setProxyByProfile = async (val: ProxyProfile) => {
     <a-layout-footer>
       <section class="settings">
         <a-button-group type="text" size="large">
-          <a-button @click="jumpTo({ name: 'profile.autoswitch' })">
+          <a-button @click="jumpTo({ name: 'profile.home' })">
             <template #icon>
               <icon-tool size="medium" />
             </template>

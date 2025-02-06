@@ -90,9 +90,7 @@ export const SystemProfile: Record<string, ProxyProfile> = {
 };
 
 const keyProfileStorage = "profiles";
-export type ProfilesStorage = {
-  [key: string]: ProxyProfile;
-};
+export type ProfilesStorage = Record<string, ProxyProfile>;
 const onProfileUpdateListeners: ((p: ProfilesStorage) => void)[] = [];
 
 // list all user defined profiles. System profiles are not included
