@@ -178,7 +178,7 @@
   },
 
   "preferences_section_import_export_desc": {
-    "message": "Export your proxy profiles to a file for backup or sharing, and import them to restore or share with others."
+    "message": "Export your proxy profiles to a file for backup or sharing, or import them to restore profiles when needed."
   },
 
   "preferences_action_profile_export": {
