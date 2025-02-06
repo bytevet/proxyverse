@@ -3,7 +3,6 @@
     "message": "Uma ferramenta para ajudá-lo a gerenciar e alternar seus perfis de proxy"
   },
 
-
   "nav_preference": {
     "message": "Preferência"
   },
@@ -17,8 +16,6 @@
     "message": "Predefinições"
   },
 
-
-
   "theme_light_mode": {
     "message": "Modo de luz"
   },
@@ -28,7 +25,6 @@
   "theme_auto_mode": {
     "message": "Seguir o sistema"
   },
-
 
   "mode_auto_switch": {
     "message": "Comutação automática"
@@ -42,7 +38,6 @@
   "mode_profile_create": {
     "message": "Criar novo perfil"
   },
-
 
   "config_proxy_type": {
     "message": "Tipo de proxy"
@@ -176,6 +171,34 @@
   },
   "config_feedback_error_occurred": {
     "message": "Ocorreu um erro: $1"
+  },
+
+  "preferences_section_import_export": {
+    "message": "Importação e exportação"
+  },
+
+  "preferences_section_import_export_desc": {
+    "message": "Exporte seus perfis de proxy para um arquivo para backup ou compartilhamento, ou importe-os para restaurar perfis quando necessário."
+  },
+
+  "preferences_action_profile_export": {
+    "message": "Perfis de exportação"
+  },
+
+  "preferences_action_profile_import": {
+    "message": "Perfis de importação"
+  },
+
+  "preferences_feedback_no_profile_to_be_exported": {
+    "message": "Nenhum perfil válido a ser exportado"
+  },
+
+  "preferences_tips_profile_overwrite": {
+    "message": "Alguns perfis podem ser sobrescritos após a importação. Tem certeza de que deseja continuar?"
+  },
+
+  "preferences_feedback_n_profiles_being_imported": {
+    "message": "$1 perfis foram importados"
   },
 
 
