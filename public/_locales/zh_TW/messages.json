@@ -3,7 +3,6 @@
     "message": "一個協助您管理和切換代理設定檔的工具"
   },
 
-
   "nav_preference": {
     "message": "偏好設定"
   },
@@ -17,8 +16,6 @@
     "message": "預設"
   },
 
-
-
   "theme_light_mode": {
     "message": "日間模式"
   },
@@ -28,7 +25,6 @@
   "theme_auto_mode": {
     "message": "遵循系統"
   },
-
 
   "mode_auto_switch": {
     "message": "自動切換"
@@ -42,7 +38,6 @@
   "mode_profile_create": {
     "message": "建立新的檔案"
   },
-
 
   "config_proxy_type": {
     "message": "代理類型"
@@ -176,6 +171,34 @@
   },
   "config_feedback_error_occurred": {
     "message": "發生錯誤： $1"
+  },
+
+  "preferences_section_import_export": {
+    "message": "匯入與匯出設定檔"
+  },
+
+  "preferences_section_import_export_desc": {
+    "message": "將您的代理伺服器設定檔匯出至檔案，以便備份或分享，並可匯入以還原。"
+  },
+
+  "preferences_action_profile_export": {
+    "message": "匯出設定檔"
+  },
+
+  "preferences_action_profile_import": {
+    "message": "匯入設定檔"
+  },
+
+  "preferences_feedback_no_profile_to_be_exported": {
+    "message": "沒有可以匯出的設定檔"
+  },
+
+  "preferences_tips_profile_overwrite": {
+    "message": "某些設定檔可能會在匯入後被覆寫。您確定要繼續嗎？"
+  },
+
+  "preferences_feedback_n_profiles_being_imported": {
+    "message": "已匯入 $1 個設定檔"
   },
 
 
