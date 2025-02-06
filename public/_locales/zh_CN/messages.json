@@ -3,7 +3,6 @@
     "message": "一个帮助您管理和切换代理配置文件的工具"
   },
 
-
   "nav_preference": {
     "message": "偏好设置"
   },
@@ -17,8 +16,6 @@
     "message": "预设"
   },
 
-
-
   "theme_light_mode": {
     "message": "浅色模式"
   },
@@ -28,7 +25,6 @@
   "theme_auto_mode": {
     "message": "跟随系统"
   },
-
 
   "mode_auto_switch": {
     "message": "自动切换"
@@ -42,7 +38,6 @@
   "mode_profile_create": {
     "message": "新建配置"
   },
-
 
   "config_proxy_type": {
     "message": "代理类型"
@@ -176,6 +171,34 @@
   },
   "config_feedback_error_occurred": {
     "message": "发生错误： $1"
+  },
+
+  "preferences_section_import_export": {
+    "message": "导入 / 导出"
+  },
+
+  "preferences_section_import_export_desc": {
+    "message": "将代理配置导出成文件以便进行备份或分享，也可导入文件还原配置。"
+  },
+
+  "preferences_action_profile_export": {
+    "message": "导出配置"
+  },
+
+  "preferences_action_profile_import": {
+    "message": "导入配置"
+  },
+
+  "preferences_feedback_no_profile_to_be_exported": {
+    "message": "没有可以导出的配置"
+  },
+
+  "preferences_tips_profile_overwrite": {
+    "message": "导入后，某些配置文件可能会被覆盖。您确定要继续吗？"
+  },
+
+  "preferences_feedback_n_profiles_being_imported": {
+    "message": "已导入$1 份有效配置"
   },
 
 
