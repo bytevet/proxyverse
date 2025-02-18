@@ -108,9 +108,23 @@ async function overwriteProfiles(profiles: ProfilesStorage) {
   onProfileUpdateListeners.map((cb) => cb(profiles));
 }
 
+/**
+ * Save a single profile to the storage.
+ * Please be noticed that this is not promise-safe. If you want to save multiple profiles, use `saveManyProfiles` instead.
+ *
+ * @param profile
+ */
 export async function saveProfile(profile: ProxyProfile) {
   const data = await listProfiles();
   data[profile.profileID] = profile;
+  await overwriteProfiles(data);
+}
+
+export async function saveManyProfiles(profiles: ProxyProfile[]) {
+  let data = await listProfiles();
+  profiles.forEach((p) => {
+    data[p.profileID] = p;
+  });
   await overwriteProfiles(data);
 }
 
