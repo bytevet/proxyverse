@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Host } from "@/adapters";
 import { config2json, json2config } from "@/services/config/schema";
-import { listProfiles, saveProfile } from "@/services/profile";
+import { listProfiles, saveManyProfiles } from "@/services/profile";
 import { useFileDialog } from "@vueuse/core";
 import { Notification } from "@arco-design/web-vue";
 import {
@@ -23,7 +23,7 @@ onChange(async (file) => {
   }
 
   const profiles = json2config(await file[0].text());
-  profiles.forEach(saveProfile);
+  await saveManyProfiles(profiles);
   Notification.success({
     content: Host.getMessage(
       "preferences_feedback_n_profiles_being_imported",
