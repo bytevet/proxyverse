@@ -85,6 +85,30 @@ jobs:
         with:
           files: ${{ github.workspace }}/release/*
 
+  release-chrome:
+    name: Publish on Chrome
+    # if: ${{ github.ref_type == 'tag' }}
+    runs-on: ubuntu-latest
+    needs:
+      - build
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Proxyverse
+          path: ${{ github.workspace }}/release/
+
+      - name: Upload to Chrome Web Store
+        uses: wdzeng/chrome-extension@v1
+        with:
+          extension-id: igknmaflmijecdmjpcgollghmipkfbho
+          zip-path: ${{ github.workspace }}/release/crx.zip
+          client-id: ${{ secrets.CHROME_CLIENT_ID }}
+          client-secret: ${{ secrets.CHROME_CLIENT_SECRET }}
+          refresh-token: ${{ secrets.CHROME_REFRESH_TOKEN }}
+          check-credentials-only: true
+
   release-edge:
     name: Publish on Edge
     if: ${{ github.ref_type == 'tag' }}
