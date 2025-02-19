@@ -16,6 +16,7 @@ on:
 
 env:
   CRX_VER: v0.0.0-${{ github.sha }}
+  SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
 jobs:
   build:
@@ -46,11 +47,15 @@ jobs:
           git archive --format tar.gz HEAD -o "${{ github.workspace }}/release/source.tar.gz"
 
       - name: Build Chrome Extension
+        env:
+          SENTRY_RELEASE: ${{ env.CRX_VER }}
         run: |
           npm run build
           cd "${{ github.workspace }}/dist/" && zip -r "${{ github.workspace }}/release/crx.zip" ./
 
       - name: Build Firefox Add-ons
+        env:
+          SENTRY_RELEASE: ${{ env.CRX_VER }}
         run: |
           npm run build:firefox
           cd "${{ github.workspace }}/dist/" && zip -r "${{ github.workspace }}/release/firefox.zip" ./

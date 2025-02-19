@@ -105,6 +105,10 @@ export default defineConfig(({ mode }) => {
             bundleSizeOptimizations: {
               excludeDebugStatements: true,
             },
+            release: {
+              inject: true,
+              dist: `v${getCRXVersion()}-${mode ? mode : "crx"}`,
+            },
           }),
           visualizer({
             filename: "stats.html",
