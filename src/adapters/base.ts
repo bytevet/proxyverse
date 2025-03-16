@@ -50,7 +50,17 @@ export type SimpleProxyServer = chrome.proxy.ProxyServer;
 export type PacScript = chrome.proxy.PacScript;
 export type ProxyRules = chrome.proxy.ProxyRules;
 
+export enum BrowserFlavor {
+  Unknown = "unknown",
+  Web = "web", // now only for local dev purpose
+  Chrome = "chrome",
+}
+
 export abstract class BaseAdapter {
+  get flavor(): BrowserFlavor {
+    return BrowserFlavor.Unknown;
+  }
+
   // local storage
   abstract set<T>(key: string, val: T): Promise<void>;
   abstract get<T>(key: string): Promise<T | undefined>;

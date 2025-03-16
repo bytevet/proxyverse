@@ -107,8 +107,17 @@
   "config_section_auto_switch_type_url": {
     "message": "URL"
   },
+  "config_section_auto_switch_type_url_malformed": {
+    "message": "Invalid URL"
+  },
+  "config_section_auto_switch_type_url_malformed_chrome": {
+    "message": "For security reasons, Chrome does not support path matching in HTTPS URLs. Learn more at https://issues.chromium.org/40083832"
+  },
   "config_section_auto_switch_type_cidr": {
-    "message": "IP/CIDR"
+    "message": "CIDR"
+  },
+  "config_section_auto_switch_type_cidr_malformed": {
+    "message": "Invalid CIDR. Please use the format like `192.168.1.1/24` or `2001:db8::/32`"
   },
   "config_section_auto_switch_type_disabled": {
     "message": "Temporarily Skip"
@@ -200,7 +209,6 @@
   "preferences_feedback_n_profiles_being_imported": {
     "message": "$1 profiles have been imported"
   },
-
 
   "form_is_required": {
     "message": "$1 is required"
