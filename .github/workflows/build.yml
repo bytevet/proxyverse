@@ -16,6 +16,7 @@ on:
 
 env:
   CRX_VER: v0.0.0-${{ github.sha }}
+  SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
 jobs:
   build:
@@ -46,11 +47,15 @@ jobs:
           git archive --format tar.gz HEAD -o "${{ github.workspace }}/release/source.tar.gz"
 
       - name: Build Chrome Extension
+        env:
+          SENTRY_RELEASE: ${{ env.CRX_VER }}
         run: |
           npm run build
           cd "${{ github.workspace }}/dist/" && zip -r "${{ github.workspace }}/release/crx.zip" ./
 
       - name: Build Firefox Add-ons
+        env:
+          SENTRY_RELEASE: ${{ env.CRX_VER }}
         run: |
           npm run build:firefox
           cd "${{ github.workspace }}/dist/" && zip -r "${{ github.workspace }}/release/firefox.zip" ./
@@ -79,6 +84,29 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ github.workspace }}/release/*
+
+  release-chrome:
+    name: Publish on Chrome
+    if: ${{ github.ref_type == 'tag' }}
+    runs-on: ubuntu-latest
+    needs:
+      - build
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Proxyverse
+          path: ${{ github.workspace }}/release/
+
+      - name: Upload to Chrome Web Store
+        uses: wdzeng/chrome-extension@v1
+        with:
+          extension-id: igknmaflmijecdmjpcgollghmipkfbho
+          zip-path: ${{ github.workspace }}/release/crx.zip
+          client-id: ${{ secrets.CHROME_CLIENT_ID }}
+          client-secret: ${{ secrets.CHROME_CLIENT_SECRET }}
+          refresh-token: ${{ secrets.CHROME_REFRESH_TOKEN }}
 
   release-edge:
     name: Publish on Edge

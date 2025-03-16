@@ -13,7 +13,10 @@ const props = defineProps<{
   disabled?: boolean;
 }>();
 
-const profileID = defineModel<string>();
+const profileID = defineModel<string>({
+  required: true,
+});
+
 const userProfiles = ref<ProxyProfile[]>([]);
 const systemProfiles = ref<ProxyProfile[]>([]);
 const selectedProfile = computed<ProxyProfile | undefined>({
@@ -28,7 +31,9 @@ const selectedProfile = computed<ProxyProfile | undefined>({
     );
   },
   set: (value) => {
-    profileID.value = value?.profileID;
+    if (value) {
+      profileID.value = value.profileID;
+    }
   },
 });
 
@@ -96,6 +101,7 @@ onBeforeMount(() => {
         </a-doption>
         <a-doption
           :value="SystemProfile.SYSTEM.profileID"
+          :disabled="!!props.currentProfileID"
           :style="{ '--indicator-color': SystemProfile.SYSTEM.color }"
         >
           <template #icon><icon-desktop /></template>

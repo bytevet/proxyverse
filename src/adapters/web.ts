@@ -3,6 +3,7 @@
 import {
   BaseAdapter,
   BlockingResponse,
+  BrowserFlavor,
   ProxyConfig,
   ProxyErrorDetails,
   ProxySettingResultDetails,
@@ -20,6 +21,10 @@ const _i18n: {
 } = i18nData;
 
 export class WebBrowser extends BaseAdapter {
+  get flavor() {
+    return BrowserFlavor.Web;
+  }
+
   async set<T>(key: string, val: T): Promise<void> {
     localStorage.setItem(key, JSON.stringify(val));
   }

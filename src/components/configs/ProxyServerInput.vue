@@ -115,7 +115,7 @@ const onClearAuth = () => {
         <a-select
           :options="options"
           :style="{ width: proxyType == optionDefault ? 'auto' : '7em' }"
-          v-model="proxyType"
+          v-model="proxyType as string"
         />
 
         <template v-if="proxyType == optionDirect"></template>

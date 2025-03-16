@@ -3,6 +3,7 @@
 import {
   BaseAdapter,
   BlockingResponse,
+  BrowserFlavor,
   ProxyConfig,
   ProxyErrorDetails,
   ProxySettingResultDetails,
@@ -12,6 +13,10 @@ import {
 } from "./base";
 
 export class Chrome extends BaseAdapter {
+  get flavor() {
+    return BrowserFlavor.Chrome;
+  }
+
   async set<T>(key: string, val: T): Promise<void> {
     return await chrome.storage.local.set({
       [key]: val,
