@@ -11,6 +11,7 @@ import {
 } from "@/services/profile";
 import ProfileSelector from "./ProfileSelector.vue";
 import { BrowserFlavor } from "@/adapters/base";
+import { isValidCIDR } from "ipaddr.js";
 
 const props = defineProps<{
   currentProfileID?: string;
@@ -133,11 +134,16 @@ const getConditionInputRule = (type: AutoSwitchType): FieldRule<string> => {
     case "cidr":
       return {
         required: true,
-        message: Host.getMessage(
-          "config_section_auto_switch_type_cidr_malformed"
-        ),
-        match:
-          /^((\d{1,3}\.){3}\d{1,3}\/\d{1,2}|([a-fA-F0-9:]+:+)+[a-fA-F0-9]+\/\d{1,3})$/,
+        validator: (value, cb) => {
+          if (!value || !isValidCIDR(value)) {
+            cb(
+              Host.getMessage("config_section_auto_switch_type_cidr_malformed")
+            );
+            return;
+          }
+
+          cb();
+        },
       };
 
     default:
