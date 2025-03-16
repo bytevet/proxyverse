@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { IconCopy, IconPlus, IconDelete } from "@arco-design/web-vue/es/icon";
+import { FieldRule } from "@arco-design/web-vue/es/form";
 
 import { Host } from "@/adapters";
 import {
@@ -9,6 +10,7 @@ import {
   SystemProfile,
 } from "@/services/profile";
 import ProfileSelector from "./ProfileSelector.vue";
+import { BrowserFlavor } from "@/adapters/base";
 
 const props = defineProps<{
   currentProfileID?: string;
@@ -90,96 +92,196 @@ const columns = [
     slotName: "actions",
   },
 ];
+
+const getConditionInputRule = (type: AutoSwitchType): FieldRule<string> => {
+  switch (type) {
+    case "disabled":
+      return {};
+
+    case "url":
+      return {
+        validator: async (value, cb) => {
+          console.log("test");
+          let u;
+          try {
+            u = new URL(value || "");
+          } catch (e) {
+            cb(
+              Host.getMessage("config_section_auto_switch_type_url_malformed")
+            );
+            return;
+          }
+
+          if (
+            Host.flavor === BrowserFlavor.Chrome ||
+            Host.flavor === BrowserFlavor.Web
+          ) {
+            if (u.protocol === "https:" && !["", "/"].includes(u.pathname)) {
+              cb(
+                Host.getMessage(
+                  "config_section_auto_switch_type_url_malformed_chrome"
+                )
+              );
+              return;
+            }
+          }
+
+          cb();
+        },
+      };
+
+    case "cidr":
+      return {
+        required: true,
+        message: Host.getMessage(
+          "config_section_auto_switch_type_cidr_malformed"
+        ),
+        match:
+          /^((\d{1,3}\.){3}\d{1,3}\/\d{1,2}|([a-fA-F0-9:]+:+)+[a-fA-F0-9]+\/\d{1,3})$/,
+      };
+
+    default:
+      return {
+        required: true,
+      };
+  }
+};
 </script>
 
 <template>
-  <a-table
-    :columns="columns"
-    :data="config.rules"
-    :pagination="false"
-    @change="onDragged"
-    :draggable="{ type: 'handle' }"
-  >
-    <template #type="{ record }: { record: AutoSwitchRule }">
-      <a-select :options="autoSwitchTypes" v-model="record.type" />
-    </template>
-
-    <template #condition="{ record }: { record: AutoSwitchRule }">
-      <a-input
-        v-model="record.condition"
-        :placeholder="getPlaceholder(record.type)"
-        :disabled="record.type === 'disabled'"
-      />
-    </template>
-
-    <template #profile="{ record }: { record: AutoSwitchRule }">
-      <ProfileSelector
-        v-model="record.profileID"
-        :currentProfileID="props.currentProfileID"
-        :disabled="record.type === 'disabled'"
-      />
-    </template>
-
-    <template
-      #actions="{
-        record,
-        rowIndex,
-      }: {
-        record: AutoSwitchRule,
-        rowIndex: number,
-      }"
+  <form layout="vertical" class="auto-switch-form" :model="config">
+    <a-table
+      :columns="columns"
+      :data="config.rules"
+      :pagination="false"
+      @change="onDragged"
+      :draggable="{ type: 'handle' }"
     >
-      <a-space>
-        <a-tooltip :content="$t('config_section_auto_switch_delete_rule')">
-          <a-button
-            type="outline"
-            shape="circle"
-            status="danger"
-            @click="() => deleteRule(rowIndex)"
-          >
-            <icon-delete />
-          </a-button>
-        </a-tooltip>
-        <a-tooltip :content="$t('config_section_auto_switch_duplicate_rule')">
-          <a-button
-            type="outline"
-            shape="circle"
-            @click="() => newRule(record)"
-          >
-            <icon-copy />
-          </a-button>
-        </a-tooltip>
-      </a-space>
-    </template>
-
-    <template #footer>
-      <div class="space-between">
-        <a-button @click="() => newRule()" size="small">
-          <template #icon>
-            <icon-plus />
-          </template>
-          {{ Host.getMessage("config_section_auto_switch_add_rule") }}
-        </a-button>
-
-        <a-space>
-          <a-typography-text>
-            {{
-              Host.getMessage("config_section_auto_switch_default_profile")
-            }}</a-typography-text
-          >
-          <ProfileSelector
-            v-model="config.defaultProfileID"
-            :currentProfileID="props.currentProfileID"
+      <template
+        #type="{
+          record,
+          rowIndex,
+        }: {
+          record: AutoSwitchRule,
+          rowIndex: number,
+        }"
+      >
+        <a-form-item hide-label :field="`rules[${rowIndex}].type`">
+          <a-select
+            :options="autoSwitchTypes"
+            v-model="record.type as string"
           />
+        </a-form-item>
+      </template>
+
+      <template
+        #condition="{
+          record,
+          rowIndex,
+        }: {
+          record: AutoSwitchRule,
+          rowIndex: number,
+        }"
+      >
+        <a-form-item
+          hide-label
+          :field="`rules[${rowIndex}].condition`"
+          :rules="getConditionInputRule(record.type)"
+          validate-trigger="blur"
+        >
+          <a-input
+            v-model="record.condition"
+            :placeholder="getPlaceholder(record.type)"
+            :disabled="record.type === 'disabled'"
+          />
+        </a-form-item>
+      </template>
+
+      <template
+        #profile="{
+          record,
+          rowIndex,
+        }: {
+          record: AutoSwitchRule,
+          rowIndex: number,
+        }"
+      >
+        <a-form-item hide-label :field="`rules[${rowIndex}].profileID`">
+          <ProfileSelector
+            v-model="record.profileID"
+            :currentProfileID="props.currentProfileID"
+            :disabled="record.type === 'disabled'"
+          />
+        </a-form-item>
+      </template>
+
+      <template
+        #actions="{
+          record,
+          rowIndex,
+        }: {
+          record: AutoSwitchRule,
+          rowIndex: number,
+        }"
+      >
+        <a-space>
+          <a-tooltip :content="$t('config_section_auto_switch_delete_rule')">
+            <a-button
+              type="outline"
+              shape="circle"
+              status="danger"
+              @click="() => deleteRule(rowIndex)"
+            >
+              <icon-delete />
+            </a-button>
+          </a-tooltip>
+          <a-tooltip :content="$t('config_section_auto_switch_duplicate_rule')">
+            <a-button
+              type="outline"
+              shape="circle"
+              @click="() => newRule(record)"
+            >
+              <icon-copy />
+            </a-button>
+          </a-tooltip>
         </a-space>
-      </div>
-    </template>
-  </a-table>
+      </template>
+
+      <template #footer>
+        <div class="space-between">
+          <a-button @click="() => newRule()" size="small">
+            <template #icon>
+              <icon-plus />
+            </template>
+            {{ Host.getMessage("config_section_auto_switch_add_rule") }}
+          </a-button>
+
+          <a-space>
+            <a-typography-text>
+              {{
+                Host.getMessage("config_section_auto_switch_default_profile")
+              }}</a-typography-text
+            >
+            <ProfileSelector
+              v-model="config.defaultProfileID"
+              :currentProfileID="props.currentProfileID"
+            />
+          </a-space>
+        </div>
+      </template>
+    </a-table>
+  </form>
 </template>
 
 <style lang="scss">
 .space-between {
   display: flex;
   justify-content: space-between;
+}
+
+.auto-switch-form {
+  .arco-form-item {
+    margin-bottom: 0;
+  }
 }
 </style>
