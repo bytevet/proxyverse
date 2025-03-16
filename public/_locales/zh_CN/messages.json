@@ -107,8 +107,17 @@
   "config_section_auto_switch_type_url": {
     "message": "URL"
   },
+  "config_section_auto_switch_type_url_malformed": {
+    "message": "无效 URL"
+  },
+  "config_section_auto_switch_type_url_malformed_chrome": {
+    "message": "出于安全考虑，Chrome 浏览器不支持 HTTPS URL 中的路径匹配。了解更多信息，请访问 https://issues.chromium.org/40083832"
+  },
   "config_section_auto_switch_type_cidr": {
-    "message": "IP/网段"
+    "message": "CIDR"
+  },
+  "config_section_auto_switch_type_cidr_malformed": {
+    "message": "无效 CIDR。请使用 \"192.168.1.1/24\" 或 \"2001:db8::/32\" 等格式。"
   },
   "config_section_auto_switch_type_disabled": {
     "message": "临时禁用"
@@ -200,7 +209,6 @@
   "preferences_feedback_n_profiles_being_imported": {
     "message": "已导入$1 份有效配置"
   },
-
 
   "form_is_required": {
     "message": "$1是必填项"

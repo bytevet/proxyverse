@@ -107,8 +107,17 @@
   "config_section_auto_switch_type_url": {
     "message": "URL"
   },
+  "config_section_auto_switch_type_url_malformed": {
+    "message": "URL inválido"
+  },
+  "config_section_auto_switch_type_url_malformed_chrome": {
+    "message": "Por motivos de segurança, o Chrome não suporta a correspondência de caminhos em URLs HTTPS. Saiba mais em https://issues.chromium.org/40083832"
+  },
   "config_section_auto_switch_type_cidr": {
-    "message": "IP/CIDR"
+    "message": "CIDR"
+  },
+  "config_section_auto_switch_type_cidr_malformed": {
+    "message": "CIDR inválido. Use o formato `192.168.1.1/24` ou `2001:db8::/32`"
   },
   "config_section_auto_switch_type_disabled": {
     "message": "Ignorar temporariamente"
@@ -200,7 +209,6 @@
   "preferences_feedback_n_profiles_being_imported": {
     "message": "$1 perfis foram importados"
   },
-
 
   "form_is_required": {
     "message": "$1 é necessário"
