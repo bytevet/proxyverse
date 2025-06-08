@@ -4,7 +4,7 @@ import {
   ProxyAuthInfo,
   SystemProfile,
   getProfile,
-  ProfileAuthSwitch,
+  ProfileAutoSwitch,
 } from "../profile";
 import { ProxySettingResultDetails } from "@/adapters";
 import { ProfileConverter } from "./profile2config";
@@ -81,7 +81,7 @@ export async function refreshProxy() {
   await Host.setProxy(await profile.toProxyConfig());
 }
 
-export async function previewAutoSwitchPac(val: ProfileAuthSwitch) {
+export async function previewAutoSwitchPac(val: ProfileAutoSwitch) {
   const profile = new ProfileConverter(val, getProfile);
   return await profile.toPAC();
 }

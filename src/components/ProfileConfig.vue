@@ -17,7 +17,7 @@ import AutoSwitchInput from "./configs/AutoSwitchInput.vue";
 import AutoSwitchPacPreview from "./configs/AutoSwitchPacPreview.vue";
 import ScriptInput from "./configs/ScriptInput.vue";
 import {
-  ProfileAuthSwitch,
+  ProfileAutoSwitch,
   ProfileSimple,
   ProxyServer,
   SystemProfile,
@@ -38,7 +38,7 @@ const chooseRandomColor = () => {
   return colors[idx];
 };
 
-type ConfigState = (ProfileSimple | ProfileAuthSwitch) & {
+type ConfigState = (ProfileSimple | ProfileAutoSwitch) & {
   [key: string]: any;
 };
 
@@ -427,7 +427,7 @@ watchEffect(async () => {
 
           <AutoSwitchPacPreview
             v-if="profileConfig.proxyType == 'auto'"
-            :profile="(profileConfig as ProfileAuthSwitch)"
+            :profile="(profileConfig as ProfileAutoSwitch)"
           />
         </a-space>
       </template>

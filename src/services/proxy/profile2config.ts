@@ -2,7 +2,7 @@ import { generate as generateJS } from "escodegen";
 import type { Program, Statement } from "acorn";
 import {
   AutoSwitchRule,
-  ProfileAuthSwitch,
+  ProfileAutoSwitch,
   ProxyProfile,
   ProxyServer,
 } from "../profile";
@@ -305,7 +305,7 @@ export class ProfileConverter {
     );
   }
 
-  private async prepareAutoProfilePrecedence(profile: ProfileAuthSwitch) {
+  private async prepareAutoProfilePrecedence(profile: ProfileAutoSwitch) {
     const loadedProfiles = new Set<string>();
     const stmt: Statement[] = [
       // var profiles = profiles || {};
