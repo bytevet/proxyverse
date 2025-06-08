@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { IconCopy } from "@arco-design/web-vue/es/icon";
-import { ProfileAuthSwitch } from "@/services/profile";
+import { ProfileAutoSwitch } from "@/services/profile";
 import { useClipboard, watchDebounced } from "@vueuse/core";
 import { ref } from "vue";
 import { previewAutoSwitchPac } from "@/services/proxy";
@@ -9,7 +9,7 @@ import hljsVuePlugin from "@highlightjs/vue-plugin";
 const highlightjs = hljsVuePlugin.component;
 
 const { profile } = defineProps<{
-  profile: ProfileAuthSwitch;
+  profile: ProfileAutoSwitch;
 }>();
 
 const pacScript = ref<string>("");

@@ -17,7 +17,7 @@ import AutoSwitchInput from "./configs/AutoSwitchInput.vue";
 import AutoSwitchPacPreview from "./configs/AutoSwitchPacPreview.vue";
 import ScriptInput from "./configs/ScriptInput.vue";
 import {
-  ProfileAuthSwitch,
+  ProfileAutoSwitch,
   ProfileSimple,
   ProxyServer,
   SystemProfile,
@@ -38,7 +38,7 @@ const chooseRandomColor = () => {
   return colors[idx];
 };
 
-type ConfigState = (ProfileSimple | ProfileAuthSwitch) & {
+type ConfigState = (ProfileSimple | ProfileAutoSwitch) & {
   [key: string]: any;
 };
 
@@ -132,7 +132,10 @@ const proxyServerFieldRule = (
   return {
     type: "object",
     required: required,
-    validator(value, callback) {
+    validator(
+      value: ProxyServer | undefined,
+      callback: (message?: string) => void
+    ) {
       if (value == undefined || value.scheme == "direct") {
         return;
       }
@@ -151,7 +154,10 @@ const pacScriptFieldRule = (
   return {
     type: "object",
     required: required,
-    validator(value, callback) {
+    validator(
+      value: PacScript | undefined,
+      callback: (message?: string) => void
+    ) {
       if (value == undefined) {
         return;
       }
@@ -421,7 +427,7 @@ watchEffect(async () => {
 
           <AutoSwitchPacPreview
             v-if="profileConfig.proxyType == 'auto'"
-            :profile="(profileConfig as ProfileAuthSwitch)"
+            :profile="(profileConfig as ProfileAutoSwitch)"
           />
         </a-space>
       </template>

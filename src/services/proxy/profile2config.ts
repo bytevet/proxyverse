@@ -2,7 +2,7 @@ import { generate as generateJS } from "escodegen";
 import type { Program, Statement } from "acorn";
 import {
   AutoSwitchRule,
-  ProfileAuthSwitch,
+  ProfileAutoSwitch,
   ProxyProfile,
   ProxyServer,
 } from "../profile";
@@ -14,7 +14,9 @@ import {
 } from "./scriptHelper";
 import { ProxyConfig } from "@/adapters";
 
-type ProfileLoader = (profileID: string) => Promise<ProxyProfile | undefined>;
+export type ProfileLoader = (
+  profileID: string
+) => Promise<ProxyProfile | undefined>;
 
 export class ProfileConverter {
   constructor(
@@ -44,6 +46,10 @@ export class ProfileConverter {
     }
   }
 
+  /**
+   * Convert the `auto` profile to a PAC script
+   * @returns the PAC script
+   */
   async toPAC() {
     const astProgram: Program = {
       type: "Program",
@@ -299,7 +305,7 @@ export class ProfileConverter {
     );
   }
 
-  private async prepareAutoProfilePrecedence(profile: ProfileAuthSwitch) {
+  private async prepareAutoProfilePrecedence(profile: ProfileAutoSwitch) {
     const loadedProfiles = new Set<string>();
     const stmt: Statement[] = [
       // var profiles = profiles || {};
