@@ -132,7 +132,10 @@ const proxyServerFieldRule = (
   return {
     type: "object",
     required: required,
-    validator(value, callback) {
+    validator(
+      value: ProxyServer | undefined,
+      callback: (message?: string) => void
+    ) {
       if (value == undefined || value.scheme == "direct") {
         return;
       }
@@ -151,7 +154,10 @@ const pacScriptFieldRule = (
   return {
     type: "object",
     required: required,
-    validator(value, callback) {
+    validator(
+      value: PacScript | undefined,
+      callback: (message?: string) => void
+    ) {
       if (value == undefined) {
         return;
       }

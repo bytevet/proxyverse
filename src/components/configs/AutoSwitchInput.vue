@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { IconCopy, IconPlus, IconDelete } from "@arco-design/web-vue/es/icon";
-import { FieldRule } from "@arco-design/web-vue/es/form";
+import type { FieldRule } from "@arco-design/web-vue";
 
 import { Host } from "@/adapters";
 import {
@@ -101,7 +101,7 @@ const getConditionInputRule = (type: AutoSwitchType): FieldRule<string> => {
 
     case "url":
       return {
-        validator: async (value, cb) => {
+        validator: async (value: string, cb: (message?: string) => void) => {
           console.log("test");
           let u;
           try {
@@ -134,7 +134,7 @@ const getConditionInputRule = (type: AutoSwitchType): FieldRule<string> => {
     case "cidr":
       return {
         required: true,
-        validator: (value, cb) => {
+        validator: (value: string, cb: (message?: string) => void) => {
           if (!value || !isValidCIDR(value)) {
             cb(
               Host.getMessage("config_section_auto_switch_type_cidr_malformed")
