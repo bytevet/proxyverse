@@ -8,6 +8,7 @@ import {
 } from "../profile";
 import { ProxySettingResultDetails } from "@/adapters";
 import { ProfileConverter } from "./profile2config";
+import { ProfileAuthProvider } from "./auth";
 
 export type ProxySetting = {
   activeProfile?: ProxyProfile;
@@ -90,30 +91,10 @@ export async function getAuthInfos(
   port: number
 ): Promise<ProxyAuthInfo[]> {
   const profile = await Host.get<ProxyProfile>(keyActiveProfile);
-  if (!profile || profile.proxyType !== "proxy") {
+  if (!profile) {
     return [];
   }
 
-  const ret: ProxyAuthInfo[] = [];
-  const auths = [
-    profile.proxyRules.default,
-    profile.proxyRules.ftp,
-    profile.proxyRules.http,
-    profile.proxyRules.https,
-  ];
-
-  // check if there's any matching host and port
-  auths.map((item) => {
-    if (!item) return;
-
-    if (
-      item.host == host &&
-      (item.port === undefined || item.port == port) &&
-      item.auth
-    ) {
-      ret.push(item.auth);
-    }
-  });
-
-  return ret;
+  const authProvider = new ProfileAuthProvider(profile, getProfile);
+  return await authProvider.getAuthInfos(host, port);
 }

@@ -14,7 +14,9 @@ import {
 } from "./scriptHelper";
 import { ProxyConfig } from "@/adapters";
 
-type ProfileLoader = (profileID: string) => Promise<ProxyProfile | undefined>;
+export type ProfileLoader = (
+  profileID: string
+) => Promise<ProxyProfile | undefined>;
 
 export class ProfileConverter {
   constructor(
@@ -44,6 +46,10 @@ export class ProfileConverter {
     }
   }
 
+  /**
+   * Convert the `auto` profile to a PAC script
+   * @returns the PAC script
+   */
   async toPAC() {
     const astProgram: Program = {
       type: "Program",
