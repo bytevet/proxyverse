@@ -5,10 +5,9 @@ export type ProxyAuthInfo = {
   password: string;
 };
 
-export interface ProxyServer extends SimpleProxyServer {
+export type ProxyServer = SimpleProxyServer & {
   auth?: ProxyAuthInfo;
-  scheme: "direct" | "http" | "https" | "socks4" | "socks5";
-}
+};
 
 export function sanitizeProxyServer(v: ProxyServer): SimpleProxyServer {
   return {

@@ -108,7 +108,12 @@ const setProxyByProfile = async (val: ProxyProfile) => {
           :style="{ '--indicator-color': item.color }"
         >
           <template #icon><span class="color-indicator"></span></template>
-          {{ item.profileName }}
+          <a-space fill class="profile-name">
+            <span>{{ item.profileName }}</span>
+            <a-tag size="small" color="gray" v-if="item.proxyType == 'auto'">
+              {{ $t("mode_auto_switch_abbr") }}
+            </a-tag>
+          </a-space>
         </a-menu-item>
       </a-menu>
     </a-layout-content>
@@ -185,6 +190,10 @@ const setProxyByProfile = async (val: ProxyProfile) => {
         left: 0;
         top: 0;
       }
+    }
+
+    .profile-name {
+      justify-content: space-between;
     }
   }
 }

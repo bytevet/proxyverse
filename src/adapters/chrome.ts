@@ -10,6 +10,7 @@ import {
   WebAuthenticationChallengeDetails,
   WebRequestCompletedDetails,
   WebRequestErrorOccurredDetails,
+  WebRequestResponseStartedDetails,
 } from "./base";
 
 export class Chrome extends BaseAdapter {
@@ -25,7 +26,7 @@ export class Chrome extends BaseAdapter {
 
   async get<T>(key: string): Promise<T | undefined> {
     const ret = await chrome.storage.local.get(key);
-    return ret[key];
+    return ret[key] as T | undefined;
   }
 
   async setProxy(cfg: ProxyConfig): Promise<void> {
@@ -50,26 +51,36 @@ export class Chrome extends BaseAdapter {
     chrome.proxy.settings.onChange.addListener(callback);
   }
 
-  async setBadge(text: string, color: string): Promise<void> {
+  async setBadge(text: string, color: string, tabID?: number): Promise<void> {
     await chrome.action.setBadgeText({
       text: text.trimStart().substring(0, 2),
+      tabId: tabID,
     });
     await chrome.action.setBadgeBackgroundColor({
       color: color,
+      tabId: tabID,
     });
   }
 
   onWebRequestAuthRequired(
     callback: (
       details: WebAuthenticationChallengeDetails,
-      callback?: (response: BlockingResponse) => void
-    ) => void
+      asyncCallback?: (response: BlockingResponse) => void
+    ) => BlockingResponse | undefined
   ): void {
     chrome.webRequest.onAuthRequired.addListener(
       callback,
       { urls: ["<all_urls>"] },
       ["asyncBlocking"]
     );
+  }
+
+  onWebRequestResponseStarted(
+    callback: (details: WebRequestResponseStartedDetails) => void
+  ): void {
+    chrome.webRequest.onResponseStarted.addListener(callback, {
+      urls: ["<all_urls>"],
+    });
   }
 
   onWebRequestCompleted(

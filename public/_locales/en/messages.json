@@ -29,6 +29,9 @@
   "mode_auto_switch": {
     "message": "Auto Switch"
   },
+  "mode_auto_switch_abbr": {
+    "message": "auto"
+  },
   "mode_direct": {
     "message": "Direct"
   },

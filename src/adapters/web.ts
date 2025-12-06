@@ -10,6 +10,7 @@ import {
   WebAuthenticationChallengeDetails,
   WebRequestCompletedDetails,
   WebRequestErrorOccurredDetails,
+  WebRequestResponseStartedDetails,
 } from "./base";
 
 import i18nData from "@/../public/_locales/en/messages.json";
@@ -56,14 +57,19 @@ export class WebBrowser extends BaseAdapter {
     throw new Error("Method not implemented.");
   }
 
-  async setBadge(text: string, color: string): Promise<void> {
-    return console.log(`Badge: ${text}, ${color}`);
+  async setBadge(text: string, color: string, tabID?: number): Promise<void> {
+    return console.log(`Badge: ${text}, ${color}, ${tabID}`);
   }
   onWebRequestAuthRequired(
     _: (
       details: WebAuthenticationChallengeDetails,
       callback?: (response: BlockingResponse) => void
     ) => void
+  ): void {
+    throw new Error("Method not implemented.");
+  }
+  onWebRequestResponseStarted(
+    _: (details: WebRequestResponseStartedDetails) => void
   ): void {
     throw new Error("Method not implemented.");
   }

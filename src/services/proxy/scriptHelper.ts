@@ -40,7 +40,8 @@ export function parsePACScript(script: string): Statement[] {
 }
 
 export const newProxyString = (cfg: ProxyServer) => {
-  if (cfg.scheme == "direct") {
+  const scheme = cfg.scheme || "http";
+  if (scheme == "direct") {
     return PACScriptHelper.newSimpleLiteral("DIRECT");
   }
 
@@ -49,14 +50,14 @@ export const newProxyString = (cfg: ProxyServer) => {
     host += `:${cfg.port}`;
   }
 
-  if (["http", "https"].includes(cfg.scheme)) {
+  if (["http", "https"].includes(scheme)) {
     return PACScriptHelper.newSimpleLiteral(
       `${cfg.scheme == "http" ? "PROXY" : "HTTPS"} ${host}`
     );
   }
 
   return PACScriptHelper.newSimpleLiteral(
-    `${cfg.scheme.toUpperCase()} ${host}; SOCKS ${host}`
+    `${scheme.toUpperCase()} ${host}; SOCKS ${host}`
   );
 };
 

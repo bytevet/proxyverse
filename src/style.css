@@ -1,10 +1,9 @@
 html {
   min-width: 18em;
-  min-height: 24em;
+  min-height: 32em;
 }
 
 #app {
   min-height: 100vh;
   display: flex;
 }
-

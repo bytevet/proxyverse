@@ -1,52 +1,53 @@
 export type WebAuthenticationChallengeDetails =
-  | chrome.webRequest.WebAuthenticationChallengeDetails
+  | chrome.webRequest.OnAuthRequiredDetails
   | browser.webRequest._OnAuthRequiredDetails;
 export type BlockingResponse = chrome.webRequest.BlockingResponse;
+
+export type WebRequestResponseStartedDetails =
+  | chrome.webRequest.OnResponseStartedDetails
+  | browser.webRequest._OnResponseStartedDetails;
+
 export type WebRequestCompletedDetails =
-  | chrome.webRequest.WebResponseDetails
+  | chrome.webRequest.OnCompletedDetails
   | browser.webRequest._OnCompletedDetails;
 
 export type WebRequestErrorOccurredDetails =
-  | chrome.webRequest.WebResponseDetails
+  | chrome.webRequest.OnErrorOccurredDetails
   | browser.webRequest._OnErrorOccurredDetails;
 
-export type ProxyConfig = {
-  /** Optional. The proxy auto-config (PAC) script for this configuration. Use this for 'pac_script' mode. */
-  pacScript?: PacScript;
-  /**
-   * 'direct' = Never use a proxy
-   * 'auto_detect' = Auto detect proxy settings
-   * 'pac_script' = Use specified PAC script
-   * 'system' = Use system proxy settings
-   */
-  mode: "direct" | "auto_detect" | "pac_script" | "system";
-};
+export type ProxyConfig = chrome.proxy.ProxyConfig;
 
 export type ProxyErrorDetails = chrome.proxy.ErrorDetails | Error;
-export type ProxySettingResultDetails = {
-  /**
-   * One of
-   * • not_controllable: cannot be controlled by any extension
-   * • controlled_by_other_extensions: controlled by extensions with higher precedence
-   * • controllable_by_this_extension: can be controlled by this extension
-   * • controlled_by_this_extension: controlled by this extension
-   */
-  levelOfControl:
-    | "not_controllable"
-    | "controlled_by_other_extensions"
-    | "controllable_by_this_extension"
-    | "controlled_by_this_extension";
-  /** The value of the setting. */
-  value: ProxyConfig;
-  /**
-   * Optional.
-   * Whether the effective value is specific to the incognito session.
-   * This property will only be present if the incognito property in the details parameter of get() was true.
-   */
-  incognitoSpecific?: boolean | undefined;
-};
+export type ProxySettingResultDetails =
+  | chrome.types.ChromeSettingGetResult<ProxyConfig>
+  | {
+      /**
+       * One of
+       * • not_controllable: cannot be controlled by any extension
+       * • controlled_by_other_extensions: controlled by extensions with higher precedence
+       * • controllable_by_this_extension: can be controlled by this extension
+       * • controlled_by_this_extension: controlled by this extension
+       */
+      levelOfControl:
+        | "not_controllable"
+        | "controlled_by_other_extensions"
+        | "controllable_by_this_extension"
+        | "controlled_by_this_extension";
+      /** The value of the setting. */
+      value: ProxyConfig;
+      /**
+       * Optional.
+       * Whether the effective value is specific to the incognito session.
+       * This property will only be present if the incognito property in the details parameter of get() was true.
+       */
+      incognitoSpecific?: boolean | undefined;
+    };
 
-export type SimpleProxyServer = chrome.proxy.ProxyServer;
+export type SimpleProxyServer = {
+  host: string;
+  port?: number;
+  scheme?: "direct" | "http" | "https" | "socks4" | "socks5";
+};
 export type PacScript = chrome.proxy.PacScript;
 export type ProxyRules = chrome.proxy.ProxyRules;
 
@@ -83,14 +84,17 @@ export abstract class BaseAdapter {
   abstract getProxySettings(): Promise<ProxySettingResultDetails>;
 
   // indicator
-  abstract setBadge(text: string, color: string): Promise<void>;
+  abstract setBadge(text: string, color: string, tabID?: number): Promise<void>;
 
   // webRequest
   abstract onWebRequestAuthRequired(
     callback: (
       details: WebAuthenticationChallengeDetails,
-      callback?: (response: BlockingResponse) => void
-    ) => void
+      asyncCallback?: (response: BlockingResponse) => void
+    ) => BlockingResponse | undefined
+  ): void;
+  abstract onWebRequestResponseStarted(
+    callback: (details: WebRequestResponseStartedDetails) => void
   ): void;
   abstract onWebRequestCompleted(
     callback: (details: WebRequestCompletedDetails) => void
