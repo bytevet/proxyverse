@@ -29,6 +29,17 @@
   "mode_auto_switch": {
     "message": "自動切換"
   },
+  "mode_auto_switch_abbr": {
+    "message": "自動"
+  },
+
+  "mode_auto_switch_detection_info": {
+    "message": "當前頁面使用$1 "
+  },
+  "mode_auto_switch_detection_tips": {
+    "message": "由於瀏覽器的限制，偵測並不總是準確的。"
+  },
+
   "mode_direct": {
     "message": "直通模式"
   },
