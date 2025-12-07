@@ -4,15 +4,25 @@ import {
   WebAuthenticationChallengeDetails,
   WebResponseDetails,
 } from "./adapters";
-import { WebRequestErrorOccurredDetails } from "./adapters/base";
+import {
+  WebRequestErrorOccurredDetails,
+  WebRequestResponseStartedDetails,
+} from "./adapters/base";
 import { setIndicator } from "./services/indicator";
-import { getAuthInfos, getCurrentProxySetting } from "./services/proxy";
+import {
+  findProfile,
+  getAuthInfos,
+  getCurrentProxySetting,
+} from "./services/proxy";
+import { WebRequestStatsService } from "./services/stats";
 
 // indicator
 async function initIndicator() {
-  await setIndicator(await getCurrentProxySetting());
+  const proxySetting = await getCurrentProxySetting();
+  await setIndicator(proxySetting.activeProfile);
   Host.onProxyChanged(async () => {
-    await setIndicator(await getCurrentProxySetting());
+    const proxySetting = await getCurrentProxySetting();
+    await setIndicator(proxySetting.activeProfile);
   });
 }
 
@@ -33,10 +43,10 @@ class ProxyAuthProvider {
 
   static onAuthRequired(
     details: WebAuthenticationChallengeDetails,
-    callback?: (response: BlockingResponse) => void
-  ) {
+    asyncCallback?: (response: BlockingResponse) => void
+  ): BlockingResponse | undefined {
     if (!details.isProxy) {
-      callback && callback({});
+      asyncCallback && asyncCallback({});
       return;
     }
 
@@ -53,17 +63,18 @@ class ProxyAuthProvider {
           ProxyAuthProvider.requests[details.requestId]
         );
         if (!auth) {
-          callback && callback({ cancel: true });
+          asyncCallback && asyncCallback({ cancel: true });
           return;
         }
 
-        callback &&
-          callback({
+        asyncCallback &&
+          asyncCallback({
             authCredentials: {
               username: auth.username,
               password: auth.password,
             },
           });
+        return;
       }
     );
   }
@@ -72,4 +83,48 @@ class ProxyAuthProvider {
 Host.onWebRequestAuthRequired(ProxyAuthProvider.onAuthRequired);
 Host.onWebRequestCompleted(ProxyAuthProvider.onCompleted);
 Host.onWebRequestErrorOccurred(ProxyAuthProvider.onCompleted);
+
+// web request stats
+class StatsProvider {
+  private static stats: WebRequestStatsService = new WebRequestStatsService();
+
+  static async onResponseStarted(details: WebRequestResponseStartedDetails) {
+    if (details.type !== "main_frame") {
+      // ignore all non-main-frame requests
+      return;
+    }
+    // this.stats.addFailedRequest(details);
+    // TODO: update indicator
+    const proxySetting = await getCurrentProxySetting();
+    console.log("onResponseStarted", details);
+    if (details.tabId > 0 && proxySetting.activeProfile) {
+      const ret = await findProfile(
+        proxySetting.activeProfile,
+        new URL(details.url)
+      );
+
+      StatsProvider.stats.setCurrentProfile(details.tabId, ret);
+
+      if (ret.profile && ret.isConfident) {
+        const profile = ret.profile.profile;
+        setTimeout(() => setIndicator(profile, details.tabId), 50); // Sometimes the indicator doesn't update properly in Chrome, so we need to wait a bit.
+        return;
+      }
+
+      await setIndicator(proxySetting.activeProfile, details.tabId);
+    }
+  }
+
+  static onRequestError(details: WebRequestErrorOccurredDetails) {
+    StatsProvider.stats.addFailedRequest(details);
+  }
+
+  static onTabRemoved(tabID: number) {
+    StatsProvider.stats.closeTab(tabID);
+  }
+}
+Host.onWebRequestResponseStarted(StatsProvider.onResponseStarted);
+Host.onWebRequestErrorOccurred(StatsProvider.onRequestError);
+Host.onTabRemoved(StatsProvider.onTabRemoved);
+
 Host.onProxyError(console.warn);

@@ -23,6 +23,7 @@ const getCRXVersion = () => {
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
+  const isTest = mode === "test";
   const transformer = TRANSFORMER_CONFIG[mode];
 
   return {
@@ -94,26 +95,30 @@ export default defineConfig(({ mode }) => {
           // },
         },
         plugins: [
-          sentryVitePlugin({
-            authToken: process.env.SENTRY_AUTH_TOKEN,
-            org: "bytevet",
-            project: "proxyverse",
-            telemetry: false,
-            sourcemaps: {
-              filesToDeleteAfterUpload: "**/*.js.map",
-            },
-            bundleSizeOptimizations: {
-              excludeDebugStatements: true,
-            },
-            release: {
-              inject: true,
-              dist: `v${getCRXVersion()}-${mode ? mode : "crx"}`,
-            },
-          }),
-          visualizer({
-            filename: "stats.html",
-            open: true,
-          }),
+          isTest
+            ? undefined
+            : sentryVitePlugin({
+                authToken: process.env.SENTRY_AUTH_TOKEN,
+                org: "bytevet",
+                project: "proxyverse",
+                telemetry: false,
+                sourcemaps: {
+                  filesToDeleteAfterUpload: "**/*.js.map",
+                },
+                bundleSizeOptimizations: {
+                  excludeDebugStatements: true,
+                },
+                release: {
+                  inject: true,
+                  dist: `v${getCRXVersion()}-${mode ? mode : "crx"}`,
+                },
+              }),
+          isTest
+            ? undefined
+            : visualizer({
+                filename: "stats.html",
+                open: true,
+              }),
         ],
       },
     },

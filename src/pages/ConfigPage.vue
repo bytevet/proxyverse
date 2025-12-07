@@ -163,7 +163,7 @@ onMounted(async () => {
     background-color: var(--indicator-color);
 
     border-radius: 0.5em;
-    vertical-align: top;
+    vertical-align: -2px;
     box-shadow: 0px 1px 4px var(--color-border-3);
   }
 
