@@ -29,6 +29,17 @@
   "mode_auto_switch": {
     "message": "Comutação automática"
   },
+  "mode_auto_switch_abbr": {
+    "message": "automático"
+  },
+
+  "mode_auto_switch_detection_info": {
+    "message": "$1 é usado para essa guia"
+  },
+  "mode_auto_switch_detection_tips": {
+    "message": "Devido à limitação do navegador, a detecção nem sempre é precisa."
+  },
+
   "mode_direct": {
     "message": "Direto"
   },

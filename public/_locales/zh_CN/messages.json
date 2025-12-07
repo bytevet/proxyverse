@@ -29,6 +29,17 @@
   "mode_auto_switch": {
     "message": "自动切换"
   },
+  "mode_auto_switch_abbr": {
+    "message": "自动"
+  },
+
+  "mode_auto_switch_detection_info": {
+    "message": "当前页面使用$1 "
+  },
+  "mode_auto_switch_detection_tips": {
+    "message": "由于浏览器的限制，检测结果可能不准确。"
+  },
+
   "mode_direct": {
     "message": "直接连接"
   },
