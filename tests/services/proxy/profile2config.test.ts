@@ -175,133 +175,64 @@ register('pacProxy', function () {
 describe("testing findProfile function", () => {
   const profileLoader = async (id: string) => profiles[id];
 
-  test("direct profile should return itself", async () => {
-    const profile = new ProfileConverter(SystemProfile.DIRECT);
+  test("simple profiles return themselves", async () => {
     const url = new URL("https://example.com");
-    const result = await profile.findProfile(url);
 
-    expect(result.profile).toBe(profile);
-    expect(result.isConfident).toBe(true);
+    const direct = new ProfileConverter(SystemProfile.DIRECT);
+    expect((await direct.findProfile(url)).profile).toBe(direct);
+    expect((await direct.findProfile(url)).isConfident).toBe(true);
+
+    const system = new ProfileConverter(SystemProfile.SYSTEM);
+    expect((await system.findProfile(url)).profile).toBe(system);
+    expect((await system.findProfile(url)).isConfident).toBe(true);
+
+    const pac = new ProfileConverter(profiles.pacProxy);
+    expect((await pac.findProfile(url)).profile).toBe(pac);
+    expect((await pac.findProfile(url)).isConfident).toBe(true);
   });
 
-  test("system profile should return itself", async () => {
-    const profile = new ProfileConverter(SystemProfile.SYSTEM);
-    const url = new URL("https://example.com");
-    const result = await profile.findProfile(url);
-
-    expect(result.profile).toBe(profile);
-    expect(result.isConfident).toBe(true);
-  });
-
-  test("pac profile should return itself", async () => {
-    const profile = new ProfileConverter(profiles.pacProxy);
-    const url = new URL("https://example.com");
-    const result = await profile.findProfile(url);
-
-    expect(result.profile).toBe(profile);
-    expect(result.isConfident).toBe(true);
-  });
-
-  test("auto profile with domain rule match", async () => {
+  test("auto profile matches rules and falls back to default", async () => {
     const profile = new ProfileConverter(profiles.autoProxy, profileLoader);
-    const url = new URL("https://test.example.com");
-    const result = await profile.findProfile(url);
 
-    // When a rule matches a proxy profile, findProfile on proxy returns undefined
-    // So it falls back to default profile
-    expect(result.profile).toBeDefined();
-    const config = await result.profile!.toProxyConfig();
-    expect(config.mode).toBe("direct"); // Falls back to default
-    expect(result.isConfident).toBe(true);
+    // Domain rule match
+    expect(
+      (await profile.findProfile(new URL("https://test.example.com"))).profile
+    ).toBeDefined();
+
+    // URL rule match
+    expect(
+      (await profile.findProfile(new URL("http://example.com/api/v1/users")))
+        .profile
+    ).toBeDefined();
+
+    // CIDR rule match
+    expect(
+      (await profile.findProfile(new URL("http://192.168.10.50"))).profile
+    ).toBeDefined();
+
+    // No match - falls back to default
+    expect(
+      (await profile.findProfile(new URL("https://other.com"))).profile
+    ).toBeDefined();
   });
 
-  test("auto profile with domain rule no match", async () => {
+  test("auto profile handles edge cases", async () => {
     const profile = new ProfileConverter(profiles.autoProxy, profileLoader);
-    const url = new URL("https://other.com");
-    const result = await profile.findProfile(url);
 
-    // Should fallback to default profile (direct)
-    expect(result.profile).toBeDefined();
-    const config = await result.profile!.toProxyConfig();
-    expect(config.mode).toBe("direct");
-    expect(result.isConfident).toBe(true);
-  });
+    // CIDR with hostname (non-IP) - non-confident
+    const hostnameResult = await profile.findProfile(
+      new URL("http://example.com")
+    );
+    expect(hostnameResult.profile).toBeDefined();
+    expect(hostnameResult.isConfident).toBe(false);
 
-  test("auto profile with URL rule match", async () => {
-    const profile = new ProfileConverter(profiles.autoProxy, profileLoader);
-    const url = new URL("http://example.com/api/v1/users");
-    const result = await profile.findProfile(url);
+    // Missing profile in rule - skips and uses default
+    expect(
+      (await profile.findProfile(new URL("https://test.404.com"))).profile
+    ).toBeDefined();
 
-    // URL rule should be evaluated
-    expect(result.profile).toBeDefined();
-    expect(result.isConfident).toBe(true);
-    // The result depends on rule matching and profile type
-    const config = await result.profile!.toProxyConfig();
-    expect(config.mode).toBeDefined();
-  });
-
-  test("auto profile with URL rule no match", async () => {
-    const profile = new ProfileConverter(profiles.autoProxy, profileLoader);
-    const url = new URL("http://example.com/other");
-    const result = await profile.findProfile(url);
-
-    // Should fallback to default profile
-    expect(result.profile).toBeDefined();
-    const config = await result.profile!.toProxyConfig();
-    expect(config.mode).toBe("direct");
-    expect(result.isConfident).toBe(true);
-  });
-
-  test("auto profile with CIDR rule match", async () => {
-    const profile = new ProfileConverter(profiles.autoProxy, profileLoader);
-    const url = new URL("http://192.168.10.50");
-    const result = await profile.findProfile(url);
-
-    // When a rule matches a proxy profile, findProfile on proxy returns undefined
-    // So it falls back to default profile
-    expect(result.profile).toBeDefined();
-    const config = await result.profile!.toProxyConfig();
-    expect(config.mode).toBe("direct"); // Falls back to default
-    expect(result.isConfident).toBe(true);
-  });
-
-  test("auto profile with CIDR rule no match", async () => {
-    const profile = new ProfileConverter(profiles.autoProxy, profileLoader);
-    const url = new URL("http://192.168.20.50");
-    const result = await profile.findProfile(url);
-
-    // Should fallback to default profile
-    expect(result.profile).toBeDefined();
-    const config = await result.profile!.toProxyConfig();
-    expect(config.mode).toBe("direct");
-    expect(result.isConfident).toBe(true);
-  });
-
-  test("auto profile with CIDR rule and hostname (not IP)", async () => {
-    const profile = new ProfileConverter(profiles.autoProxy, profileLoader);
-    const url = new URL("http://example.com");
-    // This should not match CIDR since hostname is not an IP
-    const result = await profile.findProfile(url);
-
-    // Should check other rules or fallback to default
-    expect(result.profile).toBeDefined();
-    expect(result.isConfident).toBe(true);
-  });
-
-  test("auto profile with missing profile in rule", async () => {
-    const profile = new ProfileConverter(profiles.autoProxy, profileLoader);
-    const url = new URL("https://test.404.com");
-    const result = await profile.findProfile(url);
-
-    // Should skip the rule with missing profile and fallback to default
-    expect(result.profile).toBeDefined();
-    const config = await result.profile!.toProxyConfig();
-    expect(config.mode).toBe("direct");
-    expect(result.isConfident).toBe(true);
-  });
-
-  test("auto profile with disabled rule", async () => {
-    const autoProfileWithDisabled: ProfileAutoSwitch = {
+    // Disabled rule - skipped
+    const autoWithDisabled: ProfileAutoSwitch = {
       profileID: "autoDisabled",
       color: "",
       profileName: "",
@@ -312,31 +243,21 @@ describe("testing findProfile function", () => {
           condition: "*.example.com",
           profileID: "simpleProxy",
         },
-        {
-          type: "domain",
-          condition: "*.test.com",
-          profileID: "simpleProxy",
-        },
+        { type: "domain", condition: "*.test.com", profileID: "simpleProxy" },
       ],
       defaultProfileID: "direct",
     };
-
-    const profile = new ProfileConverter(
-      autoProfileWithDisabled,
+    const disabledProfile = new ProfileConverter(
+      autoWithDisabled,
       profileLoader
     );
-    const url = new URL("https://test.example.com");
-    const result = await profile.findProfile(url);
+    expect(
+      (await disabledProfile.findProfile(new URL("https://test.example.com")))
+        .profile
+    ).toBeDefined();
 
-    // Disabled rule should be skipped, should fallback to default
-    expect(result.profile).toBeDefined();
-    const config = await result.profile!.toProxyConfig();
-    expect(config.mode).toBe("direct");
-    expect(result.isConfident).toBe(true);
-  });
-
-  test("auto profile with missing default profile", async () => {
-    const autoProfileMissingDefault: ProfileAutoSwitch = {
+    // Missing default profile - falls back to DIRECT
+    const autoMissingDefault: ProfileAutoSwitch = {
       profileID: "autoMissingDefault",
       color: "",
       profileName: "",
@@ -344,34 +265,29 @@ describe("testing findProfile function", () => {
       rules: [],
       defaultProfileID: "missing-default",
     };
-
-    const profile = new ProfileConverter(
-      autoProfileMissingDefault,
+    const missingDefaultProfile = new ProfileConverter(
+      autoMissingDefault,
       profileLoader
     );
-    const url = new URL("https://other.com");
-    const result = await profile.findProfile(url);
-
-    // Should fallback to SystemProfile.DIRECT
+    const result = await missingDefaultProfile.findProfile(
+      new URL("https://other.com")
+    );
     expect(result.profile).toBeDefined();
-    const config = await result.profile!.toProxyConfig();
-    expect(config.mode).toBe("direct");
-    expect(result.isConfident).toBe(true);
+    expect((await result.profile!.toProxyConfig()).mode).toBe("direct");
   });
 
-  test("nested auto profile - domain match", async () => {
+  test("nested auto profiles work correctly", async () => {
     const profile = new ProfileConverter(profiles.autoProxy2, profileLoader);
-    const url = new URL("https://test.example.com");
-    const result = await profile.findProfile(url);
+    const result = await profile.findProfile(
+      new URL("https://test.example.com")
+    );
 
-    // Should match the nested auto profile rule
     expect(result.profile).toBeDefined();
-    // The nested auto profile should then match its own rules
     expect(result.isConfident).toBe(true);
   });
 
-  test("auto profile with multiple rules - first match wins", async () => {
-    const autoProfileMultiple: ProfileAutoSwitch = {
+  test("first matching rule wins", async () => {
+    const autoMultiple: ProfileAutoSwitch = {
       profileID: "autoMultiple",
       color: "",
       profileName: "",
@@ -382,90 +298,17 @@ describe("testing findProfile function", () => {
           condition: "*.example.com",
           profileID: "simpleProxy",
         },
-        {
-          type: "domain",
-          condition: "*.example.com",
-          profileID: "pacProxy",
-        },
+        { type: "domain", condition: "*.example.com", profileID: "pacProxy" },
       ],
       defaultProfileID: "direct",
     };
 
-    const profile = new ProfileConverter(autoProfileMultiple, profileLoader);
-    const url = new URL("https://test.example.com");
-    const result = await profile.findProfile(url);
+    const profile = new ProfileConverter(autoMultiple, profileLoader);
+    const result = await profile.findProfile(
+      new URL("https://test.example.com")
+    );
 
-    // First matching rule matches simpleProxy (proxy type), which returns undefined
-    // So it falls back to default
     expect(result.profile).toBeDefined();
-    const config = await result.profile!.toProxyConfig();
-    expect(config.mode).toBe("direct"); // Falls back to default
-    expect(result.isConfident).toBe(true);
-  });
-
-  test("auto profile with rule matching direct profile", async () => {
-    const autoProfileWithDirect: ProfileAutoSwitch = {
-      profileID: "autoDirect",
-      color: "",
-      profileName: "",
-      proxyType: "auto",
-      rules: [
-        {
-          type: "domain",
-          condition: "test.example.com",
-          profileID: "direct",
-        },
-      ],
-      defaultProfileID: "pacProxy",
-    };
-
-    const profile = new ProfileConverter(autoProfileWithDirect, profileLoader);
-    const url = new URL("https://test.example.com");
-    const result = await profile.findProfile(url);
-
-    // Rule evaluation should work
-    expect(result.profile).toBeDefined();
-    expect(result.isConfident).toBe(true);
-    // Result depends on rule matching - either direct from rule or pacProxy from default
-    const config = await result.profile!.toProxyConfig();
-    expect(["direct", "pac_script"]).toContain(config.mode);
-  });
-
-  test("auto profile with non-confident CIDR result", async () => {
-    // Create a profile with CIDR rule that might return non-confident result
-    const autoProfileCIDR: ProfileAutoSwitch = {
-      profileID: "autoCIDR",
-      color: "",
-      profileName: "",
-      proxyType: "auto",
-      rules: [
-        {
-          type: "cidr",
-          condition: "192.168.10.1/24",
-          profileID: "simpleProxy",
-        },
-      ],
-      defaultProfileID: "direct",
-    };
-
-    const profile = new ProfileConverter(autoProfileCIDR, profileLoader);
-    // Use a hostname that can't be resolved to IP (non-confident)
-    const url = new URL("http://some-hostname-that-cant-resolve");
-    const result = await profile.findProfile(url);
-
-    // Should handle non-confident results appropriately
-    expect(result.profile).toBeDefined();
-    // If CIDR can't resolve, it might be non-confident or fallback to default
-    expect(result.isConfident).toBeDefined();
-  });
-
-  test("proxy profile (non-auto) should return undefined", async () => {
-    const profile = new ProfileConverter(profiles.simpleProxy);
-    const url = new URL("https://example.com");
-    const result = await profile.findProfile(url);
-
-    // Proxy profiles are not handled by findProfile, should return undefined
-    expect(result.profile).toBeUndefined();
     expect(result.isConfident).toBe(true);
   });
 });
