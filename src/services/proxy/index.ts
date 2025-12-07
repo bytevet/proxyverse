@@ -98,3 +98,8 @@ export async function getAuthInfos(
   const authProvider = new ProfileAuthProvider(profile, getProfile);
   return await authProvider.getAuthInfos(host, port);
 }
+
+export async function findProfile(profile: ProxyProfile, url: URL) {
+  const converter = new ProfileConverter(profile, getProfile);
+  return await converter.findProfile(url);
+}

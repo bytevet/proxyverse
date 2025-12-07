@@ -3,12 +3,15 @@
 import {
   BaseAdapter,
   BlockingResponse,
+  MessageSender,
   ProxyConfig,
   ProxyErrorDetails,
   ProxySettingResultDetails,
+  Tab,
   WebAuthenticationChallengeDetails,
   WebRequestCompletedDetails,
   WebRequestErrorOccurredDetails,
+  WebRequestResponseStartedDetails,
 } from "./base";
 
 export class Firefox extends BaseAdapter {
@@ -66,26 +69,62 @@ export class Firefox extends BaseAdapter {
     browser.proxy.settings.onChange.addListener(callback);
   }
 
-  async setBadge(text: string, color: string): Promise<void> {
+  async setBadge(text: string, color: string, tabID?: number): Promise<void> {
     await browser.action.setBadgeText({
       text: text.trimStart().substring(0, 2),
+      tabId: tabID,
     });
     await browser.action.setBadgeBackgroundColor({
       color: color,
+      tabId: tabID,
     });
+  }
+
+  async getActiveTab(): Promise<Tab | undefined> {
+    const tabs = await browser.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+    return tabs[0];
+  }
+
+  onTabRemoved(callback: (tabID: number) => void): void {
+    browser.tabs.onRemoved.addListener(callback);
+  }
+
+  onMessage(
+    callback: (
+      message: any,
+      sender: MessageSender,
+      sendResponse: (response: any) => void
+    ) => void
+  ): void {
+    browser.runtime.onMessage.addListener(callback);
+  }
+
+  sendMessage(message: any): Promise<any> {
+    return browser.runtime.sendMessage(message);
   }
 
   onWebRequestAuthRequired(
     callback: (
       details: WebAuthenticationChallengeDetails,
-      callback?: (response: BlockingResponse) => void
-    ) => void
+      asyncCallback?: (response: BlockingResponse) => void
+    ) => BlockingResponse | undefined
   ): void {
     browser.webRequest.onAuthRequired.addListener(
-      callback,
+      callback as any,
       { urls: ["<all_urls>"] },
       ["asyncBlocking"]
     );
+  }
+
+  onWebRequestResponseStarted(
+    callback: (details: WebRequestResponseStartedDetails) => void
+  ): void {
+    browser.webRequest.onResponseStarted.addListener(callback, {
+      urls: ["<all_urls>"],
+    });
   }
 
   onWebRequestCompleted(

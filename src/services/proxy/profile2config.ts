@@ -5,6 +5,7 @@ import {
   ProfileAutoSwitch,
   ProxyProfile,
   ProxyServer,
+  SystemProfile,
 } from "../profile";
 import { IPv4, IPv6, isValidCIDR, parseCIDR } from "ipaddr.js";
 import {
@@ -13,14 +14,20 @@ import {
   parsePACScript,
 } from "./scriptHelper";
 import { ProxyConfig } from "@/adapters";
+import { isInNet, shExpMatch, UNKNOWN } from "./pacSimulator";
 
 export type ProfileLoader = (
   profileID: string
 ) => Promise<ProxyProfile | undefined>;
 
+export type ProfileResult = {
+  profile: ProfileConverter | undefined;
+  isConfident: boolean;
+};
+
 export class ProfileConverter {
   constructor(
-    private profile: ProxyProfile,
+    public readonly profile: ProxyProfile,
     private profileLoader?: ProfileLoader
   ) {}
 
@@ -43,6 +50,16 @@ export class ProfileConverter {
             data: await this.toPAC(),
           },
         };
+    }
+  }
+
+  async findProfile(url: URL): Promise<ProfileResult> {
+    switch (this.profile.proxyType) {
+      case "auto":
+        return await this.findProfileForAutoProfile(url);
+
+      default:
+        return { profile: this, isConfident: true };
     }
   }
 
@@ -202,6 +219,38 @@ export class ProfileConverter {
     return stmt;
   }
 
+  private async findProfileForAutoProfile(url: URL): Promise<ProfileResult> {
+    if (this.profile.proxyType != "auto") {
+      throw new Error("this function should only be called for auto profile");
+    }
+
+    for (let rule of this.profile.rules) {
+      if (rule.type == "disabled") {
+        continue;
+      }
+
+      const profile = await this.loadProfile(rule.profileID);
+      if (!profile) {
+        continue;
+      }
+
+      const ret = await profile.findProfileForAutoProfileRule(
+        url,
+        rule,
+        profile
+      );
+      if (ret.profile) {
+        return ret;
+      }
+    }
+
+    const defaultProfile =
+      (await this.loadProfile(this.profile.defaultProfileID)) ||
+      new ProfileConverter(SystemProfile.DIRECT);
+
+    return await defaultProfile.findProfile(url);
+  }
+
   private genAutoProfileRule(rule: AutoSwitchRule): Statement {
     switch (rule.type) {
       case "domain":
@@ -276,6 +325,54 @@ export class ProfileConverter {
         ]
       )
     );
+  }
+
+  private async findProfileForAutoProfileRule(
+    url: URL,
+    rule: AutoSwitchRule,
+    profile: ProfileConverter
+  ): Promise<ProfileResult> {
+    switch (rule.type) {
+      case "domain":
+        if (shExpMatch(url.hostname, rule.condition)) {
+          return profile.findProfile(url);
+        }
+
+        break;
+      case "url":
+        if (shExpMatch(url.href, rule.condition)) {
+          return profile.findProfile(url);
+        }
+
+        break;
+      case "cidr":
+        // if it's a CIDR
+        if (isValidCIDR(rule.condition)) {
+          try {
+            const [ip, maskPrefixLen] = parseCIDR(rule.condition);
+            let mask = (
+              ip.kind() == "ipv4" ? IPv4 : IPv6
+            ).subnetMaskFromPrefixLength(maskPrefixLen);
+
+            switch (
+              isInNet(url.hostname, ip.toString(), mask.toNormalizedString())
+            ) {
+              case true:
+                return profile.findProfile(url);
+              case false:
+                break; // not in the CIDR
+              case UNKNOWN:
+                return { profile: profile, isConfident: false }; // unknown
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        }
+
+        break;
+    }
+
+    return { profile: undefined, isConfident: true };
   }
 
   private genAutoProfileCallExpression(profileID: string) {

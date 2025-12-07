@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { type RouteLocationRaw, useRouter } from "vue-router";
 import { Message } from "@arco-design/web-vue";
-import { onMounted, ref, toRaw } from "vue";
+import { computed, onMounted, ref, toRaw } from "vue";
 import {
   IconDesktop,
   IconSwap,
@@ -18,18 +18,24 @@ import {
 } from "../services/profile";
 import { setProxy, getCurrentProxySetting } from "../services/proxy";
 import { Host } from "@/adapters";
+import { type Tab } from "@/adapters/base";
+import AutoModeActionBar from "@/components/AutoModeActionBar.vue";
 
 const router = useRouter();
 const profiles = ref<ProfilesStorage>({});
-const selectedKeys = defineModel<string[]>();
+const currentTab = ref<Tab | undefined>();
+const activeProfile = ref<ProxyProfile | undefined>();
+
+const selectedKeys = computed(() => {
+  return activeProfile.value?.profileID ? [activeProfile.value.profileID] : [];
+});
 
 onMounted(async () => {
   profiles.value = await listProfiles();
   const proxy = await getCurrentProxySetting();
-  const profileID = proxy.activeProfile?.profileID;
-  if (profileID) {
-    selectedKeys.value = [profileID];
-  }
+  activeProfile.value = proxy.activeProfile;
+
+  currentTab.value = await Host.getActiveTab();
 });
 
 const jumpTo = (to: RouteLocationRaw) => {
@@ -43,7 +49,7 @@ const setProxyByProfile = async (val: ProxyProfile) => {
   try {
     console.log(toRaw(val));
     await setProxy(toRaw(val));
-    selectedKeys.value = [typeof val == "string" ? val : val.profileID];
+    activeProfile.value = toRaw(val);
   } catch (e: any) {
     Message.error({
       content: Host.getMessage("config_feedback_error_occurred", e.toString()),
@@ -108,11 +114,21 @@ const setProxyByProfile = async (val: ProxyProfile) => {
           :style="{ '--indicator-color': item.color }"
         >
           <template #icon><span class="color-indicator"></span></template>
-          {{ item.profileName }}
+          <a-space fill class="profile-name">
+            <span>{{ item.profileName }}</span>
+            <a-tag size="small" color="gray" v-if="item.proxyType == 'auto'">
+              {{ $t("mode_auto_switch_abbr") }}
+            </a-tag>
+          </a-space>
         </a-menu-item>
       </a-menu>
     </a-layout-content>
     <a-layout-footer>
+      <auto-mode-action-bar
+        v-if="currentTab?.url && activeProfile?.proxyType == 'auto'"
+        :current-tab="currentTab"
+        :active-profile="activeProfile"
+      />
       <section class="settings">
         <a-button-group type="text" size="large">
           <a-button @click="jumpTo({ name: 'profile.home' })">
@@ -185,6 +201,10 @@ const setProxyByProfile = async (val: ProxyProfile) => {
         left: 0;
         top: 0;
       }
+    }
+
+    .profile-name {
+      justify-content: space-between;
     }
   }
 }
