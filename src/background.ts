@@ -14,7 +14,7 @@ import {
   getAuthInfos,
   getCurrentProxySetting,
 } from "./services/proxy";
-import { WebRequestStats } from "./services/stats";
+import { WebRequestStatsService } from "./services/stats";
 
 // indicator
 async function initIndicator() {
@@ -86,7 +86,7 @@ Host.onWebRequestErrorOccurred(ProxyAuthProvider.onCompleted);
 
 // web request stats
 class StatsProvider {
-  private static stats: WebRequestStats = new WebRequestStats();
+  private static stats: WebRequestStatsService = new WebRequestStatsService();
 
   static async onResponseStarted(details: WebRequestResponseStartedDetails) {
     if (details.type !== "main_frame") {
@@ -102,19 +102,29 @@ class StatsProvider {
         proxySetting.activeProfile,
         new URL(details.url)
       );
+
+      StatsProvider.stats.setCurrentProfile(details.tabId, ret);
+
       if (ret.profile && ret.isConfident) {
-        await setIndicator(ret.profile.profile, details.tabId);
+        const profile = ret.profile.profile;
+        setTimeout(() => setIndicator(profile, details.tabId), 50); // Sometimes the indicator doesn't update properly in Chrome, so we need to wait a bit.
         return;
       }
+
+      await setIndicator(proxySetting.activeProfile, details.tabId);
     }
-    await setIndicator(proxySetting.activeProfile, details.tabId);
   }
 
   static onRequestError(details: WebRequestErrorOccurredDetails) {
     StatsProvider.stats.addFailedRequest(details);
   }
+
+  static onTabRemoved(tabID: number) {
+    StatsProvider.stats.closeTab(tabID);
+  }
 }
 Host.onWebRequestResponseStarted(StatsProvider.onResponseStarted);
 Host.onWebRequestErrorOccurred(StatsProvider.onRequestError);
+Host.onTabRemoved(StatsProvider.onTabRemoved);
 
 Host.onProxyError(console.warn);

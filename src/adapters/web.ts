@@ -4,9 +4,11 @@ import {
   BaseAdapter,
   BlockingResponse,
   BrowserFlavor,
+  MessageSender,
   ProxyConfig,
   ProxyErrorDetails,
   ProxySettingResultDetails,
+  Tab,
   WebAuthenticationChallengeDetails,
   WebRequestCompletedDetails,
   WebRequestErrorOccurredDetails,
@@ -35,13 +37,25 @@ export class WebBrowser extends BaseAdapter {
     return s && JSON.parse(s);
   }
 
-  setProxy(_: ProxyConfig): Promise<void> {
-    throw new Error("Method not implemented.");
+  async setProxy(_: ProxyConfig): Promise<void> {
+    window.localStorage.setItem("proxy", JSON.stringify(_));
   }
-  clearProxy(): Promise<void> {
-    throw new Error("Method not implemented.");
+  async clearProxy(): Promise<void> {
+    window.localStorage.removeItem("proxy");
   }
   async getProxySettings(): Promise<ProxySettingResultDetails> {
+    const proxy = window.localStorage.getItem("proxy");
+    if (proxy) {
+      return {
+        levelOfControl: "controlled_by_this_extension",
+        value: {
+          mode: "pac_script",
+          pacScript: {
+            url: proxy,
+          },
+        },
+      };
+    }
     return {
       levelOfControl: "controlled_by_this_extension",
       value: {
@@ -60,6 +74,37 @@ export class WebBrowser extends BaseAdapter {
   async setBadge(text: string, color: string, tabID?: number): Promise<void> {
     return console.log(`Badge: ${text}, ${color}, ${tabID}`);
   }
+  onTabRemoved(_callback: (tabID: number) => void): void {
+    throw new Error("Method not implemented.");
+  }
+  async getActiveTab(): Promise<Tab | undefined> {
+    return {
+      id: 1,
+      index: 0,
+      url: "https://www.google.com",
+      active: true,
+      pinned: false,
+      highlighted: true,
+      incognito: false,
+      audible: false,
+      autoDiscardable: false,
+      discarded: false,
+      favIconUrl: "",
+    };
+  }
+  onMessage(
+    _callback: (
+      message: any,
+      sender: MessageSender,
+      sendResponse: (response: any) => void
+    ) => void
+  ): void {
+    throw new Error("Method not implemented.");
+  }
+  sendMessage(_message: any): Promise<any> {
+    throw new Error("Method not implemented.");
+  }
+
   onWebRequestAuthRequired(
     _: (
       details: WebAuthenticationChallengeDetails,

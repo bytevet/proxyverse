@@ -11,6 +11,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AAlert: typeof import('@arco-design/web-vue')['Alert']
     AButton: typeof import('@arco-design/web-vue')['Button']
     AButtonGroup: typeof import('@arco-design/web-vue')['ButtonGroup']
     ACheckbox: typeof import('@arco-design/web-vue')['Checkbox']
@@ -48,6 +49,7 @@ declare module 'vue' {
     ATooltip: typeof import('@arco-design/web-vue')['Tooltip']
     ATypographyParagraph: typeof import('@arco-design/web-vue')['TypographyParagraph']
     ATypographyText: typeof import('@arco-design/web-vue')['TypographyText']
+    AutoModeActionBar: typeof import('./src/components/AutoModeActionBar.vue')['default']
     AutoSwitchInput: typeof import('./src/components/configs/AutoSwitchInput.vue')['default']
     AutoSwitchPacPreview: typeof import('./src/components/configs/AutoSwitchPacPreview.vue')['default']
     PreferencePage: typeof import('./src/components/PreferencePage.vue')['default']

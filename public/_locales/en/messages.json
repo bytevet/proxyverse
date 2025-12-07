@@ -32,6 +32,14 @@
   "mode_auto_switch_abbr": {
     "message": "auto"
   },
+
+  "mode_auto_switch_detection_info": {
+    "message": "$1 is used for this tab"
+  },
+  "mode_auto_switch_detection_tips": {
+    "message": "Due to the limitation of the browser, the detection is not always accurate."
+  },
+
   "mode_direct": {
     "message": "Direct"
   },

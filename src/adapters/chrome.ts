@@ -4,9 +4,11 @@ import {
   BaseAdapter,
   BlockingResponse,
   BrowserFlavor,
+  MessageSender,
   ProxyConfig,
   ProxyErrorDetails,
   ProxySettingResultDetails,
+  Tab,
   WebAuthenticationChallengeDetails,
   WebRequestCompletedDetails,
   WebRequestErrorOccurredDetails,
@@ -60,6 +62,29 @@ export class Chrome extends BaseAdapter {
       color: color,
       tabId: tabID,
     });
+  }
+
+  async getActiveTab(): Promise<Tab | undefined> {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    return tabs[0];
+  }
+
+  onTabRemoved(callback: (tabID: number) => void): void {
+    chrome.tabs.onRemoved.addListener(callback);
+  }
+
+  onMessage(
+    callback: (
+      message: any,
+      sender: MessageSender,
+      sendResponse: (response: any) => void
+    ) => void
+  ): void {
+    chrome.runtime.onMessage.addListener(callback);
+  }
+
+  sendMessage(message: any): Promise<any> {
+    return chrome.runtime.sendMessage(message);
   }
 
   onWebRequestAuthRequired(

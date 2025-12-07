@@ -20,6 +20,11 @@ export type ProfileLoader = (
   profileID: string
 ) => Promise<ProxyProfile | undefined>;
 
+export type ProfileResult = {
+  profile: ProfileConverter | undefined;
+  isConfident: boolean;
+};
+
 export class ProfileConverter {
   constructor(
     public readonly profile: ProxyProfile,
@@ -48,9 +53,7 @@ export class ProfileConverter {
     }
   }
 
-  async findProfile(
-    url: URL
-  ): Promise<{ profile: ProfileConverter | undefined; isConfident: boolean }> {
+  async findProfile(url: URL): Promise<ProfileResult> {
     switch (this.profile.proxyType) {
       case "auto":
         return await this.findProfileForAutoProfile(url);
@@ -216,9 +219,7 @@ export class ProfileConverter {
     return stmt;
   }
 
-  private async findProfileForAutoProfile(
-    url: URL
-  ): Promise<{ profile: ProfileConverter | undefined; isConfident: boolean }> {
+  private async findProfileForAutoProfile(url: URL): Promise<ProfileResult> {
     if (this.profile.proxyType != "auto") {
       throw new Error("this function should only be called for auto profile");
     }
@@ -330,7 +331,7 @@ export class ProfileConverter {
     url: URL,
     rule: AutoSwitchRule,
     profile: ProfileConverter
-  ): Promise<{ profile: ProfileConverter | undefined; isConfident: boolean }> {
+  ): Promise<ProfileResult> {
     switch (rule.type) {
       case "domain":
         if (shExpMatch(url.hostname, rule.condition)) {

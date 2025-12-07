@@ -3,9 +3,11 @@
 import {
   BaseAdapter,
   BlockingResponse,
+  MessageSender,
   ProxyConfig,
   ProxyErrorDetails,
   ProxySettingResultDetails,
+  Tab,
   WebAuthenticationChallengeDetails,
   WebRequestCompletedDetails,
   WebRequestErrorOccurredDetails,
@@ -76,6 +78,32 @@ export class Firefox extends BaseAdapter {
       color: color,
       tabId: tabID,
     });
+  }
+
+  async getActiveTab(): Promise<Tab | undefined> {
+    const tabs = await browser.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+    return tabs[0];
+  }
+
+  onTabRemoved(callback: (tabID: number) => void): void {
+    browser.tabs.onRemoved.addListener(callback);
+  }
+
+  onMessage(
+    callback: (
+      message: any,
+      sender: MessageSender,
+      sendResponse: (response: any) => void
+    ) => void
+  ): void {
+    browser.runtime.onMessage.addListener(callback);
+  }
+
+  sendMessage(message: any): Promise<any> {
+    return browser.runtime.sendMessage(message);
   }
 
   onWebRequestAuthRequired(

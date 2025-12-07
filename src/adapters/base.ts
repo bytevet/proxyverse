@@ -15,6 +15,12 @@ export type WebRequestErrorOccurredDetails =
   | chrome.webRequest.OnErrorOccurredDetails
   | browser.webRequest._OnErrorOccurredDetails;
 
+export type MessageSender =
+  | chrome.runtime.MessageSender
+  | browser.runtime.MessageSender;
+
+export type Tab = chrome.tabs.Tab | browser.tabs.Tab;
+
 export type ProxyConfig = chrome.proxy.ProxyConfig;
 
 export type ProxyErrorDetails = chrome.proxy.ErrorDetails | Error;
@@ -102,6 +108,20 @@ export abstract class BaseAdapter {
   abstract onWebRequestErrorOccurred(
     callback: (details: WebRequestErrorOccurredDetails) => void
   ): void;
+
+  // tabs
+  abstract getActiveTab(): Promise<Tab | undefined>;
+  abstract onTabRemoved(callback: (tabID: number) => void): void;
+
+  // messages
+  abstract onMessage(
+    callback: (
+      message: any,
+      sender: MessageSender,
+      sendResponse: (response: any) => void
+    ) => void
+  ): void;
+  abstract sendMessage(message: any): Promise<any>;
 
   // i18n
   abstract currentLocale(): string;

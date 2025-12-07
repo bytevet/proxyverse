@@ -18,5 +18,11 @@
   },
 
   "host_permissions": ["<all_urls>"],
-  "permissions": ["storage", "proxy", "webRequest", "webRequestAuthProvider"]
+  "permissions": [
+    "storage",
+    "proxy",
+    "webRequest",
+    "webRequestAuthProvider",
+    "activeTab"
+  ]
 }
