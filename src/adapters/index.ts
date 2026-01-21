@@ -4,9 +4,10 @@ import { Firefox } from "./firefox";
 import { WebBrowser } from "./web";
 
 function chooseAdapter(): BaseAdapter {
-  // Firefox supports browser.* and chrome.* APIs
-  // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Chrome_incompatibilities
-  if (globalThis.browser?.proxy) {
+  // Detect Firefox specifically using browser.runtime.getBrowserInfo
+  // This is a Firefox-specific API that doesn't exist in Chrome/Edge
+  // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/getBrowserInfo
+  if (typeof globalThis.browser?.runtime?.getBrowserInfo === "function") {
     return new Firefox();
   }
 
