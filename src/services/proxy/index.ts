@@ -9,6 +9,7 @@ import {
 import { ProxySettingResultDetails } from "@/adapters";
 import { ProfileConverter } from "./profile2config";
 import { ProfileAuthProvider } from "./auth";
+import { deepClone } from "../utils";
 
 export type ProxySetting = {
   activeProfile?: ProxyProfile;
@@ -56,7 +57,8 @@ export async function setProxy(val: ProxyProfile) {
       break;
   }
 
-  await Host.set<ProxyProfile>(keyActiveProfile, val);
+  // Deep clone to remove any Proxy objects before saving
+  await Host.set<ProxyProfile>(keyActiveProfile, deepClone(val));
 }
 
 /**
