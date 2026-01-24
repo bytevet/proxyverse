@@ -1,4 +1,5 @@
 import { Host, PacScript, SimpleProxyServer } from "@/adapters";
+import { deepClone } from "./utils";
 
 export type ProxyAuthInfo = {
   username: string;
@@ -103,7 +104,9 @@ export function onProfileUpdate(callback: (p: ProfilesStorage) => void) {
 }
 
 async function overwriteProfiles(profiles: ProfilesStorage) {
-  await Host.set(keyProfileStorage, profiles);
+  // Deep clone to remove any Proxy objects before saving
+  const clonedProfiles = deepClone(profiles);
+  await Host.set(keyProfileStorage, clonedProfiles);
   onProfileUpdateListeners.map((cb) => cb(profiles));
 }
 
@@ -115,14 +118,16 @@ async function overwriteProfiles(profiles: ProfilesStorage) {
  */
 export async function saveProfile(profile: ProxyProfile) {
   const data = await listProfiles();
-  data[profile.profileID] = profile;
+  // Deep clone the profile to remove any Proxy objects before saving
+  data[profile.profileID] = deepClone(profile);
   await overwriteProfiles(data);
 }
 
 export async function saveManyProfiles(profiles: ProxyProfile[]) {
   let data = await listProfiles();
   profiles.forEach((p) => {
-    data[p.profileID] = p;
+    // Deep clone each profile to remove any Proxy objects before saving
+    data[p.profileID] = deepClone(p);
   });
   await overwriteProfiles(data);
 }
