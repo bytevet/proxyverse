@@ -4,5 +4,5 @@
  * which cannot clone Proxy objects.
  */
 export function deepClone<T>(obj: T): T {
-  return JSON.parse(JSON.stringify(obj));
+  return structuredClone(obj);
 }

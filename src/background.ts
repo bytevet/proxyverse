@@ -96,11 +96,16 @@ class StatsProvider {
     // this.stats.addFailedRequest(details);
     // TODO: update indicator
     const proxySetting = await getCurrentProxySetting();
-    console.log("onResponseStarted", details);
     if (details.tabId > 0 && proxySetting.activeProfile) {
+      let parsedUrl: URL;
+      try {
+        parsedUrl = new URL(details.url);
+      } catch {
+        return;
+      }
       const ret = await findProfile(
         proxySetting.activeProfile,
-        new URL(details.url)
+        parsedUrl
       );
 
       StatsProvider.stats.setCurrentProfile(details.tabId, ret);

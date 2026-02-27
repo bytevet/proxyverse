@@ -50,7 +50,7 @@ export class ProfileAuthProvider {
     ];
 
     // check if there's any matching host and port
-    auths.map((item) => {
+    auths.forEach((item) => {
       if (!item) return;
 
       if (
