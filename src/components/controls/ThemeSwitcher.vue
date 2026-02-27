@@ -28,7 +28,6 @@ const onDarkModeChanged = (newMode: DarkMode) => {
 };
 
 const toggleDarkMode = async () => {
-  console.log(await currentDarkMode());
   switch (await currentDarkMode()) {
     case DarkMode.Dark:
       onDarkModeChanged(DarkMode.Light);

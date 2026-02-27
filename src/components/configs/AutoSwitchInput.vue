@@ -102,7 +102,6 @@ const getConditionInputRule = (type: AutoSwitchType): FieldRule<string> => {
     case "url":
       return {
         validator: async (value: string, cb: (message?: string) => void) => {
-          console.log("test");
           let u;
           try {
             u = new URL(value || "");
