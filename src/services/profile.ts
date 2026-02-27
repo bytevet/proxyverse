@@ -107,7 +107,7 @@ async function overwriteProfiles(profiles: ProfilesStorage) {
   // Deep clone to remove any Proxy objects before saving
   const clonedProfiles = deepClone(profiles);
   await Host.set(keyProfileStorage, clonedProfiles);
-  onProfileUpdateListeners.map((cb) => cb(profiles));
+  onProfileUpdateListeners.forEach((cb) => cb(profiles));
 }
 
 /**

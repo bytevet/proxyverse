@@ -53,10 +53,10 @@ export async function changeDarkMode(newMode: DarkMode) {
 
   switch (newMode) {
     case DarkMode.Dark:
-      document && document.body.setAttribute("arco-theme", "dark");
+      document?.body?.setAttribute("arco-theme", "dark");
       break;
     case DarkMode.Light:
-      document && document.body.removeAttribute("arco-theme");
+      document?.body?.removeAttribute("arco-theme");
       break;
   }
 }

@@ -75,7 +75,7 @@ export async function refreshProxy() {
   const newProfile = await getProfile(current.activeProfile.profileID);
 
   // if it's preset profiles, then do nothing
-  if (!newProfile || current.activeProfile.proxyType in ["system", "direct"]) {
+  if (!newProfile || ["system", "direct"].includes(current.activeProfile.proxyType)) {
     return;
   }
 

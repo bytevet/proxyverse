@@ -40,14 +40,12 @@ onMounted(async () => {
 
 const jumpTo = (to: RouteLocationRaw) => {
   const path = router.resolve(to).fullPath;
-  window.open(`/index.html#${path}`, import.meta.url);
-  // window.open(router.resolve(to).href, import.meta.url)
+  window.open(`/index.html#${path}`, "_blank");
 };
 
 // actions
 const setProxyByProfile = async (val: ProxyProfile) => {
   try {
-    console.log(toRaw(val));
     await setProxy(toRaw(val));
     activeProfile.value = toRaw(val);
   } catch (e: any) {
