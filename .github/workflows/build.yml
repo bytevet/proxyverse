@@ -23,10 +23,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "latest"
           cache: "npm"
@@ -56,7 +56,7 @@ jobs:
           cd "${{ github.workspace }}/dist/" && zip -r "${{ github.workspace }}/release/firefox.zip" ./
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Proxyverse
           path: ${{ github.workspace }}/release/*
@@ -70,13 +70,13 @@ jobs:
 
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: Proxyverse
           path: ${{ github.workspace }}/release/
 
       - name: Upload to release page
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: ${{ github.workspace }}/release/*
 
@@ -89,7 +89,7 @@ jobs:
 
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: Proxyverse
           path: ${{ github.workspace }}/release/
@@ -112,7 +112,7 @@ jobs:
 
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: Proxyverse
           path: ${{ github.workspace }}/release/
@@ -134,7 +134,7 @@ jobs:
 
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: Proxyverse
           path: ${{ github.workspace }}/release/
