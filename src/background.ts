@@ -34,7 +34,7 @@ class ProxyAuthProvider {
   static requests: Record<string, number> = {};
 
   static onCompleted(
-    details: WebResponseDetails | WebRequestErrorOccurredDetails
+    details: WebResponseDetails | WebRequestErrorOccurredDetails,
   ) {
     if (ProxyAuthProvider.requests[details.requestId]) {
       delete ProxyAuthProvider.requests[details.requestId];
@@ -43,7 +43,7 @@ class ProxyAuthProvider {
 
   static onAuthRequired(
     details: WebAuthenticationChallengeDetails,
-    asyncCallback?: (response: BlockingResponse) => void
+    asyncCallback?: (response: BlockingResponse) => void,
   ): BlockingResponse | undefined {
     if (!details.isProxy) {
       asyncCallback && asyncCallback({});
@@ -60,10 +60,10 @@ class ProxyAuthProvider {
     getAuthInfos(details.challenger.host, details.challenger.port).then(
       (authInfos) => {
         const auth = authInfos.at(
-          ProxyAuthProvider.requests[details.requestId]
+          ProxyAuthProvider.requests[details.requestId],
         );
         if (!auth) {
-          asyncCallback && asyncCallback({ cancel: true });
+          asyncCallback && asyncCallback({});
           return;
         }
 
@@ -75,7 +75,7 @@ class ProxyAuthProvider {
             },
           });
         return;
-      }
+      },
     );
   }
 }
@@ -103,10 +103,7 @@ class StatsProvider {
       } catch {
         return;
       }
-      const ret = await findProfile(
-        proxySetting.activeProfile,
-        parsedUrl
-      );
+      const ret = await findProfile(proxySetting.activeProfile, parsedUrl);
 
       StatsProvider.stats.setCurrentProfile(details.tabId, ret);
 
