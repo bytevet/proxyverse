@@ -1,5 +1,67 @@
 import { expect, test, describe } from "vitest";
-import { isInNet, UNKNOWN } from "@/services/proxy/pacSimulator";
+import {
+  isInNet,
+  isPlainHostName,
+  shExpMatch,
+  UNKNOWN,
+} from "@/services/proxy/pacSimulator";
+
+describe("shExpMatch", () => {
+  test("matches exact strings", () => {
+    expect(shExpMatch("www.example.com", "www.example.com")).toBe(true);
+    expect(shExpMatch("www.example.com", "www.other.com")).toBe(false);
+  });
+
+  test("matches wildcard * patterns", () => {
+    expect(shExpMatch("www.example.com", "*.example.com")).toBe(true);
+    expect(shExpMatch("sub.example.com", "*.example.com")).toBe(true);
+    expect(shExpMatch("example.com", "*.example.com")).toBe(false);
+    expect(shExpMatch("www.example.com", "*")).toBe(true);
+  });
+
+  test("matches single-char ? wildcard", () => {
+    expect(shExpMatch("abc", "a?c")).toBe(true);
+    expect(shExpMatch("aXc", "a?c")).toBe(true);
+    expect(shExpMatch("abbc", "a?c")).toBe(false);
+  });
+
+  test("escapes dots in patterns", () => {
+    // Without escaping, "www.example.com" would match "wwwXexampleYcom"
+    expect(shExpMatch("wwwXexampleYcom", "www.example.com")).toBe(false);
+  });
+
+  test("handles URL patterns", () => {
+    expect(
+      shExpMatch("http://example.com/api/v1/users", "http://example.com/api/*"),
+    ).toBe(true);
+    expect(
+      shExpMatch("http://example.com/other", "http://example.com/api/*"),
+    ).toBe(false);
+  });
+
+  test("anchors match to full string", () => {
+    expect(shExpMatch("prefix-www.example.com", "www.example.com")).toBe(false);
+    expect(shExpMatch("www.example.com-suffix", "www.example.com")).toBe(false);
+  });
+});
+
+describe("isPlainHostName", () => {
+  test("returns true for plain hostnames (no dots)", () => {
+    expect(isPlainHostName("localhost")).toBe(true);
+    expect(isPlainHostName("intranet")).toBe(true);
+    expect(isPlainHostName("myserver")).toBe(true);
+  });
+
+  test("returns false for FQDNs (contain dots)", () => {
+    expect(isPlainHostName("www.example.com")).toBe(false);
+    expect(isPlainHostName("a.b")).toBe(false);
+    expect(isPlainHostName("192.168.1.1")).toBe(false);
+  });
+
+  test("returns true for empty string", () => {
+    expect(isPlainHostName("")).toBe(true);
+  });
+});
 
 describe("isInNet function", () => {
   describe("valid IP addresses that match the subnet", () => {

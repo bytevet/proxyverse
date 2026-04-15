@@ -16,31 +16,7 @@ const loadTabStats = async () => {
   if (!props.currentTab.id) {
     return;
   }
-  const stats = await queryStats(props.currentTab.id);
-  tabStats.value = stats;
-
-  // mocking
-  //   tabStats.value = {
-  //     failedRequests: [],
-  //     currentProfile: {
-  //       profile: {
-  //         profileID: "profile1",
-  //         profileName: "Profile 1",
-  //         proxyType: "proxy",
-  //         color: "#000000",
-  //         proxyRules: {
-  //           default: {
-  //             host: "127.0.0.1",
-  //             port: 8080,
-  //           },
-  //           bypassList: [],
-  //         },
-  //       },
-  //       isConfident: true,
-  //     },
-  //     tabID: props.currentTab.id,
-  //   };
-  //   console.log(tabStats.value);
+  tabStats.value = await queryStats(props.currentTab.id);
 };
 
 watch(props.currentTab, loadTabStats, { immediate: true });

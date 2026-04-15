@@ -52,7 +52,7 @@ export const newProxyString = (cfg: ProxyServer) => {
 
   if (["http", "https"].includes(scheme)) {
     return PACScriptHelper.newSimpleLiteral(
-      `${cfg.scheme == "http" ? "PROXY" : "HTTPS"} ${host}`
+      `${scheme == "http" ? "PROXY" : "HTTPS"} ${host}`
     );
   }
 

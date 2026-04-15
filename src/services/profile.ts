@@ -104,9 +104,7 @@ export function onProfileUpdate(callback: (p: ProfilesStorage) => void) {
 }
 
 async function overwriteProfiles(profiles: ProfilesStorage) {
-  // Deep clone to remove any Proxy objects before saving
-  const clonedProfiles = deepClone(profiles);
-  await Host.set(keyProfileStorage, clonedProfiles);
+  await Host.set(keyProfileStorage, deepClone(profiles));
   onProfileUpdateListeners.forEach((cb) => cb(profiles));
 }
 
@@ -118,7 +116,6 @@ async function overwriteProfiles(profiles: ProfilesStorage) {
  */
 export async function saveProfile(profile: ProxyProfile) {
   const data = await listProfiles();
-  // Deep clone the profile to remove any Proxy objects before saving
   data[profile.profileID] = deepClone(profile);
   await overwriteProfiles(data);
 }
@@ -126,7 +123,6 @@ export async function saveProfile(profile: ProxyProfile) {
 export async function saveManyProfiles(profiles: ProxyProfile[]) {
   let data = await listProfiles();
   profiles.forEach((p) => {
-    // Deep clone each profile to remove any Proxy objects before saving
     data[p.profileID] = deepClone(p);
   });
   await overwriteProfiles(data);
