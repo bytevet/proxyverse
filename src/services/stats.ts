@@ -6,7 +6,7 @@ import { ProxyProfile } from "./profile";
 /**
  * Simple LRU cache implementation
  */
-class LRUCache<K, V> {
+export class LRUCache<K, V> {
   private cache: Map<K, V>;
   private maxSize: number;
 
@@ -103,10 +103,9 @@ export class WebRequestStatsService {
     Host.onMessage(
       (
         message: Message,
-        sender: MessageSender,
+        _sender: MessageSender,
         sendResponse: (response: any) => void
       ) => {
-        console.debug("stats:get", message, sender, sendResponse);
         if (message.type === "stats:get") {
           const tabStats = this.getTabStats(message.tabID);
           sendResponse(tabStats.toJSON());
@@ -155,10 +154,6 @@ class TabStats {
       currentProfile: this._currentProfile,
       tabID: this.tabID,
     };
-  }
-
-  get failedRequestsCount() {
-    return this.failedRequests.length;
   }
 
   addFailedRequest(details: WebRequestErrorOccurredDetails) {

@@ -6,19 +6,55 @@ import vue from "@vitejs/plugin-vue";
 import AutoImport from "unplugin-auto-import/vite";
 import Components from "unplugin-vue-components/vite";
 import { ArcoResolver } from "unplugin-vue-components/resolvers";
-import manifest from "./manifest.json";
 import { visualizer } from "rollup-plugin-visualizer";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
+import { createRequire } from "module";
+
+// Use createRequire instead of `import manifest from "./manifest.json"` to
+// work around a Rolldown panic on nested member expressions of JSON imports.
+const manifest = createRequire(import.meta.url)("./manifest.json");
+
+const env = process.env;
 
 const getCRXVersion = () => {
-  if (process.env.CRX_VER) {
-    let ver = process.env.CRX_VER;
+  const crxVer = env.CRX_VER;
+  if (crxVer) {
+    let ver = crxVer;
     if (ver.startsWith("v")) {
       ver = ver.slice(1);
     }
     return ver.slice(0, 14);
   }
   return "0.0.0-dev";
+};
+
+// Workaround: Rolldown (Vite 8) panics on nested member expressions like
+// `manifest.background.service_worker` during config transformation.
+// Hoist `manifest.background` into a local variable to flatten the access.
+const manifestBg = manifest.background;
+
+function transformManifestForFirefox() {
+  manifestBg.scripts = [manifestBg.service_worker];
+  delete manifestBg.service_worker;
+
+  delete (manifest as any).version_name;
+
+  (manifest as any).browser_specific_settings = {
+    gecko: {
+      id: "proxyverse@byte.vet",
+      strict_min_version: "109.0",
+    },
+  };
+}
+
+type Transformer = {
+  manifest(): void;
+};
+
+const TRANSFORMER_CONFIG: Record<string, Transformer> = {
+  firefox: {
+    manifest: transformManifestForFirefox,
+  },
 };
 
 // https://vitejs.dev/config/
@@ -41,19 +77,19 @@ export default defineConfig(({ mode }) => {
       }),
       {
         name: "manifest",
-        generateBundle(outputOption, bundle) {
+        generateBundle(_outputOption, bundle) {
           const entry = Object.values(bundle).find(
             (chunk) =>
               chunk.type == "chunk" &&
               chunk.isEntry &&
-              chunk.name == "background"
+              chunk.name == "background",
           );
           manifest.version = getCRXVersion().split("-", 1)[0];
           manifest.version_name = getCRXVersion();
           // avoid cache issues
-          manifest.background.service_worker = (entry as any).fileName;
+          manifestBg.service_worker = (entry as any).fileName;
 
-          transformer?.manifest(manifest);
+          transformer?.manifest();
 
           this.emitFile({
             type: "asset",
@@ -63,13 +99,6 @@ export default defineConfig(({ mode }) => {
         },
       },
     ],
-    css: {
-      preprocessorOptions: {
-        scss: {
-          api: "modern-compiler",
-        },
-      },
-    },
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
@@ -83,22 +112,12 @@ export default defineConfig(({ mode }) => {
           popup: resolve(__dirname, "popup.html"),
           background: "src/background.ts",
         },
-        output: {
-          // cannot enable this config cuz https://github.com/vitejs/vite/issues/5189
-          // manualChunks: {
-          //   framework: [
-          //     "vue",
-          //     "vue-router",
-          //     "@arco-design/web-vue",
-          //     "@vueuse/core",
-          //   ],
-          // },
-        },
+        output: {},
         plugins: [
           isTest
             ? undefined
             : sentryVitePlugin({
-                authToken: process.env.SENTRY_AUTH_TOKEN,
+                authToken: env.SENTRY_AUTH_TOKEN,
                 org: "bytevet",
                 project: "proxyverse",
                 telemetry: false,
@@ -124,27 +143,3 @@ export default defineConfig(({ mode }) => {
     },
   };
 });
-
-type Transformer = {
-  manifest(manifest: any): void;
-};
-
-const TRANSFORMER_CONFIG: Record<string, Transformer> = {
-  firefox: {
-    manifest: (manifest) => {
-      // To support firefox
-      // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/background#browser_support
-      manifest.background.scripts = [manifest.background.service_worker];
-      delete manifest.background.service_worker;
-
-      delete manifest.version_name;
-
-      manifest.browser_specific_settings = {
-        gecko: {
-          id: "proxyverse@byte.vet",
-          strict_min_version: "109.0",
-        },
-      };
-    },
-  },
-};
