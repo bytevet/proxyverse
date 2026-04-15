@@ -9,7 +9,6 @@
     "coverage": "vitest run --coverage",
     "build": "vue-tsc && vite build",
     "build:firefox": "vue-tsc && vite build -m firefox",
-    "build:test": "vue-tsc && vite build -m test",
     "dist": "rm -f dist.zip && cd ./dist/ && zip -r ../dist.zip ./",
     "preview": "vite preview"
   },
@@ -18,7 +17,6 @@
   },
   "dependencies": {
     "@highlightjs/vue-plugin": "^2.1.0",
-    "@sentry/vue": "^10.48.0",
     "@typescript/native-preview": "^7.0.0-dev.20260415.1",
     "@vueuse/core": "^14.2.1",
     "acorn": "^8.16.0",
@@ -31,7 +29,6 @@
   },
   "devDependencies": {
     "@arco-design/web-vue": "^2.57.0",
-    "@sentry/vite-plugin": "^5.2.0",
     "@types/chrome": "^0.1.40",
     "@types/escodegen": "^0.0.10",
     "@types/firefox-webext-browser": "^143.0.0",

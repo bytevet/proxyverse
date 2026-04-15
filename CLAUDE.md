@@ -11,7 +11,6 @@ A Manifest V3 browser extension (Chrome, Edge, Firefox) for proxy profile manage
 ```bash
 npm run build           # Type-check (vue-tsc) + build for Chrome/Edge
 npm run build:firefox   # Type-check + build for Firefox (transforms manifest)
-npm run build:test      # Build in test mode (no Sentry, no visualizer)
 npm run dev             # Vite dev server
 npm test                # Run vitest in watch mode
 npm run coverage        # Single run with coverage report

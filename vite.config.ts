@@ -7,7 +7,6 @@ import AutoImport from "unplugin-auto-import/vite";
 import Components from "unplugin-vue-components/vite";
 import { ArcoResolver } from "unplugin-vue-components/resolvers";
 import { visualizer } from "rollup-plugin-visualizer";
-import { sentryVitePlugin } from "@sentry/vite-plugin";
 import { createRequire } from "module";
 
 // Use createRequire instead of `import manifest from "./manifest.json"` to
@@ -59,7 +58,6 @@ const TRANSFORMER_CONFIG: Record<string, Transformer> = {
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const isTest = mode === "test";
   const transformer = TRANSFORMER_CONFIG[mode];
 
   return {
@@ -114,30 +112,10 @@ export default defineConfig(({ mode }) => {
         },
         output: {},
         plugins: [
-          isTest
-            ? undefined
-            : sentryVitePlugin({
-                authToken: env.SENTRY_AUTH_TOKEN,
-                org: "bytevet",
-                project: "proxyverse",
-                telemetry: false,
-                sourcemaps: {
-                  filesToDeleteAfterUpload: "**/*.js.map",
-                },
-                bundleSizeOptimizations: {
-                  excludeDebugStatements: true,
-                },
-                release: {
-                  inject: true,
-                  dist: `v${getCRXVersion()}-${mode ? mode : "crx"}`,
-                },
-              }),
-          isTest
-            ? undefined
-            : visualizer({
-                filename: "stats.html",
-                open: true,
-              }),
+          visualizer({
+            filename: "stats.html",
+            open: true,
+          }),
         ],
       },
     },
