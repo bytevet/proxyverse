@@ -26,6 +26,12 @@ export class Firefox extends BaseAdapter {
     return ret[key];
   }
 
+  onLocalStorageChanged(
+    callback: (changes: Record<string, { newValue?: unknown }>) => void
+  ): void {
+    browser.storage.local.onChanged.addListener(callback);
+  }
+
   async setProxy(cfg: ProxyConfig): Promise<void> {
     const proxyCfg: browser.proxy.ProxyConfig = {};
 

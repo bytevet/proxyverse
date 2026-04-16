@@ -31,6 +31,12 @@ export class Chrome extends BaseAdapter {
     return ret[key] as T | undefined;
   }
 
+  onLocalStorageChanged(
+    callback: (changes: Record<string, { newValue?: unknown }>) => void
+  ): void {
+    chrome.storage.local.onChanged.addListener(callback);
+  }
+
   async setProxy(cfg: ProxyConfig): Promise<void> {
     await chrome.proxy.settings.set({
       value: cfg,

@@ -80,6 +80,12 @@ export abstract class BaseAdapter {
     return ret;
   }
 
+  // Fires when local storage changes in any extension context, including
+  // this one — the browser dispatches the event everywhere.
+  abstract onLocalStorageChanged(
+    callback: (changes: Record<string, { newValue?: unknown }>) => void
+  ): void;
+
   // proxy
   abstract setProxy(cfg: ProxyConfig): Promise<void>;
   abstract clearProxy(): Promise<void>;

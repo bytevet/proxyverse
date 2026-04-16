@@ -122,6 +122,7 @@ export const SystemProfile: Record<string, ProxyProfile> = {
 const keyProfileStorage = "profiles";
 export type ProfilesStorage = Record<string, ProxyProfile>;
 const onProfileUpdateListeners: ((p: ProfilesStorage) => void)[] = [];
+let storageListenerRegistered = false;
 
 // list all user defined profiles. System profiles are not included
 export async function listProfiles(): Promise<ProfilesStorage> {
@@ -129,13 +130,27 @@ export async function listProfiles(): Promise<ProfilesStorage> {
   return s || {};
 }
 
+/**
+ * Subscribe to profile updates. Fires in every extension context (popup,
+ * config page, background) whenever the profiles storage key is written,
+ * regardless of which context made the write — backed by the browser's
+ * storage change events.
+ */
 export function onProfileUpdate(callback: (p: ProfilesStorage) => void) {
+  if (!storageListenerRegistered) {
+    storageListenerRegistered = true;
+    Host.onLocalStorageChanged((changes) => {
+      if (!(keyProfileStorage in changes)) return;
+      const profiles = (changes[keyProfileStorage].newValue ??
+        {}) as ProfilesStorage;
+      onProfileUpdateListeners.forEach((cb) => cb(profiles));
+    });
+  }
   onProfileUpdateListeners.push(callback);
 }
 
 async function overwriteProfiles(profiles: ProfilesStorage) {
   await Host.set(keyProfileStorage, deepClone(profiles));
-  onProfileUpdateListeners.forEach((cb) => cb(profiles));
 }
 
 /**
