@@ -17,6 +17,9 @@ import AutoSwitchInput from "./configs/AutoSwitchInput.vue";
 import AutoSwitchPacPreview from "./configs/AutoSwitchPacPreview.vue";
 import ScriptInput from "./configs/ScriptInput.vue";
 import {
+  DEFAULT_PAC_REFRESH_MINUTES,
+  PAC_REFRESH_INTERVAL_OPTIONS,
+  PacScriptConfig,
   ProfileAutoSwitch,
   ProfileSimple,
   ProxyServer,
@@ -25,7 +28,8 @@ import {
   getProfile,
   saveProfile,
 } from "@/services/profile";
-import { Host, PacScript } from "@/adapters";
+import { Host } from "@/adapters";
+import { fetchPacScript } from "@/services/proxy/pacFetcher";
 import { refreshProxy } from "@/services/proxy";
 
 const router = useRouter();
@@ -67,6 +71,10 @@ const profileConfig = reactive<ConfigState>({
   // …
   return 'DIRECT';
 }`,
+    sourceURL: "",
+    refreshIntervalMinutes: undefined,
+    lastFetched: undefined,
+    lastError: undefined,
   },
 
   // auto switch part
@@ -150,20 +158,51 @@ const proxyServerFieldRule = (
 const pacScriptFieldRule = (
   readable_name: string,
   required?: boolean
-): FieldRule<PacScript | undefined> => {
+): FieldRule<PacScriptConfig | undefined> => {
   return {
     type: "object",
     required: required,
     validator(
-      value: PacScript | undefined,
+      value: PacScriptConfig | undefined,
       callback: (message?: string) => void
     ) {
       if (value == undefined) {
         return;
       }
 
+      if (value.sourceURL?.trim()) {
+        return;
+      }
+
       if (!value.data?.trim()) {
         callback(Host.getMessage("form_is_required", readable_name));
+      }
+    },
+  };
+};
+
+const pacSourceURLFieldRule = (
+  readable_name: string
+): FieldRule<string | undefined> => {
+  return {
+    type: "string",
+    validator(
+      value: string | undefined,
+      callback: (message?: string) => void
+    ) {
+      const trimmed = value?.trim();
+      if (!trimmed) {
+        return;
+      }
+      let parsed: URL;
+      try {
+        parsed = new URL(trimmed);
+      } catch {
+        callback(Host.getMessage("form_invalid_url", readable_name));
+        return;
+      }
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+        callback(Host.getMessage("form_invalid_url", readable_name));
       }
     },
   };
@@ -225,6 +264,77 @@ const deleteProfileEvent = async () => {
 
 const discardEditEvent = () => {
   props.profileID && loadProfile(props.profileID);
+};
+
+const pacFetching = ref(false);
+
+const formatLastFetched = (ts?: number) => {
+  if (!ts) return "";
+  return new Date(ts).toLocaleString();
+};
+
+const pacIntervalOptions = computed(() =>
+  PAC_REFRESH_INTERVAL_OPTIONS.map((minutes) => ({
+    value: minutes,
+    label: pacIntervalLabel(minutes),
+  }))
+);
+
+function pacIntervalLabel(minutes: number): string {
+  if (minutes === 0) {
+    return Host.getMessage("config_pac_refresh_interval_disabled");
+  }
+  if (minutes < 60) {
+    return Host.getMessage(
+      "config_pac_refresh_interval_minutes",
+      String(minutes)
+    );
+  }
+  if (minutes === 60) {
+    return Host.getMessage("config_pac_refresh_interval_one_hour");
+  }
+  if (minutes === 1440) {
+    return Host.getMessage("config_pac_refresh_interval_one_day");
+  }
+  const hours = minutes / 60;
+  return Host.getMessage("config_pac_refresh_interval_hours", String(hours));
+}
+
+const pacRefreshIntervalModel = computed<number>({
+  get() {
+    if (profileConfig.proxyType !== "pac") return DEFAULT_PAC_REFRESH_MINUTES;
+    const v = profileConfig.pacScript.refreshIntervalMinutes;
+    return v === undefined ? DEFAULT_PAC_REFRESH_MINUTES : v;
+  },
+  set(val: number) {
+    if (profileConfig.proxyType !== "pac") return;
+    profileConfig.pacScript.refreshIntervalMinutes = val;
+  },
+});
+
+const fetchPacNow = async () => {
+  if (profileConfig.proxyType !== "pac") return;
+  const url = profileConfig.pacScript.sourceURL?.trim();
+  if (!url) return;
+
+  pacFetching.value = true;
+  try {
+    const body = await fetchPacScript(url);
+    profileConfig.pacScript.data = body;
+    profileConfig.pacScript.lastFetched = Date.now();
+    profileConfig.pacScript.lastError = undefined;
+    Notification.success({
+      content: Host.getMessage("config_feedback_pac_fetched"),
+    });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    profileConfig.pacScript.lastError = message;
+    Notification.error({
+      content: Host.getMessage("config_feedback_pac_fetch_failed", message),
+    });
+  } finally {
+    pacFetching.value = false;
+  }
 };
 
 // load data
@@ -403,6 +513,79 @@ watchEffect(async () => {
       </template>
       <template v-else-if="profileConfig.proxyType == 'pac'">
         <a-form-item
+          :label="$t('config_section_pac_url')"
+          field="pacScript.sourceURL"
+          :validate-trigger="['blur']"
+          :rules="pacSourceURLFieldRule($t('config_section_pac_url'))"
+        >
+          <template #extra>
+            <a-space direction="vertical" size="mini">
+              <a-typography-text>
+                {{ $t("config_section_pac_url_hint") }}
+              </a-typography-text>
+              <a-typography-text
+                v-if="profileConfig.pacScript.lastFetched"
+                type="secondary"
+              >
+                {{
+                  $t(
+                    "config_pac_last_fetched",
+                    formatLastFetched(profileConfig.pacScript.lastFetched)
+                  )
+                }}
+              </a-typography-text>
+              <a-typography-text
+                v-if="profileConfig.pacScript.lastError"
+                type="danger"
+              >
+                {{
+                  $t("config_pac_last_error", profileConfig.pacScript.lastError)
+                }}
+              </a-typography-text>
+            </a-space>
+          </template>
+          <a-input-group>
+            <a-input
+              v-model="profileConfig.pacScript.sourceURL"
+              :placeholder="$t('config_section_pac_url_placeholder')"
+              allow-clear
+            />
+            <a-button
+              type="primary"
+              :loading="pacFetching"
+              :disabled="!profileConfig.pacScript.sourceURL?.trim()"
+              @click="fetchPacNow"
+            >
+              {{ $t("config_action_pac_fetch") }}
+            </a-button>
+          </a-input-group>
+        </a-form-item>
+
+        <a-form-item
+          v-if="profileConfig.pacScript.sourceURL?.trim()"
+          :label="$t('config_section_pac_refresh_interval')"
+          field="pacScript.refreshIntervalMinutes"
+        >
+          <template #extra>
+            <div>{{ $t("config_section_pac_refresh_interval_hint") }}</div>
+          </template>
+          <a-select
+            v-model="pacRefreshIntervalModel"
+            :options="pacIntervalOptions"
+            style="max-width: 240px"
+          />
+        </a-form-item>
+
+        <a-alert
+          v-if="profileConfig.pacScript.sourceURL?.trim()"
+          type="warning"
+          :show-icon="true"
+          style="margin-bottom: 16px"
+        >
+          {{ $t("config_pac_manual_edit_warning") }}
+        </a-alert>
+
+        <a-form-item
           :label="$t('config_proxy_type_pac')"
           field="pacScript"
           :validate-trigger="['blur']"
@@ -445,4 +628,5 @@ watchEffect(async () => {
     }
   }
 }
+
 </style>

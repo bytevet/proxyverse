@@ -128,6 +128,19 @@ export class WebBrowser extends BaseAdapter {
   ): void {
     throw new Error("Method not implemented.");
   }
+  async createPeriodicAlarm(_: string, __: number): Promise<void> {
+    // no-op for local dev
+  }
+  async clearAlarm(_: string): Promise<void> {
+    // no-op for local dev
+  }
+  async getAllAlarmNames(): Promise<string[]> {
+    return [];
+  }
+  onAlarm(_: (name: string) => void): void {
+    // no-op for local dev
+  }
+
   currentLocale(): string {
     return "en-US";
   }

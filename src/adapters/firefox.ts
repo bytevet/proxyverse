@@ -142,6 +142,24 @@ export class Firefox extends BaseAdapter {
       urls: ["<all_urls>"],
     });
   }
+
+  async createPeriodicAlarm(
+    name: string,
+    periodInMinutes: number
+  ): Promise<void> {
+    await browser.alarms.create(name, { periodInMinutes });
+  }
+  async clearAlarm(name: string): Promise<void> {
+    await browser.alarms.clear(name);
+  }
+  async getAllAlarmNames(): Promise<string[]> {
+    const all = await browser.alarms.getAll();
+    return all.map((a) => a.name);
+  }
+  onAlarm(callback: (name: string) => void): void {
+    browser.alarms.onAlarm.addListener((alarm) => callback(alarm.name));
+  }
+
   currentLocale(): string {
     return browser.i18n.getUILanguage();
   }

@@ -23,6 +23,7 @@
     "proxy",
     "webRequest",
     "webRequestAuthProvider",
-    "activeTab"
+    "activeTab",
+    "alarms"
   ]
 }

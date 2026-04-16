@@ -40,7 +40,10 @@ export class ProfileConverter {
       case "pac":
         return {
           mode: "pac_script",
-          pacScript: this.profile.pacScript,
+          // Only pass `data` to chrome.proxy.settings — our PacScriptConfig
+          // has extra bookkeeping fields (sourceURL, lastFetched, lastError)
+          // that aren't part of chrome.proxy.PacScript.
+          pacScript: { data: this.profile.pacScript.data ?? "" },
         };
 
       default:

@@ -15,6 +15,12 @@ import {
   getCurrentProxySetting,
 } from "./services/proxy";
 import { WebRequestStatsService } from "./services/stats";
+import {
+  handlePacRefreshAlarm,
+  reconcilePacAlarms,
+  refreshActivePacIfStale,
+} from "./services/proxy/pacFetcher";
+import { onProfileUpdate } from "./services/profile";
 
 // indicator
 async function initIndicator() {
@@ -27,6 +33,27 @@ async function initIndicator() {
 }
 
 initIndicator().catch(console.error);
+
+// Per-profile PAC script refresh. Each PAC profile with a sourceURL and a
+// positive refresh interval owns a `pac-refresh:<profileID>` alarm. The
+// wake-time refresh only hits the active profile (with a staleness guard) —
+// the SW wakes on every main-frame request, so fetching all URL-backed
+// profiles here would mean back-to-back PAC requests during normal browsing.
+function initPacRefresh() {
+  Host.onAlarm((name) => {
+    handlePacRefreshAlarm(name).catch(console.error);
+  });
+
+  onProfileUpdate((profiles) => {
+    reconcilePacAlarms(profiles).catch(console.error);
+  });
+
+  Promise.all([reconcilePacAlarms(), refreshActivePacIfStale()]).catch(
+    console.error,
+  );
+}
+
+initPacRefresh();
 
 // proxy auth provider
 class ProxyAuthProvider {

@@ -59,6 +59,54 @@
   "config_proxy_type_pac": {
     "message": "PAC Script"
   },
+  "config_section_pac_url": {
+    "message": "PAC Script URL"
+  },
+  "config_section_pac_url_placeholder": {
+    "message": "https://example.com/proxy.pac"
+  },
+  "config_section_pac_url_hint": {
+    "message": "Optional. If set, the script body is refreshed periodically in the background."
+  },
+  "config_action_pac_fetch": {
+    "message": "Fetch Now"
+  },
+  "config_feedback_pac_fetched": {
+    "message": "PAC script fetched successfully."
+  },
+  "config_feedback_pac_fetch_failed": {
+    "message": "Failed to fetch PAC script: $1"
+  },
+  "config_pac_last_fetched": {
+    "message": "Last fetched: $1"
+  },
+  "config_pac_last_error": {
+    "message": "Last fetch error: $1"
+  },
+  "config_pac_manual_edit_warning": {
+    "message": "A source URL is set. Manual edits will be overwritten on the next refresh."
+  },
+  "config_section_pac_refresh_interval": {
+    "message": "Refresh Interval"
+  },
+  "config_section_pac_refresh_interval_hint": {
+    "message": "How often the PAC script is re-fetched in the background."
+  },
+  "config_pac_refresh_interval_minutes": {
+    "message": "Every $1 minutes"
+  },
+  "config_pac_refresh_interval_one_hour": {
+    "message": "Every hour"
+  },
+  "config_pac_refresh_interval_hours": {
+    "message": "Every $1 hours"
+  },
+  "config_pac_refresh_interval_one_day": {
+    "message": "Every day"
+  },
+  "config_pac_refresh_interval_disabled": {
+    "message": "Disabled (manual only)"
+  },
   "config_proxy_type_auto": {
     "message": "Auto Switch"
   },
@@ -223,6 +271,9 @@
 
   "form_is_required": {
     "message": "$1 is required"
+  },
+  "form_invalid_url": {
+    "message": "$1 must be a valid http:// or https:// URL"
   },
 
   "feedback_error": {

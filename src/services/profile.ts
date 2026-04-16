@@ -1,4 +1,4 @@
-import { Host, PacScript, SimpleProxyServer } from "@/adapters";
+import { Host, SimpleProxyServer } from "@/adapters";
 import { deepClone } from "./utils";
 
 export type ProxyAuthInfo = {
@@ -15,6 +15,36 @@ export function sanitizeProxyServer(v: ProxyServer): SimpleProxyServer {
     host: v.host,
     port: v.port,
   };
+}
+
+// PAC script configuration. `data` is the effective script text;
+// when `sourceURL` is set, `data` is refreshed from that URL periodically.
+// `refreshIntervalMinutes`:
+//   - undefined → use DEFAULT_PAC_REFRESH_MINUTES
+//   - 0         → auto-refresh disabled (manual "Fetch Now" still works)
+//   - positive  → refresh every N minutes
+export type PacScriptConfig = {
+  data?: string;
+  sourceURL?: string;
+  refreshIntervalMinutes?: number;
+  lastFetched?: number;
+  lastError?: string;
+};
+
+// Default auto-refresh cadence for PAC URLs when the user hasn't chosen one.
+export const DEFAULT_PAC_REFRESH_MINUTES = 60;
+
+// Discrete interval options offered in the UI (minutes). `0` means "disabled".
+export const PAC_REFRESH_INTERVAL_OPTIONS: number[] = [
+  5, 15, 30, 60, 180, 360, 720, 1440, 0,
+];
+
+export function resolvePacRefreshMinutes(cfg: PacScriptConfig): number {
+  const v = cfg.refreshIntervalMinutes;
+  if (v === undefined) {
+    return DEFAULT_PAC_REFRESH_MINUTES;
+  }
+  return v < 0 ? 0 : v;
 }
 
 export type ProxyConfigMeta = {
@@ -35,7 +65,7 @@ export type ProxyConfigSimple =
         ftp?: ProxyServer;
         bypassList: string[];
       };
-      pacScript?: PacScript;
+      pacScript?: PacScriptConfig;
     }
   | {
       proxyType: "pac";
@@ -46,7 +76,7 @@ export type ProxyConfigSimple =
         ftp?: ProxyServer;
         bypassList: string[];
       };
-      pacScript: PacScript;
+      pacScript: PacScriptConfig;
     };
 
 // advanced proxy config, with auto switch support

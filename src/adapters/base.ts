@@ -123,6 +123,15 @@ export abstract class BaseAdapter {
   ): void;
   abstract sendMessage(message: any): Promise<any>;
 
+  // alarms
+  abstract createPeriodicAlarm(
+    name: string,
+    periodInMinutes: number
+  ): Promise<void>;
+  abstract clearAlarm(name: string): Promise<void>;
+  abstract getAllAlarmNames(): Promise<string[]>;
+  abstract onAlarm(callback: (name: string) => void): void;
+
   // i18n
   abstract currentLocale(): string;
   abstract getMessage(key: string, substitutions?: string | string[]): string;

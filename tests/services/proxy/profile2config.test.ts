@@ -117,6 +117,52 @@ describe("testing generating ProxyConfig for direct and system", () => {
   });
 });
 
+describe("PAC profile with sourceURL metadata", () => {
+  test("does not leak sourceURL / lastFetched / lastError into ProxyConfig", async () => {
+    const profile: ProxyProfile = {
+      profileID: "pacUrl",
+      color: "",
+      profileName: "",
+      proxyType: "pac",
+      pacScript: {
+        data: "function FindProxyForURL(u, h) { return 'DIRECT'; }",
+        sourceURL: "https://example.com/proxy.pac",
+        lastFetched: 1700000000000,
+        lastError: "prior error",
+      },
+    };
+
+    const converter = new ProfileConverter(profile);
+    const cfg = await converter.toProxyConfig();
+
+    expect(cfg.mode).toBe("pac_script");
+    expect(cfg.pacScript?.data).toBe(
+      "function FindProxyForURL(u, h) { return 'DIRECT'; }"
+    );
+    // Chrome's native PacScript type only has `data` and `url` — make sure
+    // our bookkeeping fields don't bleed through.
+    expect(Object.keys(cfg.pacScript ?? {})).toEqual(["data"]);
+  });
+
+  test("handles empty data gracefully when only sourceURL is set", async () => {
+    const profile: ProxyProfile = {
+      profileID: "pacUrlOnly",
+      color: "",
+      profileName: "",
+      proxyType: "pac",
+      pacScript: {
+        sourceURL: "https://example.com/proxy.pac",
+      },
+    };
+
+    const converter = new ProfileConverter(profile);
+    const cfg = await converter.toProxyConfig();
+
+    expect(cfg.mode).toBe("pac_script");
+    expect(cfg.pacScript?.data).toBe("");
+  });
+});
+
 describe("testing bypass list", () => {
   test("bypass list with ipv6", async () => {
     const profile = new ProfileConverter(profiles.simpleProxy);

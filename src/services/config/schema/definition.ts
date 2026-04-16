@@ -45,8 +45,14 @@ export const HexedColor = t.brand(
 );
 
 // start of the config
-const PacScript = t.strict({
+// All fields are optional: a PAC profile may carry just `data` (inline script),
+// just `sourceURL` (remote source, fetched lazily), or both.
+const PacScript = t.partial({
   data: t.string,
+  sourceURL: t.string,
+  refreshIntervalMinutes: t.number,
+  lastFetched: t.number,
+  lastError: t.string,
 });
 
 export const ProxyServer = t.intersection([
