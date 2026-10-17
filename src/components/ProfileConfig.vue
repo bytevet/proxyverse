@@ -605,7 +605,8 @@ watchEffect(async () => {
         <a-space direction="vertical">
           <AutoSwitchInput
             :currentProfileID="profileConfig.profileID"
-            v-model="profileConfig"
+            :model-value="(profileConfig as ProfileAutoSwitch)"
+            @update:model-value="(v) => Object.assign(profileConfig, v)"
           />
 
           <AutoSwitchPacPreview

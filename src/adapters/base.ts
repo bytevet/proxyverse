@@ -1,25 +1,27 @@
+import type { Runtime, Tabs, WebRequest } from "webextension-polyfill";
+
 export type WebAuthenticationChallengeDetails =
   | chrome.webRequest.OnAuthRequiredDetails
-  | browser.webRequest._OnAuthRequiredDetails;
+  | WebRequest.OnAuthRequiredDetailsType;
 export type BlockingResponse = chrome.webRequest.BlockingResponse;
 
 export type WebRequestResponseStartedDetails =
   | chrome.webRequest.OnResponseStartedDetails
-  | browser.webRequest._OnResponseStartedDetails;
+  | WebRequest.OnResponseStartedDetailsType;
 
 export type WebRequestCompletedDetails =
   | chrome.webRequest.OnCompletedDetails
-  | browser.webRequest._OnCompletedDetails;
+  | WebRequest.OnCompletedDetailsType;
 
 export type WebRequestErrorOccurredDetails =
   | chrome.webRequest.OnErrorOccurredDetails
-  | browser.webRequest._OnErrorOccurredDetails;
+  | WebRequest.OnErrorOccurredDetailsType;
 
 export type MessageSender =
   | chrome.runtime.MessageSender
-  | browser.runtime.MessageSender;
+  | Runtime.MessageSender;
 
-export type Tab = chrome.tabs.Tab | browser.tabs.Tab;
+export type Tab = chrome.tabs.Tab | Tabs.Tab;
 
 export type ProxyConfig = chrome.proxy.ProxyConfig;
 

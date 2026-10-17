@@ -1,5 +1,4 @@
-/// <reference types="@types/firefox-webext-browser" />
-
+import type { Browser, Proxy } from "webextension-polyfill";
 import {
   BaseAdapter,
   BlockingResponse,
@@ -14,6 +13,9 @@ import {
   WebRequestResponseStartedDetails,
 } from "./base";
 
+// `browser` is globally typed as `typeof chrome` by @types/chrome; use Firefox typings here
+const browser = (globalThis as unknown as { browser: Browser }).browser;
+
 export class Firefox extends BaseAdapter {
   async set<T>(key: string, val: T): Promise<void> {
     return await browser.storage.local.set({
@@ -23,7 +25,7 @@ export class Firefox extends BaseAdapter {
 
   async get<T>(key: string): Promise<T | undefined> {
     const ret = await browser.storage.local.get(key);
-    return ret[key];
+    return ret[key] as T | undefined;
   }
 
   onLocalStorageChanged(
@@ -33,7 +35,7 @@ export class Firefox extends BaseAdapter {
   }
 
   async setProxy(cfg: ProxyConfig): Promise<void> {
-    const proxyCfg: browser.proxy.ProxyConfig = {};
+    const proxyCfg: Proxy.ProxyConfig = {};
 
     switch (cfg.mode) {
       case "direct":
@@ -69,10 +71,10 @@ export class Firefox extends BaseAdapter {
   }
 
   onProxyError(callback: (error: ProxyErrorDetails) => void): void {
-    browser.proxy.onError.addListener(callback);
+    browser.proxy.onError.addListener(callback as any);
   }
   onProxyChanged(callback: (setting: ProxySettingResultDetails) => void): void {
-    browser.proxy.settings.onChange.addListener(callback);
+    browser.proxy.settings.onChange.addListener(callback as any);
   }
 
   async setBadge(text: string, color: string, tabID?: number): Promise<void> {
@@ -105,7 +107,7 @@ export class Firefox extends BaseAdapter {
       sendResponse: (response: any) => void
     ) => void
   ): void {
-    browser.runtime.onMessage.addListener(callback);
+    browser.runtime.onMessage.addListener(callback as any);
   }
 
   sendMessage(message: any): Promise<any> {

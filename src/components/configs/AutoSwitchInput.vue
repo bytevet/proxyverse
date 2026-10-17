@@ -101,7 +101,10 @@ const getConditionInputRule = (type: AutoSwitchType): FieldRule<string> => {
 
     case "url":
       return {
-        validator: async (value: string, cb: (message?: string) => void) => {
+        validator: async (
+          value: string | undefined,
+          cb: (message?: string) => void
+        ) => {
           let u;
           try {
             u = new URL(value || "");
@@ -133,7 +136,7 @@ const getConditionInputRule = (type: AutoSwitchType): FieldRule<string> => {
     case "cidr":
       return {
         required: true,
-        validator: (value: string, cb: (message?: string) => void) => {
+        validator: (value: string | undefined, cb: (message?: string) => void) => {
           if (!value || !isValidCIDR(value)) {
             cb(
               Host.getMessage("config_section_auto_switch_type_cidr_malformed")

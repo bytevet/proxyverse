@@ -67,7 +67,7 @@ const setProxyByProfile = async (val: ProxyProfile) => {
       <a-menu :selected-keys="selectedKeys">
         <a-menu-item
           :key="SystemProfile.DIRECT.profileID"
-          @click.prevent="() => setProxyByProfile(SystemProfile.DIRECT)"
+          @click.prevent="setProxyByProfile(SystemProfile.DIRECT)"
           :style="{ '--indicator-color': SystemProfile.DIRECT.color }"
         >
           <template #icon><icon-swap /></template>
@@ -75,7 +75,7 @@ const setProxyByProfile = async (val: ProxyProfile) => {
         </a-menu-item>
         <a-menu-item
           :key="SystemProfile.SYSTEM.profileID"
-          @click.prevent="() => setProxyByProfile(SystemProfile.SYSTEM)"
+          @click.prevent="setProxyByProfile(SystemProfile.SYSTEM)"
           :style="{ '--indicator-color': SystemProfile.SYSTEM.color }"
         >
           <template #icon><icon-desktop /></template>
