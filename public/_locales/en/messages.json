@@ -33,11 +33,70 @@
     "message": "auto"
   },
 
-  "mode_auto_switch_detection_info": {
-    "message": "$1 is used for this tab"
+  "mode_auto_switch_via": {
+    "message": "This site via"
   },
-  "mode_auto_switch_detection_tips": {
-    "message": "Due to the limitation of the browser, the detection is not always accurate."
+  "mode_auto_switch_uncertain": {
+    "message": "Best guess. The actual proxy may differ, as IP-based rules can't be checked for hostnames."
+  },
+  "mode_auto_switch_scope_host": {
+    "message": "This site"
+  },
+  "mode_auto_switch_rule_saved": {
+    "message": "Rule saved for $1"
+  },
+  "action_reload_tab": {
+    "message": "Reload tab"
+  },
+
+  "stats_failed_resources": {
+    "message": "$1 resources failed to load"
+  },
+  "stats_details": {
+    "message": "Details"
+  },
+
+  "resources_title": {
+    "message": "Resources"
+  },
+  "resources_filter_all": {
+    "message": "All"
+  },
+  "resources_filter_failed": {
+    "message": "Failed"
+  },
+  "resources_empty": {
+    "message": "No resources recorded. Reload the page to capture them."
+  },
+  "resource_type_main": {
+    "message": "main"
+  },
+  "resource_type_iframe": {
+    "message": "iframe"
+  },
+  "resource_type_stylesheet": {
+    "message": "css"
+  },
+  "resource_type_script": {
+    "message": "script"
+  },
+  "resource_type_image": {
+    "message": "img"
+  },
+  "resource_type_font": {
+    "message": "font"
+  },
+  "resource_type_xhr": {
+    "message": "xhr"
+  },
+  "resource_type_media": {
+    "message": "media"
+  },
+  "resource_type_websocket": {
+    "message": "ws"
+  },
+  "resource_type_other": {
+    "message": "other"
   },
 
   "mode_direct": {

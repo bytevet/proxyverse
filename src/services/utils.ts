@@ -11,3 +11,18 @@
 export function deepClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
 }
+
+/**
+ * Parse a web URL, which auto switch rules can target.
+ * Returns undefined for other schemes (e.g. chrome://, data:) and bad URLs.
+ */
+export function parseWebURL(url?: string): URL | undefined {
+  try {
+    const u = new URL(url ?? "");
+    return ["http:", "https:", "ws:", "wss:"].includes(u.protocol)
+      ? u
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}

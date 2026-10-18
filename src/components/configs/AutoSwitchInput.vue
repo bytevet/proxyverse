@@ -176,6 +176,7 @@ const getConditionInputRule = (type: AutoSwitchType): FieldRule<string> => {
       >
         <a-form-item hide-label :field="`rules[${rowIndex}].type`">
           <a-select
+            :data-testid="`rule-${rowIndex}-type`"
             :options="autoSwitchTypes"
             v-model="record.type as string"
           />
@@ -198,6 +199,7 @@ const getConditionInputRule = (type: AutoSwitchType): FieldRule<string> => {
           validate-trigger="blur"
         >
           <a-input
+            :data-testid="`rule-${rowIndex}-condition`"
             v-model="record.condition"
             :placeholder="getPlaceholder(record.type)"
             :disabled="record.type === 'disabled'"
@@ -216,6 +218,7 @@ const getConditionInputRule = (type: AutoSwitchType): FieldRule<string> => {
       >
         <a-form-item hide-label :field="`rules[${rowIndex}].profileID`">
           <ProfileSelector
+            :data-testid="`rule-${rowIndex}-route`"
             v-model="record.profileID"
             :currentProfileID="props.currentProfileID"
             :disabled="record.type === 'disabled'"
@@ -235,6 +238,7 @@ const getConditionInputRule = (type: AutoSwitchType): FieldRule<string> => {
         <a-space>
           <a-tooltip :content="$t('config_section_auto_switch_delete_rule')">
             <a-button
+              :data-testid="`rule-${rowIndex}-delete`"
               type="outline"
               shape="circle"
               status="danger"
@@ -245,6 +249,7 @@ const getConditionInputRule = (type: AutoSwitchType): FieldRule<string> => {
           </a-tooltip>
           <a-tooltip :content="$t('config_section_auto_switch_duplicate_rule')">
             <a-button
+              :data-testid="`rule-${rowIndex}-duplicate`"
               type="outline"
               shape="circle"
               @click="() => newRule(record)"
@@ -257,7 +262,11 @@ const getConditionInputRule = (type: AutoSwitchType): FieldRule<string> => {
 
       <template #footer>
         <div class="space-between">
-          <a-button @click="() => newRule()" size="small">
+          <a-button
+            data-testid="rule-add"
+            @click="() => newRule()"
+            size="small"
+          >
             <template #icon>
               <icon-plus />
             </template>
@@ -271,6 +280,7 @@ const getConditionInputRule = (type: AutoSwitchType): FieldRule<string> => {
               }}</a-typography-text
             >
             <ProfileSelector
+              data-testid="rule-default"
               v-model="config.defaultProfileID"
               :currentProfileID="props.currentProfileID"
             />

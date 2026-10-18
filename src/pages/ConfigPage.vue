@@ -33,7 +33,10 @@ onMounted(async () => {
         <section class="settings">
           <a-button-group type="text" size="large">
             <a-tooltip :content="$t('nav_preference')" position="bottom">
-              <a-button @click="$router.push({ name: 'preference' })">
+              <a-button
+                data-testid="sidebar-preference"
+                @click="$router.push({ name: 'preference' })"
+              >
                 <template #icon>
                   <icon-settings size="large" />
                 </template>
@@ -67,6 +70,7 @@ onMounted(async () => {
                   }).path
                 "
                 class="custom-profiles"
+                :data-testid="`sidebar-profile-${p.profileID}`"
                 :style="{ '--indicator-color': p.color }"
               >
                 <template #icon><span class="color-indicator"></span></template>
@@ -77,6 +81,7 @@ onMounted(async () => {
 
             <RouterLink :to="{ name: 'profile.create' }">
               <a-menu-item
+                data-testid="sidebar-create"
                 :key="$router.resolve({ name: 'profile.create' }).path"
               >
                 <template #icon><icon-plus /></template>

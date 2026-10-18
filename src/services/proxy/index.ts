@@ -4,7 +4,10 @@ import {
   ProxyAuthInfo,
   SystemProfile,
   getProfile,
+  listProfiles,
+  lookupProfile,
   ProfileAutoSwitch,
+  ProfilesStorage,
 } from "../profile";
 import { ProxySettingResultDetails } from "@/adapters";
 import { ProfileConverter } from "./profile2config";
@@ -40,25 +43,36 @@ async function wrapProxySetting(setting: ProxySettingResultDetails) {
   return ret;
 }
 
+/**
+ * Subscribe to changes of the active profile, including edits of it (e.g.
+ * a new color), in any extension context.
+ */
+export function onActiveProfileChanged(callback: () => void) {
+  Host.onLocalStorageChanged((changes) => {
+    if (keyActiveProfile in changes) callback();
+  });
+}
+
 export async function getCurrentProxySetting() {
   const setting = await Host.getProxySettings();
   return await wrapProxySetting(setting);
 }
 
 export async function setProxy(val: ProxyProfile) {
-  switch (val.proxyType) {
-    case "system":
-      await Host.clearProxy();
-      break;
+  const config =
+    val.proxyType === "system"
+      ? undefined
+      : await new ProfileConverter(val, getProfile).toProxyConfig();
 
-    default:
-      const profile = new ProfileConverter(val, getProfile);
-      await Host.setProxy(await profile.toProxyConfig());
-      break;
-  }
-
-  // Deep clone to remove any Proxy objects before saving
+  // Save the snapshot before applying, as proxy change listeners (e.g. the
+  // badge indicator) read it. Deep clone to remove any Proxy objects.
   await Host.set<ProxyProfile>(keyActiveProfile, deepClone(val));
+
+  if (config) {
+    await Host.setProxy(config);
+  } else {
+    await Host.clearProxy();
+  }
 }
 
 /**
@@ -79,8 +93,64 @@ export async function refreshProxy() {
     return;
   }
 
-  const profile = new ProfileConverter(newProfile, getProfile);
-  await Host.setProxy(await profile.toProxyConfig());
+  // also refreshes the active profile snapshot
+  await setProxy(newProfile);
+}
+
+/**
+ * The IDs of `rootID` and every profile it routes to, directly or through
+ * nested auto switch profiles. Missing profiles are included as well.
+ */
+export function profileTreeIDs(
+  rootID: string,
+  profiles: ProfilesStorage
+): Set<string> {
+  const ret = new Set<string>();
+  const visit = (profileID: string) => {
+    if (ret.has(profileID)) return; // avoid infinite loop
+    ret.add(profileID);
+
+    const profile = profiles[profileID];
+    if (profile?.proxyType !== "auto") return;
+    profile.rules
+      .filter((rule) => rule.type !== "disabled")
+      .forEach((rule) => visit(rule.profileID));
+    visit(profile.defaultProfileID);
+  };
+
+  visit(rootID);
+  return ret;
+}
+
+/**
+ * Whether a change of the profiles storage affects the proxy config generated
+ * for `rootID`.
+ */
+export function isProfileTreeChanged(
+  rootID: string,
+  profiles: ProfilesStorage,
+  oldProfiles: ProfilesStorage
+): boolean {
+  return [...profileTreeIDs(rootID, profiles)].some(
+    (id) => JSON.stringify(profiles[id]) !== JSON.stringify(oldProfiles[id])
+  );
+}
+
+/**
+ * Re-apply the active profile when a change of the profiles storage affects
+ * it, no matter where the change comes from (config page, import, PAC refresh).
+ */
+export async function refreshProxyOnProfileUpdate(
+  profiles: ProfilesStorage,
+  oldProfiles: ProfilesStorage
+) {
+  const { activeProfile } = await getCurrentProxySetting();
+  if (
+    activeProfile &&
+    isProfileTreeChanged(activeProfile.profileID, profiles, oldProfiles)
+  ) {
+    await refreshProxy();
+  }
 }
 
 export async function previewAutoSwitchPac(val: ProfileAutoSwitch) {
@@ -101,7 +171,28 @@ export async function getAuthInfos(
   return await authProvider.getAuthInfos(host, port);
 }
 
-export async function findProfile(profile: ProxyProfile, url: URL) {
-  const converter = new ProfileConverter(profile, getProfile);
-  return await converter.findProfile(url);
+export type ResolvedProfile = {
+  profile: ProxyProfile | undefined;
+  uncertain: boolean;
+};
+
+/**
+ * Build a resolver that simulates which profile `profile` uses for a URL.
+ * Profiles are loaded once, so it's cheap to call for many URLs.
+ */
+export async function createProfileFinder(profile: ProxyProfile) {
+  const profiles = await listProfiles();
+  const converter = new ProfileConverter(
+    profile,
+    async (profileID) => lookupProfile(profiles, profileID)
+  );
+
+  return async (url: string): Promise<ResolvedProfile> => {
+    try {
+      const ret = await converter.findProfile(new URL(url));
+      return { profile: ret.profile?.profile, uncertain: !ret.isConfident };
+    } catch {
+      return { profile: undefined, uncertain: true };
+    }
+  };
 }

@@ -11,6 +11,7 @@ import {
   Tab,
   WebAuthenticationChallengeDetails,
   WebRequestCompletedDetails,
+  WebRequestBeforeRequestDetails,
   WebRequestErrorOccurredDetails,
   WebRequestResponseStartedDetails,
 } from "./base";
@@ -32,9 +33,35 @@ export class Chrome extends BaseAdapter {
   }
 
   onLocalStorageChanged(
-    callback: (changes: Record<string, { newValue?: unknown }>) => void
+    callback: (changes: Record<string, { newValue?: unknown; oldValue?: unknown }>) => void
   ): void {
     chrome.storage.local.onChanged.addListener(callback);
+  }
+
+  async setSession<T>(key: string, val: T): Promise<void> {
+    await chrome.storage.session.set({
+      [key]: val,
+    });
+  }
+
+  async getSession<T>(key: string): Promise<T | undefined> {
+    const ret = await chrome.storage.session.get(key);
+    return ret[key] as T | undefined;
+  }
+
+  async removeSession(key: string): Promise<void> {
+    await chrome.storage.session.remove(key);
+  }
+
+  async getAllSession(): Promise<Record<string, unknown>> {
+    return await chrome.storage.session.get(null);
+  }
+
+  onSessionStorageChanged(
+    callback: (changes: Record<string, { newValue?: unknown; oldValue?: unknown }>) => void
+  ): () => void {
+    chrome.storage.session.onChanged.addListener(callback);
+    return () => chrome.storage.session.onChanged.removeListener(callback);
   }
 
   async setProxy(cfg: ProxyConfig): Promise<void> {
@@ -61,13 +88,17 @@ export class Chrome extends BaseAdapter {
 
   async setBadge(text: string, color: string, tabID?: number): Promise<void> {
     await chrome.action.setBadgeText({
-      text: text.trimStart().substring(0, 2),
+      text,
       tabId: tabID,
     });
     await chrome.action.setBadgeBackgroundColor({
       color: color,
       tabId: tabID,
     });
+  }
+
+  async getTab(tabID: number): Promise<Tab | undefined> {
+    return await chrome.tabs.get(tabID).catch(() => undefined);
   }
 
   async getActiveTab(): Promise<Tab | undefined> {
@@ -77,6 +108,10 @@ export class Chrome extends BaseAdapter {
 
   onTabRemoved(callback: (tabID: number) => void): void {
     chrome.tabs.onRemoved.addListener(callback);
+  }
+
+  async reloadTab(tabID: number): Promise<void> {
+    await chrome.tabs.reload(tabID);
   }
 
   onMessage(
@@ -104,6 +139,14 @@ export class Chrome extends BaseAdapter {
       { urls: ["<all_urls>"] },
       ["asyncBlocking"]
     );
+  }
+
+  onWebRequestBeforeRequest(
+    callback: (details: WebRequestBeforeRequestDetails) => void
+  ): void {
+    chrome.webRequest.onBeforeRequest.addListener(callback as any, {
+      urls: ["<all_urls>"],
+    });
   }
 
   onWebRequestResponseStarted(

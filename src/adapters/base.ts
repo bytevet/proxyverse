@@ -13,6 +13,10 @@ export type WebRequestCompletedDetails =
   | chrome.webRequest.OnCompletedDetails
   | WebRequest.OnCompletedDetailsType;
 
+export type WebRequestBeforeRequestDetails =
+  | chrome.webRequest.OnBeforeRequestDetails
+  | WebRequest.OnBeforeRequestDetailsType;
+
 export type WebRequestErrorOccurredDetails =
   | chrome.webRequest.OnErrorOccurredDetails
   | WebRequest.OnErrorOccurredDetailsType;
@@ -85,8 +89,17 @@ export abstract class BaseAdapter {
   // Fires when local storage changes in any extension context, including
   // this one — the browser dispatches the event everywhere.
   abstract onLocalStorageChanged(
-    callback: (changes: Record<string, { newValue?: unknown }>) => void
+    callback: (changes: Record<string, { newValue?: unknown; oldValue?: unknown }>) => void
   ): void;
+
+  // session storage, cleared when the browser closes
+  abstract setSession<T>(key: string, val: T): Promise<void>;
+  abstract getSession<T>(key: string): Promise<T | undefined>;
+  abstract removeSession(key: string): Promise<void>;
+  abstract getAllSession(): Promise<Record<string, unknown>>;
+  abstract onSessionStorageChanged(
+    callback: (changes: Record<string, { newValue?: unknown; oldValue?: unknown }>) => void
+  ): () => void;
 
   // proxy
   abstract setProxy(cfg: ProxyConfig): Promise<void>;
@@ -107,6 +120,9 @@ export abstract class BaseAdapter {
       asyncCallback?: (response: BlockingResponse) => void
     ) => BlockingResponse | undefined
   ): void;
+  abstract onWebRequestBeforeRequest(
+    callback: (details: WebRequestBeforeRequestDetails) => void
+  ): void;
   abstract onWebRequestResponseStarted(
     callback: (details: WebRequestResponseStartedDetails) => void
   ): void;
@@ -119,7 +135,9 @@ export abstract class BaseAdapter {
 
   // tabs
   abstract getActiveTab(): Promise<Tab | undefined>;
+  abstract getTab(tabID: number): Promise<Tab | undefined>;
   abstract onTabRemoved(callback: (tabID: number) => void): void;
+  abstract reloadTab(tabID: number): Promise<void>;
 
   // messages
   abstract onMessage(

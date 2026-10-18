@@ -9,6 +9,7 @@ import {
   Tab,
   WebAuthenticationChallengeDetails,
   WebRequestCompletedDetails,
+  WebRequestBeforeRequestDetails,
   WebRequestErrorOccurredDetails,
   WebRequestResponseStartedDetails,
 } from "./base";
@@ -29,9 +30,35 @@ export class Firefox extends BaseAdapter {
   }
 
   onLocalStorageChanged(
-    callback: (changes: Record<string, { newValue?: unknown }>) => void
+    callback: (changes: Record<string, { newValue?: unknown; oldValue?: unknown }>) => void
   ): void {
     browser.storage.local.onChanged.addListener(callback);
+  }
+
+  async setSession<T>(key: string, val: T): Promise<void> {
+    await browser.storage.session.set({
+      [key]: val,
+    });
+  }
+
+  async getSession<T>(key: string): Promise<T | undefined> {
+    const ret = await browser.storage.session.get(key);
+    return ret[key] as T | undefined;
+  }
+
+  async removeSession(key: string): Promise<void> {
+    await browser.storage.session.remove(key);
+  }
+
+  async getAllSession(): Promise<Record<string, unknown>> {
+    return await browser.storage.session.get(null);
+  }
+
+  onSessionStorageChanged(
+    callback: (changes: Record<string, { newValue?: unknown; oldValue?: unknown }>) => void
+  ): () => void {
+    browser.storage.session.onChanged.addListener(callback);
+    return () => browser.storage.session.onChanged.removeListener(callback);
   }
 
   async setProxy(cfg: ProxyConfig): Promise<void> {
@@ -79,13 +106,17 @@ export class Firefox extends BaseAdapter {
 
   async setBadge(text: string, color: string, tabID?: number): Promise<void> {
     await browser.action.setBadgeText({
-      text: text.trimStart().substring(0, 2),
+      text,
       tabId: tabID,
     });
     await browser.action.setBadgeBackgroundColor({
       color: color,
       tabId: tabID,
     });
+  }
+
+  async getTab(tabID: number): Promise<Tab | undefined> {
+    return await browser.tabs.get(tabID).catch(() => undefined);
   }
 
   async getActiveTab(): Promise<Tab | undefined> {
@@ -98,6 +129,10 @@ export class Firefox extends BaseAdapter {
 
   onTabRemoved(callback: (tabID: number) => void): void {
     browser.tabs.onRemoved.addListener(callback);
+  }
+
+  async reloadTab(tabID: number): Promise<void> {
+    await browser.tabs.reload(tabID);
   }
 
   onMessage(
@@ -125,6 +160,14 @@ export class Firefox extends BaseAdapter {
       { urls: ["<all_urls>"] },
       ["asyncBlocking"]
     );
+  }
+
+  onWebRequestBeforeRequest(
+    callback: (details: WebRequestBeforeRequestDetails) => void
+  ): void {
+    browser.webRequest.onBeforeRequest.addListener(callback as any, {
+      urls: ["<all_urls>"],
+    });
   }
 
   onWebRequestResponseStarted(

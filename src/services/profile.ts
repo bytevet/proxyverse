@@ -121,7 +121,10 @@ export const SystemProfile: Record<string, ProxyProfile> = {
 
 const keyProfileStorage = "profiles";
 export type ProfilesStorage = Record<string, ProxyProfile>;
-const onProfileUpdateListeners: ((p: ProfilesStorage) => void)[] = [];
+const onProfileUpdateListeners: ((
+  p: ProfilesStorage,
+  old: ProfilesStorage
+) => void)[] = [];
 let storageListenerRegistered = false;
 
 // list all user defined profiles. System profiles are not included
@@ -136,14 +139,17 @@ export async function listProfiles(): Promise<ProfilesStorage> {
  * regardless of which context made the write — backed by the browser's
  * storage change events.
  */
-export function onProfileUpdate(callback: (p: ProfilesStorage) => void) {
+export function onProfileUpdate(
+  callback: (p: ProfilesStorage, old: ProfilesStorage) => void
+) {
   if (!storageListenerRegistered) {
     storageListenerRegistered = true;
     Host.onLocalStorageChanged((changes) => {
       if (!(keyProfileStorage in changes)) return;
-      const profiles = (changes[keyProfileStorage].newValue ??
-        {}) as ProfilesStorage;
-      onProfileUpdateListeners.forEach((cb) => cb(profiles));
+      const { newValue, oldValue } = changes[keyProfileStorage];
+      const profiles = (newValue ?? {}) as ProfilesStorage;
+      const old = (oldValue ?? {}) as ProfilesStorage;
+      onProfileUpdateListeners.forEach((cb) => cb(profiles, old));
     });
   }
   onProfileUpdateListeners.push(callback);
@@ -173,16 +179,26 @@ export async function saveManyProfiles(profiles: ProxyProfile[]) {
   await overwriteProfiles(data);
 }
 
+export function getSystemProfile(profileID: string): ProxyProfile | undefined {
+  return Object.values(SystemProfile).find((p) => p.profileID === profileID);
+}
+
+/** Find a system profile, or a user profile in `profiles`. */
+export function lookupProfile(
+  profiles: ProfilesStorage,
+  profileID: string
+): ProxyProfile | undefined {
+  return getSystemProfile(profileID) ?? profiles[profileID];
+}
+
 export async function getProfile(
   profileID: string,
   userProfileOnly?: boolean
 ): Promise<ProxyProfile | undefined> {
   if (!userProfileOnly) {
-    // check if it's a system profile
-    for (const p of Object.values(SystemProfile)) {
-      if (p.profileID === profileID) {
-        return p;
-      }
+    const p = getSystemProfile(profileID);
+    if (p) {
+      return p;
     }
   }
 

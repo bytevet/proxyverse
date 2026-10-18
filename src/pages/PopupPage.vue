@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { type RouteLocationRaw, useRouter } from "vue-router";
+import { type RouteLocationRaw, useRoute, useRouter } from "vue-router";
 import { Message } from "@arco-design/web-vue";
-import { computed, onMounted, ref, toRaw } from "vue";
+import { computed, onMounted, onUnmounted, ref, toRaw } from "vue";
 import {
   IconDesktop,
   IconSwap,
@@ -20,11 +20,20 @@ import { setProxy, getCurrentProxySetting } from "../services/proxy";
 import { Host } from "@/adapters";
 import { type Tab } from "@/adapters/base";
 import AutoModeActionBar from "@/components/AutoModeActionBar.vue";
+import FailedResourcesAlert from "@/components/FailedResourcesAlert.vue";
+import {
+  acknowledgeTabStats,
+  subscribeTabStats,
+  type TabStatsResult,
+} from "@/services/stats";
 
 const router = useRouter();
+const route = useRoute();
 const profiles = ref<ProfilesStorage>({});
 const currentTab = ref<Tab | undefined>();
 const activeProfile = ref<ProxyProfile | undefined>();
+const tabStats = ref<TabStatsResult | undefined>();
+let unsubscribeTabStats: (() => void) | undefined;
 
 const selectedKeys = computed(() => {
   return activeProfile.value?.profileID ? [activeProfile.value.profileID] : [];
@@ -35,12 +44,36 @@ onMounted(async () => {
   const proxy = await getCurrentProxySetting();
   activeProfile.value = proxy.activeProfile;
 
-  currentTab.value = await Host.getActiveTab();
+  // `?tabID=` makes the popup act on a given tab, used by e2e tests
+  const tabID = Number(route.query.tabID);
+  currentTab.value = tabID
+    ? await Host.getTab(tabID)
+    : await Host.getActiveTab();
+  if (currentTab.value?.id !== undefined) {
+    // the user sees the failures here, so the badge can stop signaling them
+    acknowledgeTabStats(currentTab.value.id);
+    unsubscribeTabStats = subscribeTabStats(
+      currentTab.value.id,
+      (stats) => (tabStats.value = stats)
+    );
+  }
 });
+
+onUnmounted(() => unsubscribeTabStats?.());
 
 const jumpTo = (to: RouteLocationRaw) => {
   const path = router.resolve(to).fullPath;
   window.open(`/index.html#${path}`, "_blank");
+};
+
+// open the active custom profile for editing, or the config home otherwise
+const openConfig = () => {
+  const profileID = activeProfile.value?.profileID;
+  if (profileID && profiles.value[profileID]) {
+    jumpTo({ name: "profile.custom", params: { id: profileID } });
+  } else {
+    jumpTo({ name: "profile.home" });
+  }
 };
 
 // actions
@@ -67,6 +100,7 @@ const setProxyByProfile = async (val: ProxyProfile) => {
       <a-menu :selected-keys="selectedKeys">
         <a-menu-item
           :key="SystemProfile.DIRECT.profileID"
+          data-testid="popup-profile-direct"
           @click.prevent="setProxyByProfile(SystemProfile.DIRECT)"
           :style="{ '--indicator-color': SystemProfile.DIRECT.color }"
         >
@@ -75,6 +109,7 @@ const setProxyByProfile = async (val: ProxyProfile) => {
         </a-menu-item>
         <a-menu-item
           :key="SystemProfile.SYSTEM.profileID"
+          data-testid="popup-profile-system"
           @click.prevent="setProxyByProfile(SystemProfile.SYSTEM)"
           :style="{ '--indicator-color': SystemProfile.SYSTEM.color }"
         >
@@ -92,6 +127,7 @@ const setProxyByProfile = async (val: ProxyProfile) => {
               type="secondary"
               shape="circle"
               size="mini"
+              data-testid="popup-create"
               @click="jumpTo({ name: 'profile.create' })"
             >
               <icon-plus />
@@ -107,6 +143,7 @@ const setProxyByProfile = async (val: ProxyProfile) => {
         <a-menu-item
           v-for="(item, _) in profiles"
           :key="item.profileID"
+          :data-testid="`popup-profile-${item.profileID}`"
           @click.prevent="() => setProxyByProfile(item)"
           class="custom-profiles"
           :style="{ '--indicator-color': item.color }"
@@ -126,10 +163,12 @@ const setProxyByProfile = async (val: ProxyProfile) => {
         v-if="currentTab?.url && activeProfile?.proxyType == 'auto'"
         :current-tab="currentTab"
         :active-profile="activeProfile"
+        @switched="(p) => (activeProfile = p)"
       />
+      <failed-resources-alert v-if="tabStats" :stats="tabStats" />
       <section class="settings">
         <a-button-group type="text" size="large">
-          <a-button @click="jumpTo({ name: 'profile.home' })">
+          <a-button data-testid="popup-config" @click="openConfig">
             <template #icon>
               <icon-tool size="medium" />
             </template>
