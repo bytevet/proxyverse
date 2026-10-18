@@ -9,7 +9,7 @@ import {
   server,
   standardProfiles,
 } from "../data/profiles";
-import { freshHost } from "../data/hosts";
+import { freshProxyHost } from "../data/hosts";
 import { AUTH } from "../servers";
 import {
   fieldError,
@@ -198,7 +198,7 @@ test.describe("proxy profile editor", () => {
       activate,
     }) => {
       // a fresh host, as Chrome caches proxy credentials per host
-      const host = freshHost("proxy");
+      const host = freshProxyHost();
       await sw.setProfiles([
         proxyProfile(
           { profileID: "authed" },

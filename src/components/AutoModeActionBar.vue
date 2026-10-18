@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { type Tab } from "@/adapters/base";
 import { ProfileAutoSwitch, ProxyProfile } from "@/services/profile";
-import {
-  createProfileFinder,
-  type ResolvedProfile,
-} from "@/services/proxy";
+import { type ResolvedProfile } from "@/services/proxy";
+import { createRouteResolver } from "@/services/proxy/route";
+import type { TabStatsResult } from "@/services/stats";
 import { computed, defineAsyncComponent, ref, watch } from "vue";
 import { parseWebURL } from "@/services/utils";
 
@@ -16,6 +15,7 @@ const ProfileSwitchChip = defineAsyncComponent(
 const props = defineProps<{
   currentTab: Tab;
   activeProfile: ProxyProfile;
+  stats?: TabStatsResult; // the tab's requests, telling the route of the page
 }>();
 
 const emit = defineEmits<{
@@ -25,17 +25,36 @@ const emit = defineEmits<{
 const current = ref<ResolvedProfile | undefined>();
 const host = computed(() => parseWebURL(props.currentTab.url)?.hostname);
 
+// the route the browser reported for the page, once it loaded. It only
+// holds for the rules it was made under
+const rulesChangedAt = ref(0);
+const observed = computed(() => {
+  const page = props.stats?.resources.find((r) => r.type === "main_frame");
+  return page && page.ts >= rulesChangedAt.value ? page.observed : undefined;
+});
+
 watch(
-  () => [props.currentTab.url, props.activeProfile],
+  () => [
+    props.currentTab.url,
+    props.activeProfile,
+    JSON.stringify(observed.value ?? null),
+  ],
   async () => {
     const url = props.currentTab.url;
     current.value =
       host.value && url
-        ? await (await createProfileFinder(props.activeProfile))(url)
+        ? await (
+            await createRouteResolver(props.activeProfile)
+          )(url, observed.value)
         : undefined;
   },
   { immediate: true }
 );
+
+const onSwitched = (p: ProfileAutoSwitch) => {
+  rulesChangedAt.value = Date.now();
+  emit("switched", p);
+};
 </script>
 
 <template>
@@ -55,7 +74,7 @@ watch(
           :profile="current.profile"
           :uncertain="current.uncertain"
           :activeProfileID="activeProfile.profileID"
-          @switched="(p) => emit('switched', p)"
+          @switched="onSwitched"
         />
       </a-space>
     </a-alert>

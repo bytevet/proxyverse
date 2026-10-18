@@ -7,11 +7,8 @@ import {
   IconLoading,
 } from "@arco-design/web-vue/es/icon";
 import { ProxyProfile } from "@/services/profile";
-import {
-  createProfileFinder,
-  getCurrentProxySetting,
-  type ResolvedProfile,
-} from "@/services/proxy";
+import { getCurrentProxySetting, type ResolvedProfile } from "@/services/proxy";
+import { createRouteResolver } from "@/services/proxy/route";
 import {
   countFailures,
   isFailure,
@@ -74,29 +71,38 @@ onUnmounted(() => unsubscribe?.());
 const resources = computed(() => stats.value?.resources ?? []);
 const failureCount = computed(() => countFailures(resources.value));
 
-// simulate which profile is used for each resource URL
-const finder = shallowRef<Awaited<ReturnType<typeof createProfileFinder>>>();
+// the profile used for each resource: what the browser observed when
+// known, else what the rules say
+const finder = shallowRef<Awaited<ReturnType<typeof createRouteResolver>>>();
 const resolved = ref<Record<string, ResolvedProfile>>({});
+// an observation only holds for the rules it was made under
+const rulesChangedAt = ref(0);
+const observedOf = (r: TabResource) =>
+  r.ts >= rulesChangedAt.value ? r.observed : undefined;
+const routeKey = (r: TabResource) =>
+  `${r.url} ${JSON.stringify(observedOf(r) ?? null)}`;
 
 watch(activeProfile, async (active) => {
   resolved.value = {};
   finder.value =
-    active?.proxyType === "auto" ? await createProfileFinder(active) : undefined;
+    active?.proxyType === "auto" ? await createRouteResolver(active) : undefined;
 });
 
-watch([resources, finder], async ([res, find], _, onCleanup) => {
+watch([resources, finder], async ([res, resolve], _, onCleanup) => {
   let cancelled = false;
   onCleanup(() => (cancelled = true));
-  if (!find) return;
+  if (!resolve) return;
 
-  const urls = [...new Set(res.map((r) => r.url))].filter(
-    (url) => !resolved.value[url]
+  const todo = [
+    ...new Map(res.map((r) => [routeKey(r), r])).entries(),
+  ].filter(([key]) => !resolved.value[key]);
+  const results = await Promise.all(
+    todo.map(([, r]) => resolve(r.url, observedOf(r)))
   );
-  const results = await Promise.all(urls.map(find));
-  if (cancelled || urls.length == 0) return;
+  if (cancelled || todo.length == 0) return;
 
   const ret = { ...resolved.value };
-  urls.forEach((url, i) => (ret[url] = results[i]));
+  todo.forEach(([key], i) => (ret[key] = results[i]));
   resolved.value = ret;
 });
 
@@ -117,7 +123,7 @@ const parseURL = (url: string) => {
 const majorityProfile = (items: ResourceItem[]) => {
   const counts = new Map<string, { n: number; p: ResolvedProfile }>();
   for (const { resource } of items) {
-    const p = resolved.value[resource.url];
+    const p = resolved.value[routeKey(resource)];
     if (!p) continue;
     const key = p.profile?.profileID ?? "";
     const c = counts.get(key) ?? { n: 0, p };
@@ -148,7 +154,7 @@ const groups = computed<ResourceGroup[]>(() => {
   for (const g of ret) {
     g.profile = majorityProfile(g.items);
     for (const item of g.items) {
-      const p = resolved.value[item.resource.url];
+      const p = resolved.value[routeKey(item.resource)];
       if (p && p.profile?.profileID !== g.profile?.profile?.profileID) {
         item.outlier = p.profile;
       }
@@ -168,6 +174,11 @@ watch(groups, (val) => {
     }
   }
 });
+
+const onSwitched = (p: ProxyProfile) => {
+  rulesChangedAt.value = Date.now();
+  activeProfile.value = p;
+};
 
 const goBack = () =>
   router.push({ name: "page.popup", query: { tabID: tabID.value } });
@@ -233,7 +244,7 @@ const goBack = () =>
                 :profile="group.profile?.profile"
                 :uncertain="group.profile?.uncertain"
                 :activeProfileID="activeProfile.profileID"
-                @switched="(p) => (activeProfile = p)"
+                @switched="onSwitched"
               />
             </span>
           </template>

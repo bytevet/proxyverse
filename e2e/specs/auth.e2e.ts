@@ -1,7 +1,7 @@
 import { test, expect } from "../fixtures";
 import { expectRoute, routeOf } from "../fixtures/routing";
 import { autoProfile, proxyProfile, rule } from "../data/profiles";
-import { freshHost } from "../data/hosts";
+import { freshHost, freshProxyHost } from "../data/hosts";
 import { AUTH, type Servers } from "../servers";
 import type { ProxyServer } from "@/services/profile";
 
@@ -26,7 +26,7 @@ test.describe("proxy auth", () => {
     activate,
   }) => {
     const site = freshHost();
-    const proxyHost = freshHost("proxy");
+    const proxyHost = freshProxyHost();
     await sw.setProfiles([
       proxyProfile(
         { profileID: "authed" },
@@ -46,7 +46,7 @@ test.describe("proxy auth", () => {
     activate,
   }) => {
     const site = freshHost();
-    const proxyHost = freshHost("proxy");
+    const proxyHost = freshProxyHost();
     const wrong = { username: AUTH.username, password: "wrong" };
     // candidates are tried in order: default, ftp, http, https
     await sw.setProfiles([
@@ -76,7 +76,7 @@ test.describe("proxy auth", () => {
     activate,
   }) => {
     const site = freshHost();
-    const proxyHost = freshHost("proxy");
+    const proxyHost = freshProxyHost();
     await sw.setProfiles([
       proxyProfile(
         { profileID: "authed" },
@@ -100,7 +100,7 @@ test.describe("proxy auth", () => {
     activate,
   }) => {
     const site = freshHost();
-    const proxyHost = freshHost("proxy");
+    const proxyHost = freshProxyHost();
     await sw.setProfiles([
       proxyProfile(
         { profileID: "authed" },

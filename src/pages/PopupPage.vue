@@ -163,6 +163,7 @@ const setProxyByProfile = async (val: ProxyProfile) => {
         v-if="currentTab?.url && activeProfile?.proxyType == 'auto'"
         :current-tab="currentTab"
         :active-profile="activeProfile"
+        :stats="tabStats"
         @switched="(p) => (activeProfile = p)"
       />
       <failed-resources-alert v-if="tabStats" :stats="tabStats" />
