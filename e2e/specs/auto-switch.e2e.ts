@@ -47,15 +47,15 @@ test.describe("auto switch profiles", () => {
     test("CIDR on an IP literal", async ({ sw, servers, page, activate }) => {
       const { proxyA } = standardProfiles(servers);
       const auto = autoProfile({ profileID: "auto" }, [
-        rule("cidr", "10.9.8.0/24", "proxyA"),
+        rule("cidr", "198.51.100.0/24", "proxyA"),
       ]);
       await sw.setProfiles([proxyA, auto]);
       await activate("auto");
 
-      // nothing listens on 10.9.8.7, so only the proxy can answer
+      // nothing listens on 198.51.100.7, so only the proxy can answer
       await expectRoute(
         page,
-        `http://10.9.8.7:${servers.ports.direct}/`,
+        `http://198.51.100.7:${servers.ports.direct}/`,
         "proxyA",
       );
       await expectRoute(page, servers.url("site.test"), "direct");
@@ -181,20 +181,20 @@ test.describe("auto switch profiles", () => {
     });
     await editor.setRule(1, {
       type: "CIDR",
-      condition: "10.9.8.0/24",
+      condition: "198.51.100.0/24",
       profileID: "socks",
     });
     const id = await saveNew(editor);
 
     expect((await stored(sw, id, "auto")).rules).toEqual([
       rule("domain", "*.ui.test", "proxyA"),
-      rule("cidr", "10.9.8.0/24", "socks"),
+      rule("cidr", "198.51.100.0/24", "socks"),
     ]);
     await activate(id);
     await expectRoute(page, servers.url("www.ui.test"), "proxyA");
     await expectRoute(
       page,
-      `http://10.9.8.7:${servers.ports.direct}/`,
+      `http://198.51.100.7:${servers.ports.direct}/`,
       "socks",
     );
   });
@@ -316,7 +316,7 @@ test.describe("auto switch profiles", () => {
         { profileID: "auto" },
         [
           rule("domain", "*.wild.test", "proxyA"),
-          rule("cidr", "10.9.8.0/24", "proxyB"),
+          rule("cidr", "198.51.100.0/24", "proxyB"),
         ],
         "proxyB",
       ),
@@ -329,7 +329,7 @@ test.describe("auto switch profiles", () => {
     await expect(code).toContainText("FindProxyForURL");
     await expect(code).toContainText("shExpMatch(host, '*.wild.test')");
     await expect(code).toContainText(
-      "isInNet(host, '10.9.8.0', '255.255.255.0')",
+      "isInNet(host, '198.51.100.0', '255.255.255.0')",
     );
     await expect(code).toContainText(`127.0.0.1:${servers.ports.proxyA}`);
 

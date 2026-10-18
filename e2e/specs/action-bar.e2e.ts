@@ -85,7 +85,7 @@ test.describe("auto mode action bar", () => {
       openPopup,
     }) => {
       // an IP literal, answered by the default proxy
-      await page.goto(`http://10.9.8.7:${servers.ports.direct}/`);
+      await page.goto(`http://198.51.100.7:${servers.ports.direct}/`);
       const popup = await openPopup(await sw.tabIdOf(page));
       await popup.chip.click();
       await expect(
@@ -135,7 +135,7 @@ test.describe("auto mode action bar", () => {
     // a CIDR rule can't be checked against a hostname without DNS
     const auto = autoProfile(
       { profileID: "auto" },
-      [rule("cidr", "10.0.0.0/8", "proxyA")],
+      [rule("cidr", "198.51.100.0/24", "proxyA")],
       "direct"
     );
     await sw.setProfiles([proxyA, auto]);
@@ -323,7 +323,7 @@ test.describe("auto mode action bar", () => {
     const { socks } = standardProfiles(servers);
     const auto = autoProfile(
       { profileID: "auto", profileName: "Auto Mode", color: "#123456" },
-      [rule("domain", "a.test", "socks"), rule("cidr", "10.0.0.0/8", "socks")],
+      [rule("domain", "a.test", "socks"), rule("cidr", "198.51.100.0/24", "socks")],
       "direct"
     );
     await sw.setProfiles([socks, auto]);
