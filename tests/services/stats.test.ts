@@ -175,6 +175,24 @@ describe("TabStats", () => {
   });
 });
 
+describe("TabStats routes", () => {
+  test("are stored on completion and failure, and saved", () => {
+    const s = new TabStats(1);
+    s.addRequest(req("1", "https://a.com/a.js"));
+    s.addRequest(req("2", "https://b.com/b.js"));
+    s.completeRequest(req("1", ""), { ip: "127.0.0.1" });
+    s.failRequest(req("2", "", "script", { error: "net::ERR_FAILED" }), {
+      proxyInfo: null,
+    });
+
+    const restored = TabStats.fromJSON(1, s.toJSON()).toJSON().resources;
+    expect(restored.map((r) => r.route)).toEqual([
+      { ip: "127.0.0.1" },
+      { proxyInfo: null },
+    ]);
+  });
+});
+
 describe("TabStats acknowledgement", () => {
   const failed = (s: TabStats, id: string) => {
     s.addRequest(req(id, `https://a.com/${id}`));

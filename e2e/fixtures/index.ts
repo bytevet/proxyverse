@@ -6,7 +6,7 @@ import {
   type Page,
 } from "@playwright/test";
 import path from "node:path";
-import { startServers, type Servers } from "../servers";
+import { LAN_IP, startServers, type Servers } from "../servers";
 import { ServiceWorker } from "./sw";
 import { Popup } from "../pages/popup";
 import { ProfileEditor } from "../pages/editor";
@@ -49,8 +49,9 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
         args: [
           `--disable-extensions-except=${CHROME_BUILD}`,
           `--load-extension=${CHROME_BUILD}`,
-          // fake sites; requests going through a proxy never resolve them
-          "--host-resolver-rules=MAP *.test 127.0.0.1",
+          // fake sites (requests going through a proxy never resolve them),
+          // and hostnames for the test proxies
+          `--host-resolver-rules=MAP *.test ${LAN_IP ?? "127.0.0.1"}, MAP *.proxy.internal 127.0.0.1`,
         ],
       });
       await use(context);

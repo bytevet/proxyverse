@@ -4,6 +4,7 @@ import {
   WebRequestErrorOccurredDetails,
 } from "@/adapters/base";
 import { Host } from "@/adapters";
+import type { RouteFacts } from "./proxy/route";
 
 /**
  * Simple LRU cache implementation
@@ -66,6 +67,8 @@ export type TabResource = {
   status: "pending" | "ok" | "failed";
   error?: string;
   ts: number;
+  // what the browser reported about the route, when known
+  route?: RouteFacts;
 };
 
 export type TabStatsResult = {
@@ -209,12 +212,17 @@ export class WebRequestStatsService {
     return this.update(details.tabId, (s) => s.addRequest(details));
   }
 
-  completeRequest(details: WebRequestCompletedDetails) {
-    return this.update(details.tabId, (s) => s.completeRequest(details));
+  completeRequest(details: WebRequestCompletedDetails, route?: RouteFacts) {
+    return this.update(details.tabId, (s) =>
+      s.completeRequest(details, route)
+    );
   }
 
-  addFailedRequest(details: WebRequestErrorOccurredDetails) {
-    return this.update(details.tabId, (s) => s.failRequest(details));
+  addFailedRequest(
+    details: WebRequestErrorOccurredDetails,
+    route?: RouteFacts
+  ) {
+    return this.update(details.tabId, (s) => s.failRequest(details, route));
   }
 
   getTabStats(tabID: number): Promise<TabStats> {
@@ -344,22 +352,30 @@ export class TabStats {
     return true;
   }
 
-  completeRequest(details: WebRequestCompletedDetails): boolean {
+  completeRequest(
+    details: WebRequestCompletedDetails,
+    route?: RouteFacts
+  ): boolean {
     const resource = this.byRequestId.get(details.requestId);
     if (!resource) {
       return false;
     }
     resource.status = "ok";
+    if (route) resource.route = route;
     return true;
   }
 
-  failRequest(details: WebRequestErrorOccurredDetails): boolean {
+  failRequest(
+    details: WebRequestErrorOccurredDetails,
+    route?: RouteFacts
+  ): boolean {
     const resource = this.byRequestId.get(details.requestId);
     if (!resource) {
       return false;
     }
     resource.status = "failed";
     resource.error = details.error;
+    if (route) resource.route = route;
     return true;
   }
 }

@@ -5,21 +5,33 @@ export type WebAuthenticationChallengeDetails =
   | WebRequest.OnAuthRequiredDetailsType;
 export type BlockingResponse = chrome.webRequest.BlockingResponse;
 
-export type WebRequestResponseStartedDetails =
-  | chrome.webRequest.OnResponseStartedDetails
-  | WebRequest.OnResponseStartedDetailsType;
+// Firefox reports the proxy a request used (null when direct), which the
+// webextension-polyfill types lack
+export type WithProxyInfo = {
+  proxyInfo?: { host: string; port: number; type: string } | null;
+};
 
-export type WebRequestCompletedDetails =
+export type WebRequestResponseStartedDetails = (
+  | chrome.webRequest.OnResponseStartedDetails
+  | WebRequest.OnResponseStartedDetailsType
+) &
+  WithProxyInfo;
+
+export type WebRequestCompletedDetails = (
   | chrome.webRequest.OnCompletedDetails
-  | WebRequest.OnCompletedDetailsType;
+  | WebRequest.OnCompletedDetailsType
+) &
+  WithProxyInfo;
 
 export type WebRequestBeforeRequestDetails =
   | chrome.webRequest.OnBeforeRequestDetails
   | WebRequest.OnBeforeRequestDetailsType;
 
-export type WebRequestErrorOccurredDetails =
+export type WebRequestErrorOccurredDetails = (
   | chrome.webRequest.OnErrorOccurredDetails
-  | WebRequest.OnErrorOccurredDetailsType;
+  | WebRequest.OnErrorOccurredDetailsType
+) &
+  WithProxyInfo;
 
 export type MessageSender =
   | chrome.runtime.MessageSender

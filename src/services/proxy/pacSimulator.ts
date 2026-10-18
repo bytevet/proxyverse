@@ -1,4 +1,28 @@
+import { IPv4, IPv6, isValidCIDR, parseCIDR } from "ipaddr.js";
+
 export const UNKNOWN = undefined;
+
+/** The network address and mask of a CIDR, as PAC's isInNet takes them. */
+export function cidrNetMask(
+  cidr: string
+): { ip: string; mask: string } | undefined {
+  if (!isValidCIDR(cidr)) return;
+  try {
+    const [ip, prefix] = parseCIDR(cidr);
+    const mask = (ip.kind() == "ipv4" ? IPv4 : IPv6).subnetMaskFromPrefixLength(
+      prefix
+    );
+    return { ip: ip.toString(), mask: mask.toNormalizedString() };
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+/** isInNet for a CIDR: UNKNOWN for hostnames, false for an invalid CIDR. */
+export function isInCIDR(host: string, cidr: string) {
+  const net = cidrNetMask(cidr);
+  return net ? isInNet(host, net.ip, net.mask) : false;
+}
 
 // copy from Mozilla's implementation
 // https://github.com/mozilla/pjs/blob/cbcb610a8cfb035c37fe3103fc2a2eb3b214921a/netwerk/base/src/nsProxyAutoConfig.js#L4

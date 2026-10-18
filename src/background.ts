@@ -11,8 +11,8 @@ import {
   WebRequestResponseStartedDetails,
 } from "./adapters/base";
 import { TabIndicator } from "./services/indicator";
+import { createRouteResolver, routeFactsOf } from "./services/proxy/route";
 import {
-  createProfileFinder,
   getAuthInfos,
   getCurrentProxySetting,
   onActiveProfileChanged,
@@ -27,13 +27,19 @@ import {
 import { onProfileUpdate } from "./services/profile";
 
 // indicator
-const tabIndicator = new TabIndicator(
-  async () => (await getCurrentProxySetting()).activeProfile
-);
+const activeProfile = async () =>
+  (await getCurrentProxySetting()).activeProfile;
+const tabIndicator = new TabIndicator(activeProfile);
+
+// tells the route of requests, for the current rules
+let routeResolver: ReturnType<typeof createRouteResolver> | undefined;
 
 // the badge follows the proxy setting, and edits of the active profile
 // (e.g. a new color leaves the proxy setting unchanged)
-const refreshIndicator = () => tabIndicator.refresh().catch(console.error);
+const refreshIndicator = () => {
+  routeResolver = undefined;
+  tabIndicator.refresh().catch(console.error);
+};
 Host.onProxyChanged(refreshIndicator);
 onActiveProfileChanged(refreshIndicator);
 refreshIndicator();
@@ -41,6 +47,7 @@ refreshIndicator();
 // Keep the proxy config in sync with the stored profiles, whichever context
 // changed them (config page, popup, import, PAC refresh).
 onProfileUpdate((profiles, old) => {
+  routeResolver = undefined;
   refreshProxyOnProfileUpdate(profiles, old).catch(console.error);
 });
 
@@ -138,8 +145,13 @@ class StatsProvider {
       if (!URL.canParse(details.url)) {
         return;
       }
-      const find = await createProfileFinder(proxySetting.activeProfile);
-      const { profile, uncertain } = await find(details.url);
+      // what the browser reported when it tells, else what the rules say
+      routeResolver ??= createRouteResolver(proxySetting.activeProfile);
+      const resolve = await routeResolver;
+      const { profile, uncertain } = await resolve(
+        details.url,
+        routeFactsOf(details)
+      );
 
       if (profile && !uncertain) {
         // Sometimes the indicator doesn't update properly in Chrome, so we need to wait a bit.
@@ -162,11 +174,11 @@ class StatsProvider {
   }
 
   static onRequestCompleted(details: WebRequestCompletedDetails) {
-    StatsProvider.stats.completeRequest(details);
+    StatsProvider.stats.completeRequest(details, routeFactsOf(details));
   }
 
   static onRequestError(details: WebRequestErrorOccurredDetails) {
-    StatsProvider.stats.addFailedRequest(details);
+    StatsProvider.stats.addFailedRequest(details, routeFactsOf(details));
   }
 
   static onTabRemoved(tabID: number) {
