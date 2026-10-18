@@ -1,14 +1,21 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from "vue";
 import { IconUser, IconEraser, IconSave } from "@arco-design/web-vue/es/icon";
+import type { FieldRule } from "@arco-design/web-vue";
 import { ProxyServer } from "../../services/profile";
 import { Host } from "@/adapters";
 
+type ValidateTrigger = "change" | "input" | "focus" | "blur";
+
+// `rules` and `validateTrigger` are declared, as this component has two root
+// nodes and wouldn't pass them through to its form item
 const props = defineProps<{
   label: string;
   field: string;
   required?: boolean;
   allowDefault?: boolean;
+  rules?: FieldRule | FieldRule[];
+  validateTrigger?: ValidateTrigger | ValidateTrigger[];
 }>();
 
 const model = defineModel<ProxyServer>();
@@ -109,10 +116,13 @@ const onClearAuth = () => {
     :field="props.field"
     :label="props.label"
     :required="props.required"
+    :rules="props.rules"
+    :validate-trigger="props.validateTrigger"
   >
     <a-space>
       <a-input-group>
         <a-select
+          :data-testid="`${props.field}-scheme`"
           :options="options"
           :style="{ width: proxyType == optionDefault ? 'auto' : '7em' }"
           v-model="proxyType as string"
@@ -122,6 +132,7 @@ const onClearAuth = () => {
         <template v-else-if="proxyType == optionDefault"></template>
         <template v-else>
           <a-input
+            :data-testid="`${props.field}-host`"
             :style="{ width: '16em' }"
             placeholder="127.0.0.1"
             v-model="proxyHost"
@@ -130,6 +141,7 @@ const onClearAuth = () => {
             <template #prepend>://</template>
           </a-input>
           <a-input-number
+            :data-testid="`${props.field}-port`"
             :style="{ width: '8em' }"
             v-model="proxyPort"
             hide-button
@@ -150,6 +162,7 @@ const onClearAuth = () => {
         "
       >
         <a-button
+          :data-testid="`${props.field}-auth`"
           :type="model?.auth === undefined ? 'secondary' : 'primary'"
           :disabled="!supportAuth"
           @click="
@@ -176,24 +189,32 @@ const onClearAuth = () => {
         field="name"
         :label="$t('config_section_proxy_auth_username')"
       >
-        <a-input v-model="proxyAuth.username" />
+        <a-input data-testid="auth-username" v-model="proxyAuth.username" />
       </a-form-item>
       <a-form-item
         field="password"
         :label="$t('config_section_proxy_auth_password')"
       >
-        <a-input-password v-model="proxyAuth.password" />
+        <a-input-password
+          data-testid="auth-password"
+          v-model="proxyAuth.password"
+        />
       </a-form-item>
     </a-form>
 
     <template #footer>
-      <a-button type="text" status="danger" @click="onClearAuth">
+      <a-button
+        type="text"
+        status="danger"
+        data-testid="auth-clear"
+        @click="onClearAuth"
+      >
         <template #icon>
           <icon-eraser />
         </template>
         {{ $t("config_action_clear") }}
       </a-button>
-      <a-button type="primary" @click="onSaveAuth">
+      <a-button type="primary" data-testid="auth-save" @click="onSaveAuth">
         <template #icon>
           <icon-save />
         </template>

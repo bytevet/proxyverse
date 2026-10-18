@@ -5,14 +5,18 @@ import {
   WebResponseDetails,
 } from "./adapters";
 import {
+  WebRequestBeforeRequestDetails,
+  WebRequestCompletedDetails,
   WebRequestErrorOccurredDetails,
   WebRequestResponseStartedDetails,
 } from "./adapters/base";
-import { setIndicator } from "./services/indicator";
+import { TabIndicator } from "./services/indicator";
 import {
-  findProfile,
+  createProfileFinder,
   getAuthInfos,
   getCurrentProxySetting,
+  onActiveProfileChanged,
+  refreshProxyOnProfileUpdate,
 } from "./services/proxy";
 import { WebRequestStatsService } from "./services/stats";
 import {
@@ -23,16 +27,22 @@ import {
 import { onProfileUpdate } from "./services/profile";
 
 // indicator
-async function initIndicator() {
-  const proxySetting = await getCurrentProxySetting();
-  await setIndicator(proxySetting.activeProfile);
-  Host.onProxyChanged(async () => {
-    const proxySetting = await getCurrentProxySetting();
-    await setIndicator(proxySetting.activeProfile);
-  });
-}
+const tabIndicator = new TabIndicator(
+  async () => (await getCurrentProxySetting()).activeProfile
+);
 
-initIndicator().catch(console.error);
+// the badge follows the proxy setting, and edits of the active profile
+// (e.g. a new color leaves the proxy setting unchanged)
+const refreshIndicator = () => tabIndicator.refresh().catch(console.error);
+Host.onProxyChanged(refreshIndicator);
+onActiveProfileChanged(refreshIndicator);
+refreshIndicator();
+
+// Keep the proxy config in sync with the stored profiles, whichever context
+// changed them (config page, popup, import, PAC refresh).
+onProfileUpdate((profiles, old) => {
+  refreshProxyOnProfileUpdate(profiles, old).catch(console.error);
+});
 
 // Per-profile PAC script refresh. Each PAC profile with a sourceURL and a
 // positive refresh interval owns a `pac-refresh:<profileID>` alarm. The
@@ -113,35 +123,46 @@ Host.onWebRequestErrorOccurred(ProxyAuthProvider.onCompleted);
 
 // web request stats
 class StatsProvider {
-  private static stats: WebRequestStatsService = new WebRequestStatsService();
+  // the badge signals failures the user hasn't seen yet
+  static stats: WebRequestStatsService = new WebRequestStatsService((s) =>
+    tabIndicator.setFailures(s.tabID, s.unseenFailures).catch(console.warn)
+  );
 
   static async onResponseStarted(details: WebRequestResponseStartedDetails) {
     if (details.type !== "main_frame") {
       // ignore all non-main-frame requests
       return;
     }
-    // this.stats.addFailedRequest(details);
-    // TODO: update indicator
     const proxySetting = await getCurrentProxySetting();
     if (details.tabId > 0 && proxySetting.activeProfile) {
-      let parsedUrl: URL;
-      try {
-        parsedUrl = new URL(details.url);
-      } catch {
+      if (!URL.canParse(details.url)) {
         return;
       }
-      const ret = await findProfile(proxySetting.activeProfile, parsedUrl);
+      const find = await createProfileFinder(proxySetting.activeProfile);
+      const { profile, uncertain } = await find(details.url);
 
-      StatsProvider.stats.setCurrentProfile(details.tabId, ret);
-
-      if (ret.profile && ret.isConfident) {
-        const profile = ret.profile.profile;
-        setTimeout(() => setIndicator(profile, details.tabId), 50); // Sometimes the indicator doesn't update properly in Chrome, so we need to wait a bit.
+      if (profile && !uncertain) {
+        // Sometimes the indicator doesn't update properly in Chrome, so we need to wait a bit.
+        setTimeout(
+          () => tabIndicator.setTabProfile(details.tabId, profile),
+          50
+        );
         return;
       }
 
-      await setIndicator(proxySetting.activeProfile, details.tabId);
+      await tabIndicator.setTabProfile(
+        details.tabId,
+        proxySetting.activeProfile
+      );
     }
+  }
+
+  static onBeforeRequest(details: WebRequestBeforeRequestDetails) {
+    StatsProvider.stats.addRequest(details);
+  }
+
+  static onRequestCompleted(details: WebRequestCompletedDetails) {
+    StatsProvider.stats.completeRequest(details);
   }
 
   static onRequestError(details: WebRequestErrorOccurredDetails) {
@@ -149,10 +170,16 @@ class StatsProvider {
   }
 
   static onTabRemoved(tabID: number) {
+    tabIndicator.removeTab(tabID);
     StatsProvider.stats.closeTab(tabID);
   }
 }
+
+// resume signaling failures after the service worker restarted
+StatsProvider.stats.restore().catch(console.warn);
+Host.onWebRequestBeforeRequest(StatsProvider.onBeforeRequest);
 Host.onWebRequestResponseStarted(StatsProvider.onResponseStarted);
+Host.onWebRequestCompleted(StatsProvider.onRequestCompleted);
 Host.onWebRequestErrorOccurred(StatsProvider.onRequestError);
 Host.onTabRemoved(StatsProvider.onTabRemoved);
 

@@ -1,5 +1,4 @@
-/// <reference types="@types/firefox-webext-browser" />
-
+import type { Browser, Proxy } from "webextension-polyfill";
 import {
   BaseAdapter,
   BlockingResponse,
@@ -10,9 +9,13 @@ import {
   Tab,
   WebAuthenticationChallengeDetails,
   WebRequestCompletedDetails,
+  WebRequestBeforeRequestDetails,
   WebRequestErrorOccurredDetails,
   WebRequestResponseStartedDetails,
 } from "./base";
+
+// `browser` is globally typed as `typeof chrome` by @types/chrome; use Firefox typings here
+const browser = (globalThis as unknown as { browser: Browser }).browser;
 
 export class Firefox extends BaseAdapter {
   async set<T>(key: string, val: T): Promise<void> {
@@ -23,17 +26,43 @@ export class Firefox extends BaseAdapter {
 
   async get<T>(key: string): Promise<T | undefined> {
     const ret = await browser.storage.local.get(key);
-    return ret[key];
+    return ret[key] as T | undefined;
   }
 
   onLocalStorageChanged(
-    callback: (changes: Record<string, { newValue?: unknown }>) => void
+    callback: (changes: Record<string, { newValue?: unknown; oldValue?: unknown }>) => void
   ): void {
     browser.storage.local.onChanged.addListener(callback);
   }
 
+  async setSession<T>(key: string, val: T): Promise<void> {
+    await browser.storage.session.set({
+      [key]: val,
+    });
+  }
+
+  async getSession<T>(key: string): Promise<T | undefined> {
+    const ret = await browser.storage.session.get(key);
+    return ret[key] as T | undefined;
+  }
+
+  async removeSession(key: string): Promise<void> {
+    await browser.storage.session.remove(key);
+  }
+
+  async getAllSession(): Promise<Record<string, unknown>> {
+    return await browser.storage.session.get(null);
+  }
+
+  onSessionStorageChanged(
+    callback: (changes: Record<string, { newValue?: unknown; oldValue?: unknown }>) => void
+  ): () => void {
+    browser.storage.session.onChanged.addListener(callback);
+    return () => browser.storage.session.onChanged.removeListener(callback);
+  }
+
   async setProxy(cfg: ProxyConfig): Promise<void> {
-    const proxyCfg: browser.proxy.ProxyConfig = {};
+    const proxyCfg: Proxy.ProxyConfig = {};
 
     switch (cfg.mode) {
       case "direct":
@@ -69,21 +98,25 @@ export class Firefox extends BaseAdapter {
   }
 
   onProxyError(callback: (error: ProxyErrorDetails) => void): void {
-    browser.proxy.onError.addListener(callback);
+    browser.proxy.onError.addListener(callback as any);
   }
   onProxyChanged(callback: (setting: ProxySettingResultDetails) => void): void {
-    browser.proxy.settings.onChange.addListener(callback);
+    browser.proxy.settings.onChange.addListener(callback as any);
   }
 
   async setBadge(text: string, color: string, tabID?: number): Promise<void> {
     await browser.action.setBadgeText({
-      text: text.trimStart().substring(0, 2),
+      text,
       tabId: tabID,
     });
     await browser.action.setBadgeBackgroundColor({
       color: color,
       tabId: tabID,
     });
+  }
+
+  async getTab(tabID: number): Promise<Tab | undefined> {
+    return await browser.tabs.get(tabID).catch(() => undefined);
   }
 
   async getActiveTab(): Promise<Tab | undefined> {
@@ -98,6 +131,10 @@ export class Firefox extends BaseAdapter {
     browser.tabs.onRemoved.addListener(callback);
   }
 
+  async reloadTab(tabID: number): Promise<void> {
+    await browser.tabs.reload(tabID);
+  }
+
   onMessage(
     callback: (
       message: any,
@@ -105,7 +142,7 @@ export class Firefox extends BaseAdapter {
       sendResponse: (response: any) => void
     ) => void
   ): void {
-    browser.runtime.onMessage.addListener(callback);
+    browser.runtime.onMessage.addListener(callback as any);
   }
 
   sendMessage(message: any): Promise<any> {
@@ -123,6 +160,14 @@ export class Firefox extends BaseAdapter {
       { urls: ["<all_urls>"] },
       ["asyncBlocking"]
     );
+  }
+
+  onWebRequestBeforeRequest(
+    callback: (details: WebRequestBeforeRequestDetails) => void
+  ): void {
+    browser.webRequest.onBeforeRequest.addListener(callback as any, {
+      urls: ["<all_urls>"],
+    });
   }
 
   onWebRequestResponseStarted(

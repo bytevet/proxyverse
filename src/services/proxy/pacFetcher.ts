@@ -7,7 +7,7 @@ import {
   resolvePacRefreshMinutes,
   saveManyProfiles,
 } from "../profile";
-import { getCurrentProxySetting, refreshProxy } from "./index";
+import { getCurrentProxySetting } from "./index";
 
 export const PAC_FETCH_TIMEOUT_MS = 15_000;
 export const PAC_REFRESH_ALARM_PREFIX = "pac-refresh:";
@@ -136,13 +136,6 @@ export async function refreshPacProfile(
   }
 }
 
-async function refreshProxyIfActive(profileID: string): Promise<void> {
-  const current = await getCurrentProxySetting();
-  if (current.activeProfile?.profileID === profileID) {
-    await refreshProxy();
-  }
-}
-
 // Persist only when something meaningful to consumers changed. lastFetched
 // stamps alone aren't worth a storage write + `onProfileUpdate` fanout — the
 // UI's "last fetched" indicator only needs to be accurate after user action
@@ -161,12 +154,9 @@ async function refreshProfile(profile: ProfileSimple): Promise<void> {
 
   const result = await refreshPacProfile(profile);
 
+  // a content change is applied by the background's profile update listener
   if (shouldPersist(profile, result.profile)) {
     await saveManyProfiles([result.profile]);
-  }
-
-  if (result.changed) {
-    await refreshProxyIfActive(profile.profileID);
   }
 }
 

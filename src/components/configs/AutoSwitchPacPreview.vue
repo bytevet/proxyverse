@@ -38,12 +38,17 @@ watchDebounced(() => profile, updatePacScript, {
 <template>
   <a-collapse :bordered="true">
     <a-collapse-item
+      data-testid="pac-preview"
       :header="$t('config_section_auto_switch_pac_preview')"
       class="pac-preview-wrapper"
       key="pac-script"
     >
       <template #extra>
-        <a-button size="small" @click.stop="copy(pacScript)">
+        <a-button
+          size="small"
+          data-testid="pac-preview-copy"
+          @click.stop="copy(pacScript)"
+        >
           <span v-if="copied">{{ $t("config_feedback_copied") }}</span>
           <icon-copy v-else />
         </a-button>

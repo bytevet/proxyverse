@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { Host } from "@/adapters";
-import { config2json, json2config } from "@/services/config/schema";
+import {
+  config2json,
+  exportableProfiles,
+  json2config,
+} from "@/services/config/schema";
 import { listProfiles, saveManyProfiles } from "@/services/profile";
 import { useFileDialog } from "@vueuse/core";
 import { Notification } from "@arco-design/web-vue";
@@ -22,20 +26,28 @@ onChange(async (file) => {
     return;
   }
 
-  const profiles = json2config(await file[0].text());
-  await saveManyProfiles(profiles);
-  Notification.success({
-    content: Host.getMessage(
-      "preferences_feedback_n_profiles_being_imported",
-      profiles.length.toString()
-    ),
-  });
-  reset();
+  try {
+    const profiles = json2config(await file[0].text());
+    await saveManyProfiles(profiles);
+    Notification.success({
+      content: Host.getMessage(
+        "preferences_feedback_n_profiles_being_imported",
+        profiles.length.toString()
+      ),
+    });
+  } catch (e: any) {
+    Notification.error({
+      content: Host.getMessage("config_feedback_error_occurred", e.toString()),
+    });
+  } finally {
+    // allow choosing the same file again
+    reset();
+  }
 });
 
 const exportProfiles = async () => {
   const profiles = await listProfiles();
-  if (!profiles) {
+  if (exportableProfiles(profiles).length === 0) {
     Notification.warning({
       content: Host.getMessage(
         "preferences_feedback_no_profile_to_be_exported"
@@ -90,7 +102,7 @@ const exportProfiles = async () => {
       }}</a-typography-paragraph>
 
       <a-space>
-        <a-button @click.prevent="exportProfiles">
+        <a-button data-testid="export-profiles" @click.prevent="exportProfiles">
           <template #icon>
             <icon-download />
           </template>
@@ -101,7 +113,7 @@ const exportProfiles = async () => {
           :content="$t('preferences_tips_profile_overwrite')"
           @ok="open"
         >
-          <a-button>
+          <a-button data-testid="import-profiles">
             <template #icon>
               <icon-import />
             </template>

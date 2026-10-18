@@ -1,7 +1,9 @@
-import { MessageSender, WebRequestErrorOccurredDetails } from "@/adapters/base";
-import { ProfileResult } from "./proxy/profile2config";
+import {
+  WebRequestBeforeRequestDetails,
+  WebRequestCompletedDetails,
+  WebRequestErrorOccurredDetails,
+} from "@/adapters/base";
 import { Host } from "@/adapters";
-import { ProxyProfile } from "./profile";
 
 /**
  * Simple LRU cache implementation
@@ -56,121 +58,308 @@ export class LRUCache<K, V> {
   }
 }
 
-type Message = {
-  type: "stats:get";
-  tabID: number;
+export type TabResource = {
+  requestId: string;
+  url: string;
+  // webRequest resource type, e.g. main_frame, sub_frame, stylesheet, script
+  type: string;
+  status: "pending" | "ok" | "failed";
+  error?: string;
+  ts: number;
 };
 
 export type TabStatsResult = {
-  failedRequests: WebRequestErrorOccurredDetails[];
-  currentProfile:
-    | { profile: ProxyProfile | undefined; isConfident: boolean }
-    | undefined;
   tabID: number;
+  resources: TabResource[];
+  // the user has seen the failures (opened the popup) since the page loaded
+  acknowledged?: boolean;
 };
+
+// Errors that are not caused by the network or the proxy: cancelled loads,
+// ad blockers, CORP/COEP rejections, etc.
+const BENIGN_ERRORS = [
+  "net::ERR_ABORTED",
+  "net::ERR_BLOCKED_BY_CLIENT",
+  "net::ERR_BLOCKED_BY_RESPONSE",
+  "NS_BINDING_ABORTED", // Firefox equivalent of ERR_ABORTED
+];
+
+export function isFailure(r: TabResource): boolean {
+  return r.status === "failed" && !BENIGN_ERRORS.includes(r.error ?? "");
+}
+
+export function countFailures(resources: TabResource[]): number {
+  return resources.filter(isFailure).length;
+}
+
+const TAB_STATS_PREFIX = "tabstats:";
+const tabStatsKey = (tabID: number) => `${TAB_STATS_PREFIX}${tabID}`;
+
+function emptyStats(tabID: number): TabStatsResult {
+  return { tabID, resources: [] };
+}
+
+/**
+ * Tell the background the user has seen the failures of a tab, which stops
+ * them being signaled on the badge until the page reloads.
+ */
+export async function acknowledgeTabStats(tabID: number) {
+  try {
+    await Host.sendMessage({ type: "stats:ack", tabID } satisfies Message);
+  } catch (error) {
+    console.warn("Failed to acknowledge stats", error);
+  }
+}
+
+type Message = { type: "stats:ack"; tabID: number };
 
 export async function queryStats(tabID: number): Promise<TabStatsResult> {
   try {
-    const ret = await Host.sendMessage({
-      type: "stats:get",
-      tabID,
-    });
-    return ret as TabStatsResult;
+    return (
+      (await Host.getSession<TabStatsResult>(tabStatsKey(tabID))) ??
+      emptyStats(tabID)
+    );
   } catch (error) {
     console.error("Failed to query stats", error);
-    return {
-      failedRequests: [],
-      currentProfile: undefined,
-      tabID,
-    };
+    return emptyStats(tabID);
   }
+}
+
+/**
+ * Watch the stats of a tab. The callback fires once with the current value,
+ * then on every update written by the background script.
+ * Returns an unsubscribe function.
+ */
+export function subscribeTabStats(
+  tabID: number,
+  callback: (stats: TabStatsResult) => void
+): () => void {
+  const key = tabStatsKey(tabID);
+  let latestSeen = false;
+  const unsubscribe = Host.onSessionStorageChanged((changes) => {
+    if (!(key in changes)) return;
+    latestSeen = true;
+    callback(
+      (changes[key].newValue as TabStatsResult | undefined) ??
+        emptyStats(tabID)
+    );
+  });
+
+  queryStats(tabID).then((stats) => {
+    // don't overwrite a newer value delivered by the change listener
+    if (!latestSeen) callback(stats);
+  });
+
+  return unsubscribe;
 }
 
 /**
  * Service to collect and manage web request stats
  * It can only be initalized in the background script
+ *
+ * Stats are mirrored to session storage, so they survive service worker
+ * restarts and can be read directly by the popup.
  */
 export class WebRequestStatsService {
-  private stats: LRUCache<number, TabStats>;
+  // loading promises keep event handling in order while a tab is hydrated
+  private stats: LRUCache<number, Promise<TabStats>>;
   private maxTabs: number = 100; // Maximum number of tabs to keep in memory
+  private persistTimers = new Map<number, ReturnType<typeof setTimeout>>();
+  private persistDelay = 300;
 
-  constructor() {
-    this.stats = new LRUCache<number, TabStats>(this.maxTabs);
-    this.listen();
+  /**
+   * @param onChange called after the stats of a tab changed
+   */
+  constructor(private onChange?: (stats: TabStats) => void) {
+    this.stats = new LRUCache<number, Promise<TabStats>>(this.maxTabs);
+    Host.onMessage((message: Message, _sender, sendResponse) => {
+      if (message?.type === "stats:ack") {
+        this.acknowledge(message.tabID);
+        sendResponse(undefined);
+      }
+    });
   }
 
-  private listen() {
-    Host.onMessage(
-      (
-        message: Message,
-        _sender: MessageSender,
-        sendResponse: (response: any) => void
-      ) => {
-        if (message.type === "stats:get") {
-          const tabStats = this.getTabStats(message.tabID);
-          sendResponse(tabStats.toJSON());
-        }
+  acknowledge(tabID: number) {
+    return this.update(tabID, (s) => s.acknowledge());
+  }
+
+  /**
+   * Report every tab saved in session storage to `onChange`, e.g. to restore
+   * the badges after the service worker restarted.
+   */
+  async restore() {
+    const saved = await Host.getAllSession();
+    for (const [key, value] of Object.entries(saved)) {
+      if (!key.startsWith(TAB_STATS_PREFIX)) continue;
+      const tabID = Number(key.slice(TAB_STATS_PREFIX.length));
+      // a tab already loaded by an event meanwhile is more recent
+      let tabStats = this.stats.get(tabID);
+      if (!tabStats) {
+        tabStats = Promise.resolve(
+          TabStats.fromJSON(tabID, value as TabStatsResult)
+        );
+        this.stats.set(tabID, tabStats);
       }
-    );
+      this.onChange?.(await tabStats);
+    }
+  }
+
+  addRequest(details: WebRequestBeforeRequestDetails) {
+    return this.update(details.tabId, (s) => s.addRequest(details));
+  }
+
+  completeRequest(details: WebRequestCompletedDetails) {
+    return this.update(details.tabId, (s) => s.completeRequest(details));
   }
 
   addFailedRequest(details: WebRequestErrorOccurredDetails) {
-    const tabID = details.tabId;
-    const tabStats = this.getTabStats(tabID);
-    tabStats.addFailedRequest(details);
+    return this.update(details.tabId, (s) => s.failRequest(details));
   }
 
-  setCurrentProfile(tabID: number, profile: ProfileResult) {
-    const tabStats = this.getTabStats(tabID);
-    tabStats.setCurrentProfile(profile);
-  }
-
-  getTabStats(tabID: number) {
+  getTabStats(tabID: number): Promise<TabStats> {
     let tabStats = this.stats.get(tabID);
     if (!tabStats) {
-      tabStats = new TabStats(tabID);
+      tabStats = Host.getSession<TabStatsResult>(tabStatsKey(tabID))
+        .catch(() => undefined)
+        .then((saved) => TabStats.fromJSON(tabID, saved));
       this.stats.set(tabID, tabStats);
     }
     return tabStats;
   }
 
-  closeTab(tabID: number) {
+  async closeTab(tabID: number) {
     this.stats.delete(tabID);
-  }
-}
-
-class TabStats {
-  private failedRequests: WebRequestErrorOccurredDetails[] = [];
-  private maxRequests: number = 500; // max number of requests to keep in memory
-  private _currentProfile:
-    | { profile: ProxyProfile | undefined; isConfident: boolean }
-    | undefined;
-
-  constructor(public readonly tabID: number) {}
-
-  toJSON(): TabStatsResult {
-    return {
-      failedRequests: this.failedRequests,
-      currentProfile: this._currentProfile,
-      tabID: this.tabID,
-    };
+    clearTimeout(this.persistTimers.get(tabID));
+    this.persistTimers.delete(tabID);
+    await Host.removeSession(tabStatsKey(tabID)).catch(console.warn);
   }
 
-  addFailedRequest(details: WebRequestErrorOccurredDetails) {
-    this.failedRequests.push(details);
-    if (this.failedRequests.length > this.maxRequests) {
-      this.failedRequests.shift();
+  // apply `fn` to the stats of a tab, and persist them if `fn` changed them
+  private async update(tabID: number, fn: (s: TabStats) => boolean) {
+    if (tabID < 0) {
+      // not related to a tab, e.g. requests from service workers
+      return;
+    }
+    try {
+      const tabStats = await this.getTabStats(tabID);
+      if (fn(tabStats)) {
+        this.schedulePersist(tabID, tabStats);
+        this.onChange?.(tabStats);
+      }
+    } catch (e) {
+      console.warn("Failed to update stats", e);
     }
   }
 
-  setCurrentProfile({ profile, isConfident }: ProfileResult) {
-    this._currentProfile = {
-      profile: profile?.profile,
-      isConfident: isConfident,
+  private schedulePersist(tabID: number, tabStats: TabStats) {
+    if (this.persistTimers.has(tabID)) {
+      return;
+    }
+    this.persistTimers.set(
+      tabID,
+      setTimeout(() => {
+        this.persistTimers.delete(tabID);
+        Host.setSession(tabStatsKey(tabID), tabStats.toJSON()).catch(
+          console.warn
+        );
+      }, this.persistDelay)
+    );
+  }
+}
+
+export class TabStats {
+  private resources: TabResource[] = [];
+  private byRequestId = new Map<string, TabResource>();
+  private acknowledged = false;
+  static maxResources: number = 300; // max number of requests to keep per tab
+  static maxUrlLength: number = 1024;
+
+  constructor(public readonly tabID: number) {}
+
+  static fromJSON(tabID: number, saved?: TabStatsResult): TabStats {
+    const ret = new TabStats(tabID);
+    if (saved) {
+      ret.resources = saved.resources ?? [];
+      ret.resources.forEach((r) => ret.byRequestId.set(r.requestId, r));
+      ret.acknowledged = saved.acknowledged ?? false;
+    }
+    return ret;
+  }
+
+  toJSON(): TabStatsResult {
+    return {
+      tabID: this.tabID,
+      resources: this.resources,
+      acknowledged: this.acknowledged,
     };
   }
 
-  get currentProfile() {
-    return this._currentProfile;
+  /** Failures to signal: those the user hasn't seen yet. */
+  get unseenFailures(): number {
+    return this.acknowledged ? 0 : countFailures(this.resources);
+  }
+
+  /** Mark the current failures as seen, until the next page load. */
+  acknowledge(): boolean {
+    // nothing to acknowledge yet: failures happening later still get signaled
+    if (this.acknowledged || countFailures(this.resources) === 0) {
+      return false;
+    }
+    this.acknowledged = true;
+    return true;
+  }
+
+  addRequest(details: WebRequestBeforeRequestDetails): boolean {
+    const url = details.url.substring(0, TabStats.maxUrlLength);
+
+    // a new top-level navigation (including refresh) starts a fresh list
+    if (details.type === "main_frame" && details.frameId === 0) {
+      this.resources = [];
+      this.byRequestId.clear();
+      this.acknowledged = false;
+    }
+
+    // redirects reuse the same requestId
+    const existing = this.byRequestId.get(details.requestId);
+    if (existing) {
+      existing.url = url;
+      return true;
+    }
+
+    const resource: TabResource = {
+      requestId: details.requestId,
+      url,
+      type: details.type,
+      status: "pending",
+      ts: details.timeStamp,
+    };
+    this.resources.push(resource);
+    this.byRequestId.set(resource.requestId, resource);
+
+    if (this.resources.length > TabStats.maxResources) {
+      const evicted = this.resources.shift();
+      evicted && this.byRequestId.delete(evicted.requestId);
+    }
+    return true;
+  }
+
+  completeRequest(details: WebRequestCompletedDetails): boolean {
+    const resource = this.byRequestId.get(details.requestId);
+    if (!resource) {
+      return false;
+    }
+    resource.status = "ok";
+    return true;
+  }
+
+  failRequest(details: WebRequestErrorOccurredDetails): boolean {
+    const resource = this.byRequestId.get(details.requestId);
+    if (!resource) {
+      return false;
+    }
+    resource.status = "failed";
+    resource.error = details.error;
+    return true;
   }
 }

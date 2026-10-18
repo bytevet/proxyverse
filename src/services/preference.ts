@@ -46,7 +46,24 @@ export async function currentDarkMode(): Promise<
 
 export async function changeDarkMode(newMode: DarkMode) {
   await Host.set<DarkMode>(keyDarkMode, newMode);
+  applyDarkMode(newMode);
+}
 
+/**
+ * Re-apply the theme when the system theme changes, if following the system.
+ * Call once per page.
+ */
+export function followSystemDarkMode() {
+  window
+    .matchMedia?.("(prefers-color-scheme: dark)")
+    .addEventListener("change", async () => {
+      if ((await getDarkModeSetting()) == DarkMode.Default) {
+        applyDarkMode(DarkMode.Default);
+      }
+    });
+}
+
+function applyDarkMode(newMode: DarkMode) {
   if (newMode == DarkMode.Default) {
     newMode = detectDeviceDarkMode();
   }

@@ -5,7 +5,6 @@ import {
   ref,
   toRaw,
   useTemplateRef,
-  watch,
   watchEffect,
 } from "vue";
 import { colors } from "@arco-design/web-vue/es/color-picker/colors";
@@ -95,20 +94,15 @@ const profileConfig = reactive<ConfigState>({
 
 const showAdvanceConfig = ref(false);
 const newProfileMode = !props.profileID;
-const editing = ref(newProfileMode);
-let profileFirstLoaded = false;
 
-watch(
-  profileConfig,
-  () => {
-    if (profileFirstLoaded) {
-      profileFirstLoaded = false;
-      editing.value = false;
-      return;
-    }
-    editing.value = true;
-  },
-  { immediate: true }
+// Edits are detected by comparing with the profile as loaded, so writes of
+// unchanged values by child inputs don't count as edits.
+const snapshot = () => JSON.stringify(profileConfig);
+const savedSnapshot = ref<string>();
+const editing = computed(
+  () =>
+    newProfileMode ||
+    (savedSnapshot.value !== undefined && savedSnapshot.value !== snapshot())
 );
 
 const bypassList = computed({
@@ -121,12 +115,11 @@ const bypassList = computed({
   },
 
   set: (val) => {
-    if (profileConfig.proxyType != "proxy" || !val) {
+    if (profileConfig.proxyType != "proxy") {
       return;
     }
-    profileConfig.proxyRules.bypassList = val
-      .split("\n")
-      .map((host) => host.trim());
+    profileConfig.proxyRules.bypassList =
+      val === "" ? [] : val.split("\n").map((host) => host.trim());
   },
 });
 
@@ -239,7 +232,7 @@ const saveProfileEvent = async () => {
       return;
     }
 
-    editing.value = false;
+    savedSnapshot.value = snapshot();
   } catch (e: any) {
     Notification.error({
       content: Host.getMessage("config_feedback_error_occurred", e.toString()),
@@ -346,8 +339,11 @@ const loadProfile = async (profileID: string) => {
     return;
   }
 
-  profileFirstLoaded = true;
-  Object.assign(profileConfig, profile);
+  // the color picker emits upper-case colors; match it so loading isn't an edit
+  Object.assign(profileConfig, profile, {
+    color: profile.color.toUpperCase(),
+  });
+  savedSnapshot.value = snapshot();
   if (
     profileConfig.proxyType == "proxy" &&
     (profileConfig.proxyRules.ftp ||
@@ -373,12 +369,14 @@ watchEffect(async () => {
     <template #title>
       <a-space class="profile-name">
         <a-color-picker
+          data-testid="profile-color"
           v-model="profileConfig.color"
           disabledAlpha
           showPreset
           format="hex"
         />
         <a-typography-text
+          data-testid="profile-name"
           editable
           :defaultEditing="newProfileMode"
           v-model:editText="profileConfig.profileName"
@@ -389,7 +387,11 @@ watchEffect(async () => {
     <template #extra>
       <!-- action buttons -->
       <a-space>
-        <a-button v-if="editing && !newProfileMode" @click="discardEditEvent">
+        <a-button
+          v-if="editing && !newProfileMode"
+          data-testid="profile-discard"
+          @click="discardEditEvent"
+        >
           <template #icon>
             <icon-undo />
           </template>
@@ -397,6 +399,7 @@ watchEffect(async () => {
         </a-button>
         <a-button
           type="primary"
+          data-testid="profile-save"
           @click="saveProfileEvent"
           v-if="editing || newProfileMode"
         >
@@ -413,7 +416,7 @@ watchEffect(async () => {
           :ok-button-props="{ status: 'danger' }"
           :content="$t('config_action_delete_double_confirm')"
         >
-          <a-button type="primary" status="danger">
+          <a-button type="primary" status="danger" data-testid="profile-delete">
             <template #icon>
               <icon-delete />
             </template>
@@ -426,9 +429,9 @@ watchEffect(async () => {
     <a-form :model="profileConfig" autoLabelWidth ref="profile-form">
       <a-form-item field="proxyType" :label="$t('config_proxy_type')" required>
         <a-radio-group type="button" v-model="profileConfig.proxyType">
-          <a-radio value="proxy">{{ $t("config_proxy_type_proxy") }}</a-radio>
-          <a-radio value="pac">{{ $t("config_proxy_type_pac") }}</a-radio>
-          <a-radio value="auto">{{ $t("config_proxy_type_auto") }}</a-radio>
+          <a-radio value="proxy" data-testid="proxy-type-proxy">{{ $t("config_proxy_type_proxy") }}</a-radio>
+          <a-radio value="pac" data-testid="proxy-type-pac">{{ $t("config_proxy_type_pac") }}</a-radio>
+          <a-radio value="auto" data-testid="proxy-type-auto">{{ $t("config_proxy_type_auto") }}</a-radio>
         </a-radio-group>
       </a-form-item>
 
@@ -452,7 +455,7 @@ watchEffect(async () => {
         />
 
         <a-form-item field="configAdvanceMode">
-          <a-checkbox v-model="showAdvanceConfig">{{
+          <a-checkbox v-model="showAdvanceConfig" data-testid="advanced-config">{{
             $t("config_section_advance")
           }}</a-checkbox>
         </a-form-item>
@@ -504,6 +507,7 @@ watchEffect(async () => {
             </a-link>
           </template>
           <a-textarea
+            data-testid="bypass-list"
             v-model="bypassList"
             :autoSize="{
               minRows: 2,
@@ -546,12 +550,14 @@ watchEffect(async () => {
           </template>
           <a-input-group>
             <a-input
+              data-testid="pac-url"
               v-model="profileConfig.pacScript.sourceURL"
               :placeholder="$t('config_section_pac_url_placeholder')"
               allow-clear
             />
             <a-button
               type="primary"
+              data-testid="pac-fetch"
               :loading="pacFetching"
               :disabled="!profileConfig.pacScript.sourceURL?.trim()"
               @click="fetchPacNow"
@@ -570,6 +576,7 @@ watchEffect(async () => {
             <div>{{ $t("config_section_pac_refresh_interval_hint") }}</div>
           </template>
           <a-select
+            data-testid="pac-interval"
             v-model="pacRefreshIntervalModel"
             :options="pacIntervalOptions"
             style="max-width: 240px"
@@ -592,7 +599,11 @@ watchEffect(async () => {
           :rules="pacScriptFieldRule($t('config_proxy_type_pac'), true)"
           required
         >
-          <ScriptInput v-model="profileConfig.pacScript.data" :min-rows="4" />
+          <ScriptInput
+            data-testid="pac-script"
+            v-model="profileConfig.pacScript.data"
+            :min-rows="4"
+          />
         </a-form-item>
       </template>
 
@@ -605,7 +616,8 @@ watchEffect(async () => {
         <a-space direction="vertical">
           <AutoSwitchInput
             :currentProfileID="profileConfig.profileID"
-            v-model="profileConfig"
+            :model-value="(profileConfig as ProfileAutoSwitch)"
+            @update:model-value="(v) => Object.assign(profileConfig, v)"
           />
 
           <AutoSwitchPacPreview
