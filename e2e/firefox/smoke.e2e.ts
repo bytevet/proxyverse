@@ -4,6 +4,7 @@ import { AUTH, startServers, type Servers } from "../servers";
 import {
   autoProfile,
   pacProfile,
+  pacReturning,
   proxyProfile,
   rule,
   server,
@@ -56,21 +57,10 @@ test.describe("firefox smoke", () => {
   async function popupFor(url: string) {
     await ff.newTab();
     await ff.driver.get(url);
-    await ff.openExtensionPage("/popup");
-    const tabID = await ff.driver.executeAsyncScript(
-      `const [url, done] = arguments;
-      browser.tabs.query({}).then((tabs) => done(tabs.find((t) => t.url === url)?.id));`,
-      url
-    );
-    await ff.driver.executeScript(
-      `location.hash = "#/popup?tabID=" + arguments[0]; location.reload();`,
-      tabID
-    );
+    await ff.openExtensionPage("/preference");
+    await ff.openPopup(await ff.tabIdOf(url));
     return ff.byTestId("switch-chip");
   }
-
-  const pacTo = (target: string) =>
-    `function FindProxyForURL(url, host) { return "${target}"; }`;
 
   test("popup renders without the private browsing error", async () => {
     await ff.openExtensionPage("/popup");
@@ -96,7 +86,7 @@ test.describe("firefox smoke", () => {
     const { proxyB } = standardProfiles(servers);
     const pac = pacProfile(
       { profileID: "pac", profileName: "PAC" },
-      { data: pacTo(`PROXY 127.0.0.1:${servers.ports.proxyB}`) }
+      { data: pacReturning(`PROXY 127.0.0.1:${servers.ports.proxyB}`) }
     );
     const auto = autoProfile({ profileID: "auto" }, [rule("domain", "pac.test", "pac")], "direct");
     await activate([proxyB, pac, auto], "auto");
@@ -109,7 +99,7 @@ test.describe("firefox smoke", () => {
   test("a PAC fallback to DIRECT shows Direct", async () => {
     const pac = pacProfile(
       { profileID: "pac", profileName: "PAC" },
-      { data: pacTo(`PROXY 127.0.0.1:${servers.ports.closed}; DIRECT`) }
+      { data: pacReturning(`PROXY 127.0.0.1:${servers.ports.closed}; DIRECT`) }
     );
     const auto = autoProfile(
       { profileID: "auto" },

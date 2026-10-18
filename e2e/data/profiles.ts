@@ -64,6 +64,10 @@ export const pacRouting = (suffix: string, port: number) =>
   return "DIRECT";
 }`;
 
+/** PAC script returning `result` for every URL, e.g. "PROXY host:port". */
+export const pacReturning = (result: string) =>
+  `function FindProxyForURL(url, host) { return "${result}"; }`;
+
 /** The proxy profiles most tests need, pointing at the worker's servers. */
 export function standardProfiles(servers: Servers) {
   const { ports } = servers;

@@ -1,24 +1,40 @@
-import { IPv4, IPv6, isValid as isIP, isValidCIDR, parse, parseCIDR } from "ipaddr.js";
+import { isValid as isIP, parse } from "ipaddr.js";
+import type { WithProxyInfo } from "@/adapters/base";
 import {
   listProfiles,
-  ProfileSimple,
   ProfilesStorage,
   ProxyProfile,
   ProxyServer,
   SystemProfile,
 } from "../profile";
 import { createProfileFinder, profileTreeIDs, type ResolvedProfile } from "./index";
-import { isInNet, isPlainHostName, shExpMatch, UNKNOWN } from "./pacSimulator";
+import { ProfileConverter } from "./profile2config";
 
 /**
- * What the browser reported about the route of a request: it went direct, or
- * through one of `servers` (server keys, see `serverKey`). Chrome only tells
- * the proxy's IP, which several servers may share (e.g. local proxies on
- * 127.0.0.1 with different ports).
+ * What the browser reported about the route of a request:
+ * - Firefox: `proxyInfo`, the proxy used (null when direct);
+ * - Chrome: `ip`, the first hop's IP (no port), stale when `fromCache`.
  */
-export type Observation = { direct: true } | { servers: string[] };
+export type RouteFacts = WithProxyInfo & { ip?: string; fromCache?: boolean };
 
-type ProxyProfileSimple = ProfileSimple & { proxyType: "proxy" };
+/** The route facts of webRequest details, if any. */
+export function routeFactsOf(details: RouteFacts): RouteFacts | undefined {
+  const { proxyInfo, ip, fromCache } = details;
+  if (proxyInfo !== undefined) return { proxyInfo };
+  if (ip) return fromCache ? { ip, fromCache } : { ip };
+}
+
+/**
+ * The route facts of a request, if they hold for the current rules: requests
+ * made before the rules were changed (at `rulesChangedAt`) went by the old
+ * ones.
+ */
+export function currentFacts(
+  request: { ts: number; route?: RouteFacts },
+  rulesChangedAt: number
+): RouteFacts | undefined {
+  return request.ts >= rulesChangedAt ? request.route : undefined;
+}
 
 const DEFAULT_PORTS: Record<string, number> = {
   http: 80,
@@ -28,9 +44,8 @@ const DEFAULT_PORTS: Record<string, number> = {
 };
 
 /** "host:port" of a proxy server, with the browser's default port if unset. */
-export function serverKey(server: ProxyServer): string {
-  const port = server.port ?? DEFAULT_PORTS[server.scheme ?? "http"] ?? 80;
-  return `${server.host.toLowerCase()}:${port}`;
+function serverKey(host: string, port?: number, scheme = "http") {
+  return `${host.toLowerCase()}:${port ?? DEFAULT_PORTS[scheme] ?? 80}`;
 }
 
 /** The proxy servers a proxy profile uses. */
@@ -42,182 +57,108 @@ function serversOf(profile: ProxyProfile): ProxyServer[] {
   );
 }
 
-export type ServerChoice =
-  | { server: ProxyServer }
-  | { direct: true }
-  | { uncertain: true };
-
-/**
- * The server a proxy profile uses for `url`, mirroring its generated PAC
- * script: the bypass list first, then the per-scheme servers, then the
- * default one.
- */
-export function serverFor(profile: ProxyProfileSimple, url: URL): ServerChoice {
-  const host = url.hostname;
-  for (const item of profile.proxyRules.bypassList) {
-    if (item === "<local>") {
-      if (isPlainHostName(host)) return { direct: true };
-    } else if (isValidCIDR(item)) {
-      const [ip, prefix] = parseCIDR(item);
-      const mask = (ip.kind() === "ipv4" ? IPv4 : IPv6)
-        .subnetMaskFromPrefixLength(prefix)
-        .toNormalizedString();
-      const inNet = isInNet(host, ip.toString(), mask);
-      if (inNet === UNKNOWN) return { uncertain: true };
-      if (inNet) return { direct: true };
-    } else if (shExpMatch(host, item)) {
-      return { direct: true };
-    }
-  }
-
-  // websockets are resolved like http(s)
-  const scheme = url.protocol.replace(/^ws(s?):$/, "http$1:").slice(0, -1);
-  const { proxyRules } = profile;
-  const server =
-    (scheme === "ftp" && proxyRules.ftp) ||
-    (scheme === "https" && proxyRules.https) ||
-    (scheme === "http" && proxyRules.http) ||
-    proxyRules.default;
-  return server.scheme === "direct" ? { direct: true } : { server };
+/** An IP literal, possibly in brackets, or undefined for a hostname. */
+function parseIP(host: string) {
+  const ip = host.replace(/^\[|\]$/g, "");
+  return isIP(ip) ? parse(ip) : undefined;
 }
-
-const normalizeIP = (ip: string) => {
-  try {
-    return parse(ip.replace(/^\[|\]$/g, "")).toNormalizedString();
-  } catch {
-    return ip;
-  }
-};
-
-const isIPLiteral = (host: string) => isIP(host.replace(/^\[|\]$/g, ""));
 
 const isLoopback = (host: string) =>
   host === "localhost" ||
   host.endsWith(".localhost") ||
-  (isIPLiteral(host) &&
-    parse(host.replace(/^\[|\]$/g, "")).range() === "loopback");
-
-/** The parts of webRequest details telling the route of a request. */
-export type RouteDetails = {
-  url: string;
-  ip?: string;
-  fromCache?: boolean;
-  // Firefox only: the proxy used, null when direct
-  proxyInfo?: { host: string; port: number; type: string } | null;
-};
-
-/**
- * Turns what the browser reports about requests into observations of their
- * route. Runs in the background.
- */
-export class RouteObserver {
-  private context?: Promise<{
-    find?: (url: string) => Promise<ResolvedProfile>;
-    servers: ProxyServer[];
-  }>;
-
-  constructor(private activeProfile: () => Promise<ProxyProfile | undefined>) {}
-
-  /** Forget the cached profiles, e.g. after they changed. */
-  invalidate() {
-    this.context = undefined;
-  }
-
-  async observe(details: RouteDetails): Promise<Observation | undefined> {
-    // Firefox reports the proxy used
-    if (details.proxyInfo !== undefined) {
-      const info = details.proxyInfo;
-      return !info || info.type === "direct"
-        ? { direct: true }
-        : { servers: [`${info.host.toLowerCase()}:${info.port}`] };
-    }
-
-    // Chrome reports the IP of the first hop, stale for cached responses.
-    // Only proxies set by IP can be matched: extensions can't resolve hosts
-    if (!details.ip || details.fromCache) return;
-    // the browser never proxies loopback hosts
-    if (isLoopback(new URL(details.url).hostname)) return { direct: true };
-    const ip = normalizeIP(details.ip);
-    const { find, servers } = await this.getContext();
-
-    const matches = servers
-      .filter((s) => isIPLiteral(s.host) && normalizeIP(s.host) === ip)
-      .map(serverKey);
-    if (matches.length) return { servers: [...new Set(matches)] };
-
-    const predicted = find ? await find(details.url) : undefined;
-    const choice =
-      predicted?.profile?.proxyType === "proxy" && !predicted.uncertain
-        ? serverFor(predicted.profile, new URL(details.url))
-        : undefined;
-
-    // not a known proxy IP: certainly direct when the expected route was
-    // direct, or a proxy whose IP is known (a fallback to DIRECT)
-    const expectedDirect =
-      (predicted?.profile?.proxyType === "direct" && !predicted.uncertain) ||
-      (choice && "direct" in choice) ||
-      (choice && "server" in choice && isIPLiteral(choice.server.host));
-    return expectedDirect ? { direct: true } : undefined;
-  }
-
-  private getContext() {
-    this.context ??= (async () => {
-      const [active, profiles] = await Promise.all([
-        this.activeProfile(),
-        listProfiles(),
-      ]);
-      return {
-        find: active ? await createProfileFinder(active) : undefined,
-        servers: Object.values(profiles).flatMap(serversOf),
-      };
-    })();
-    return this.context;
-  }
-}
+  parseIP(host)?.range() === "loopback";
 
 /**
  * Build a resolver telling which profile `active` uses for a URL: what the
- * browser observed when known, else what the rules say.
+ * browser reported when it leaves a single possible profile, else what the
+ * rules say.
  */
 export async function createRouteResolver(active: ProxyProfile) {
   const [profiles, find] = await Promise.all([
     listProfiles(),
     createProfileFinder(active),
   ]);
-  const byServer = profilesByServer(profiles);
   const tree = profileTreeIDs(active.profileID, profiles);
+  const { byServer, byIP } = indexServers(profiles);
 
-  return async (
-    url: string,
-    observed?: Observation
-  ): Promise<ResolvedProfile> => {
-    const predicted = await find(url);
-    if (!observed) return predicted;
-    if ("direct" in observed) {
+  // the rules don't change for this resolver: predict each URL once
+  const predictions = new Map<string, Promise<ResolvedProfile>>();
+  const predict = (url: string) => {
+    let ret = predictions.get(url);
+    if (!ret) {
+      ret = find(url);
+      predictions.set(url, ret);
+    }
+    return ret;
+  };
+
+  /** The profiles the facts allow: "direct", some profiles, or unknown. */
+  const candidatesOf = (
+    url: URL,
+    facts: RouteFacts,
+    predicted: ResolvedProfile
+  ): "direct" | ProxyProfile[] | undefined => {
+    const { proxyInfo, ip, fromCache } = facts;
+    if (proxyInfo !== undefined) {
+      if (!proxyInfo || proxyInfo.type === "direct") return "direct";
+      return byServer.get(serverKey(proxyInfo.host, proxyInfo.port)) ?? [];
+    }
+
+    if (!ip || fromCache) return;
+    // the browser never proxies loopback hosts
+    if (isLoopback(url.hostname)) return "direct";
+    const matches = byIP.get(parseIP(ip)?.toNormalizedString() ?? ip);
+    if (matches) return matches;
+
+    // not a proxy IP: certainly direct when the expected route was direct,
+    // or a proxy set by IP (a fallback to DIRECT). Proxies set by hostname
+    // can't be told, as extensions can't resolve hosts in Chrome
+    const profile = predicted.uncertain ? undefined : predicted.profile;
+    if (profile?.proxyType === "direct") return "direct";
+    if (profile?.proxyType === "proxy") {
+      const choice = new ProfileConverter(profile).findServer(url);
+      if ("direct" in choice) return "direct";
+      if ("server" in choice && parseIP(choice.server.host)) return "direct";
+    }
+  };
+
+  return async (url: string, facts?: RouteFacts): Promise<ResolvedProfile> => {
+    const predicted = await predict(url);
+    const candidates = facts && candidatesOf(new URL(url), facts, predicted);
+    if (!candidates) return predicted;
+    if (candidates === "direct") {
       return { profile: SystemProfile.DIRECT, uncertain: false };
     }
 
-    // the profiles that may have been used, preferring those the active
-    // profile routes to
-    const candidates = observed.servers.flatMap((key) => byServer.get(key) ?? []);
+    // prefer the profiles the active profile routes to
     const inTree = candidates.filter((p) => tree.has(p.profileID));
     const pool = [...new Set(inTree.length ? inTree : candidates)];
     if (pool.length === 0) return predicted; // a server no profile uses
     if (pool.length === 1) return { profile: pool[0], uncertain: false };
 
-    // ambiguous: confirmed only as far as the prediction is among them
+    // ambiguous (e.g. local proxies sharing 127.0.0.1): the prediction holds
+    // only as far as it's among them
     return pool.some((p) => p.profileID === predicted.profile?.profileID)
       ? predicted
       : { profile: predicted.profile, uncertain: true };
   };
 }
 
-function profilesByServer(profiles: ProfilesStorage) {
-  const ret = new Map<string, ProxyProfile[]>();
+/** Profiles by server key, and by the IP of servers set by IP. */
+function indexServers(profiles: ProfilesStorage) {
+  const byServer = new Map<string, ProxyProfile[]>();
+  const byIP = new Map<string, ProxyProfile[]>();
+  const add = (map: Map<string, ProxyProfile[]>, key: string, p: ProxyProfile) => {
+    const list = map.get(key) ?? [];
+    if (!list.includes(p)) map.set(key, [...list, p]);
+  };
+
   for (const p of Object.values(profiles)) {
-    for (const key of new Set(serversOf(p).map(serverKey))) {
-      ret.set(key, [...(ret.get(key) ?? []), p]);
+    for (const s of serversOf(p)) {
+      add(byServer, serverKey(s.host, s.port, s.scheme), p);
+      const ip = parseIP(s.host);
+      if (ip) add(byIP, ip.toNormalizedString(), p);
     }
   }
-  return ret;
+  return { byServer, byIP };
 }

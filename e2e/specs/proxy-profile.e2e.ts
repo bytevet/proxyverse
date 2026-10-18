@@ -197,7 +197,6 @@ test.describe("proxy profile editor", () => {
       openEditor,
       activate,
     }) => {
-      // a fresh host, as Chrome caches proxy credentials per host
       const host = freshProxyHost();
       await sw.setProfiles([
         proxyProfile(

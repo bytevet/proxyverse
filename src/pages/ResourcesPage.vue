@@ -8,7 +8,7 @@ import {
 } from "@arco-design/web-vue/es/icon";
 import { ProxyProfile } from "@/services/profile";
 import { getCurrentProxySetting, type ResolvedProfile } from "@/services/proxy";
-import { createRouteResolver } from "@/services/proxy/route";
+import { createRouteResolver, currentFacts } from "@/services/proxy/route";
 import {
   countFailures,
   isFailure,
@@ -71,16 +71,21 @@ onUnmounted(() => unsubscribe?.());
 const resources = computed(() => stats.value?.resources ?? []);
 const failureCount = computed(() => countFailures(resources.value));
 
-// the profile used for each resource: what the browser observed when
-// known, else what the rules say
+// the profile used for each resource: what the browser reported when it
+// tells, else what the rules say
 const finder = shallowRef<Awaited<ReturnType<typeof createRouteResolver>>>();
 const resolved = ref<Record<string, ResolvedProfile>>({});
-// an observation only holds for the rules it was made under
 const rulesChangedAt = ref(0);
-const observedOf = (r: TabResource) =>
-  r.ts >= rulesChangedAt.value ? r.observed : undefined;
-const routeKey = (r: TabResource) =>
-  `${r.url} ${JSON.stringify(observedOf(r) ?? null)}`;
+const factsOf = (r: TabResource) => currentFacts(r, rulesChangedAt.value);
+// a cache key: a resource's URL and the route facts that matter
+const routeKey = (r: TabResource) => {
+  const f = factsOf(r);
+  if (f?.proxyInfo !== undefined) {
+    const p = f.proxyInfo;
+    return `${r.url} ${p ? `${p.host}:${p.port}` : "direct"}`;
+  }
+  return f?.ip && !f.fromCache ? `${r.url} ${f.ip}` : r.url;
+};
 
 watch(activeProfile, async (active) => {
   resolved.value = {};
@@ -93,16 +98,18 @@ watch([resources, finder], async ([res, resolve], _, onCleanup) => {
   onCleanup(() => (cancelled = true));
   if (!resolve) return;
 
-  const todo = [
-    ...new Map(res.map((r) => [routeKey(r), r])).entries(),
-  ].filter(([key]) => !resolved.value[key]);
+  const todo = new Map<string, TabResource>();
+  for (const r of res) {
+    const key = routeKey(r);
+    if (!resolved.value[key]) todo.set(key, r);
+  }
   const results = await Promise.all(
-    todo.map(([, r]) => resolve(r.url, observedOf(r)))
+    [...todo.values()].map((r) => resolve(r.url, factsOf(r)))
   );
-  if (cancelled || todo.length == 0) return;
+  if (cancelled || todo.size == 0) return;
 
   const ret = { ...resolved.value };
-  todo.forEach(([key], i) => (ret[key] = results[i]));
+  [...todo.keys()].forEach((key, i) => (ret[key] = results[i]));
   resolved.value = ret;
 });
 

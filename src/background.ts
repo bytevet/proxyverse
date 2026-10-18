@@ -11,11 +11,7 @@ import {
   WebRequestResponseStartedDetails,
 } from "./adapters/base";
 import { TabIndicator } from "./services/indicator";
-import {
-  createRouteResolver,
-  RouteObserver,
-  type RouteDetails,
-} from "./services/proxy/route";
+import { createRouteResolver, routeFactsOf } from "./services/proxy/route";
 import {
   getAuthInfos,
   getCurrentProxySetting,
@@ -35,13 +31,13 @@ const activeProfile = async () =>
   (await getCurrentProxySetting()).activeProfile;
 const tabIndicator = new TabIndicator(activeProfile);
 
-// what the browser reports about the route of requests
-const routeObserver = new RouteObserver(activeProfile);
+// tells the route of requests, for the current rules
+let routeResolver: ReturnType<typeof createRouteResolver> | undefined;
 
 // the badge follows the proxy setting, and edits of the active profile
 // (e.g. a new color leaves the proxy setting unchanged)
 const refreshIndicator = () => {
-  routeObserver.invalidate();
+  routeResolver = undefined;
   tabIndicator.refresh().catch(console.error);
 };
 Host.onProxyChanged(refreshIndicator);
@@ -51,7 +47,7 @@ refreshIndicator();
 // Keep the proxy config in sync with the stored profiles, whichever context
 // changed them (config page, popup, import, PAC refresh).
 onProfileUpdate((profiles, old) => {
-  routeObserver.invalidate();
+  routeResolver = undefined;
   refreshProxyOnProfileUpdate(profiles, old).catch(console.error);
 });
 
@@ -149,12 +145,13 @@ class StatsProvider {
       if (!URL.canParse(details.url)) {
         return;
       }
-      // what the browser observed when known, else what the rules say
-      const [resolve, observed] = await Promise.all([
-        createRouteResolver(proxySetting.activeProfile),
-        routeObserver.observe(details),
-      ]);
-      const { profile, uncertain } = await resolve(details.url, observed);
+      // what the browser reported when it tells, else what the rules say
+      routeResolver ??= createRouteResolver(proxySetting.activeProfile);
+      const resolve = await routeResolver;
+      const { profile, uncertain } = await resolve(
+        details.url,
+        routeFactsOf(details)
+      );
 
       if (profile && !uncertain) {
         // Sometimes the indicator doesn't update properly in Chrome, so we need to wait a bit.
@@ -176,20 +173,12 @@ class StatsProvider {
     StatsProvider.stats.addRequest(details);
   }
 
-  static async onRequestCompleted(details: WebRequestCompletedDetails) {
-    const observed = await StatsProvider.observe(details);
-    StatsProvider.stats.completeRequest(details, observed);
+  static onRequestCompleted(details: WebRequestCompletedDetails) {
+    StatsProvider.stats.completeRequest(details, routeFactsOf(details));
   }
 
-  static async onRequestError(details: WebRequestErrorOccurredDetails) {
-    const observed = await StatsProvider.observe(details);
-    StatsProvider.stats.addFailedRequest(details, observed);
-  }
-
-  private static observe(details: RouteDetails & { tabId: number }) {
-    return details.tabId < 0
-      ? undefined
-      : routeObserver.observe(details).catch(() => undefined);
+  static onRequestError(details: WebRequestErrorOccurredDetails) {
+    StatsProvider.stats.addFailedRequest(details, routeFactsOf(details));
   }
 
   static onTabRemoved(tabID: number) {

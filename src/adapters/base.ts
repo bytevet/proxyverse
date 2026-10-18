@@ -7,7 +7,7 @@ export type BlockingResponse = chrome.webRequest.BlockingResponse;
 
 // Firefox reports the proxy a request used (null when direct), which the
 // webextension-polyfill types lack
-type WithProxyInfo = {
+export type WithProxyInfo = {
   proxyInfo?: { host: string; port: number; type: string } | null;
 };
 

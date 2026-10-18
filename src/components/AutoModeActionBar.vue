@@ -2,9 +2,9 @@
 import { type Tab } from "@/adapters/base";
 import { ProfileAutoSwitch, ProxyProfile } from "@/services/profile";
 import { type ResolvedProfile } from "@/services/proxy";
-import { createRouteResolver } from "@/services/proxy/route";
+import { createRouteResolver, currentFacts } from "@/services/proxy/route";
 import type { TabStatsResult } from "@/services/stats";
-import { computed, defineAsyncComponent, ref, watch } from "vue";
+import { computed, defineAsyncComponent, ref, shallowRef, watch } from "vue";
 import { parseWebURL } from "@/services/utils";
 
 // loaded on demand, as it brings in the public suffix list
@@ -25,28 +25,25 @@ const emit = defineEmits<{
 const current = ref<ResolvedProfile | undefined>();
 const host = computed(() => parseWebURL(props.currentTab.url)?.hostname);
 
-// the route the browser reported for the page, once it loaded. It only
-// holds for the rules it was made under
+// what the browser reported about the page's route, once it loaded
 const rulesChangedAt = ref(0);
-const observed = computed(() => {
+const facts = computed(() => {
   const page = props.stats?.resources.find((r) => r.type === "main_frame");
-  return page && page.ts >= rulesChangedAt.value ? page.observed : undefined;
+  return page && currentFacts(page, rulesChangedAt.value);
 });
 
+const resolver = shallowRef<Awaited<ReturnType<typeof createRouteResolver>>>();
 watch(
-  () => [
-    props.currentTab.url,
-    props.activeProfile,
-    JSON.stringify(observed.value ?? null),
-  ],
-  async () => {
-    const url = props.currentTab.url;
+  () => props.activeProfile,
+  async (active) => (resolver.value = await createRouteResolver(active)),
+  { immediate: true }
+);
+
+watch(
+  [() => props.currentTab.url, resolver, facts],
+  async ([url, resolve, facts]) => {
     current.value =
-      host.value && url
-        ? await (
-            await createRouteResolver(props.activeProfile)
-          )(url, observed.value)
-        : undefined;
+      host.value && url && resolve ? await resolve(url, facts) : undefined;
   },
   { immediate: true }
 );

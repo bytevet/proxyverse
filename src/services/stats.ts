@@ -4,7 +4,7 @@ import {
   WebRequestErrorOccurredDetails,
 } from "@/adapters/base";
 import { Host } from "@/adapters";
-import type { Observation } from "./proxy/route";
+import type { RouteFacts } from "./proxy/route";
 
 /**
  * Simple LRU cache implementation
@@ -67,8 +67,8 @@ export type TabResource = {
   status: "pending" | "ok" | "failed";
   error?: string;
   ts: number;
-  // the route the browser reported, when known
-  observed?: Observation;
+  // what the browser reported about the route, when known
+  route?: RouteFacts;
 };
 
 export type TabStatsResult = {
@@ -212,17 +212,17 @@ export class WebRequestStatsService {
     return this.update(details.tabId, (s) => s.addRequest(details));
   }
 
-  completeRequest(details: WebRequestCompletedDetails, observed?: Observation) {
+  completeRequest(details: WebRequestCompletedDetails, route?: RouteFacts) {
     return this.update(details.tabId, (s) =>
-      s.completeRequest(details, observed)
+      s.completeRequest(details, route)
     );
   }
 
   addFailedRequest(
     details: WebRequestErrorOccurredDetails,
-    observed?: Observation
+    route?: RouteFacts
   ) {
-    return this.update(details.tabId, (s) => s.failRequest(details, observed));
+    return this.update(details.tabId, (s) => s.failRequest(details, route));
   }
 
   getTabStats(tabID: number): Promise<TabStats> {
@@ -354,20 +354,20 @@ export class TabStats {
 
   completeRequest(
     details: WebRequestCompletedDetails,
-    observed?: Observation
+    route?: RouteFacts
   ): boolean {
     const resource = this.byRequestId.get(details.requestId);
     if (!resource) {
       return false;
     }
     resource.status = "ok";
-    if (observed) resource.observed = observed;
+    if (route) resource.route = route;
     return true;
   }
 
   failRequest(
     details: WebRequestErrorOccurredDetails,
-    observed?: Observation
+    route?: RouteFacts
   ): boolean {
     const resource = this.byRequestId.get(details.requestId);
     if (!resource) {
@@ -375,7 +375,7 @@ export class TabStats {
     }
     resource.status = "failed";
     resource.error = details.error;
-    if (observed) resource.observed = observed;
+    if (route) resource.route = route;
     return true;
   }
 }

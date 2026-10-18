@@ -114,6 +114,20 @@ export class Firefox {
     );
   }
 
+  /** The ID of the tab showing `url` (call from an extension page). */
+  async tabIdOf(url: string): Promise<number> {
+    return this.driver.executeAsyncScript(
+      `const [url, done] = arguments;
+      browser.tabs.query({}).then((tabs) => done(tabs.find((t) => t.url === url)?.id));`,
+      url
+    );
+  }
+
+  /** Open the popup acting on tab `tabID`. */
+  async openPopup(tabID: number) {
+    await this.openExtensionPage(`/popup?tabID=${tabID}`);
+  }
+
   /** Open a regular tab and switch to it. */
   async newTab() {
     await this.driver.switchTo().newWindow("tab");
