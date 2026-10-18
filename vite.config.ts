@@ -41,7 +41,7 @@ function transformManifestForFirefox() {
   (manifest as any).browser_specific_settings = {
     gecko: {
       id: "proxyverse@byte.vet",
-      strict_min_version: "109.0",
+      strict_min_version: "115.0",
     },
   };
 }
@@ -114,7 +114,7 @@ export default defineConfig(({ mode }) => {
         plugins: [
           visualizer({
             filename: "stats.html",
-            open: true,
+            open: false,
           }),
         ],
       },

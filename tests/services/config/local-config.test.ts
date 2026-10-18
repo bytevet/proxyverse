@@ -1,4 +1,8 @@
-import { config2json, json2config } from "@/services/config/schema";
+import {
+  config2json,
+  exportableProfiles,
+  json2config,
+} from "@/services/config/schema";
 import { ProxyProfile } from "@/services/profile";
 import { expect, test, describe } from "vitest";
 
@@ -256,6 +260,17 @@ describe("testing exporting config", () => {
     const jsonStr = config2json(mockInnerConfig);
 
     expect(JSON.parse(jsonStr)).toMatchObject(mockExportedJSON);
+  });
+
+  test("only valid profiles are exportable", () => {
+    const [first] = Object.values(mockInnerConfig);
+    expect(exportableProfiles({})).toEqual([]);
+    expect(
+      exportableProfiles({ bad: { ...first, profileID: "bad", color: "red" } })
+    ).toEqual([]);
+    expect(exportableProfiles(mockInnerConfig)).toHaveLength(
+      mockExportedJSON.profiles.length
+    );
   });
 });
 

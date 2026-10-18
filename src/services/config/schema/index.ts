@@ -11,13 +11,19 @@ import { ConfigFile, getPaths, ProxyProfile } from "./definition";
 export const config2json = (rawProfiles: inner.ProfilesStorage): string => {
   const encoded = ConfigFile.encode({
     version: "2025-01",
-    profiles: Object.values(rawProfiles)
-      .map(exportProfile)
-      .filter((p) => p !== undefined),
+    profiles: exportableProfiles(rawProfiles),
   });
 
   return JSON.stringify(encoded, null, 2);
 };
+
+/** The profiles that pass validation, which are the ones being exported. */
+export const exportableProfiles = (
+  rawProfiles: inner.ProfilesStorage
+): ProxyProfile[] =>
+  Object.values(rawProfiles)
+    .map(exportProfile)
+    .filter((p) => p !== undefined);
 
 const exportProfile = (p: inner.ProxyProfile): ProxyProfile | undefined => {
   const decoded = ProxyProfile.decode(p);

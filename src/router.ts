@@ -37,6 +37,12 @@ const routes: RouteRecordRaw[] = [
     name: "page.popup",
     component: PopupPage,
   },
+  {
+    path: "/popup/resources/:tabID",
+    name: "popup.resources",
+    component: () => import("./pages/ResourcesPage.vue"),
+    props: true,
+  },
 ];
 
 export const router = createRouter({

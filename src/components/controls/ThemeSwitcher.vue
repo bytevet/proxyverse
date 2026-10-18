@@ -43,6 +43,7 @@ const toggleDarkMode = async () => {
 <template>
   <a-dropdown trigger="hover" @select="onDarkModeChanged as any">
     <a-button
+      data-testid="theme-switch"
       type="text"
       status="normal"
       style="color: var(--color-text-2)"
@@ -60,19 +61,19 @@ const toggleDarkMode = async () => {
     </a-button>
 
     <template #content>
-      <a-doption :value="DarkMode.Light">
+      <a-doption :value="DarkMode.Light" data-testid="theme-option-light">
         <template #icon>
           <icon-sun-fill />
         </template>
         {{ $t("theme_light_mode") }}
       </a-doption>
-      <a-doption :value="DarkMode.Dark">
+      <a-doption :value="DarkMode.Dark" data-testid="theme-option-dark">
         <template #icon>
           <icon-moon-fill />
         </template>
         {{ $t("theme_dark_mode") }}
       </a-doption>
-      <a-doption :value="DarkMode.Default">
+      <a-doption :value="DarkMode.Default" data-testid="theme-option-auto">
         <template #icon>
           <icon-bg-colors />
         </template>

@@ -11,6 +11,7 @@ import {
   Tab,
   WebAuthenticationChallengeDetails,
   WebRequestCompletedDetails,
+  WebRequestBeforeRequestDetails,
   WebRequestErrorOccurredDetails,
   WebRequestResponseStartedDetails,
 } from "./base";
@@ -29,12 +30,13 @@ export class WebBrowser extends BaseAdapter {
   }
 
   private storageListeners: ((
-    changes: Record<string, { newValue?: unknown }>
+    changes: Record<string, { newValue?: unknown; oldValue?: unknown }>
   ) => void)[] = [];
 
   async set<T>(key: string, val: T): Promise<void> {
+    const oldValue = await this.get(key);
     localStorage.setItem(key, JSON.stringify(val));
-    const changes = { [key]: { newValue: val } };
+    const changes = { [key]: { newValue: val, oldValue } };
     this.storageListeners.forEach((cb) => cb(changes));
   }
   async get<T>(key: string): Promise<T | undefined> {
@@ -44,9 +46,41 @@ export class WebBrowser extends BaseAdapter {
   }
 
   onLocalStorageChanged(
-    callback: (changes: Record<string, { newValue?: unknown }>) => void
+    callback: (changes: Record<string, { newValue?: unknown; oldValue?: unknown }>) => void
   ): void {
     this.storageListeners.push(callback);
+  }
+
+  private session: Record<string, unknown> = {};
+  private sessionListeners: ((
+    changes: Record<string, { newValue?: unknown; oldValue?: unknown }>
+  ) => void)[] = [];
+
+  async setSession<T>(key: string, val: T): Promise<void> {
+    this.session[key] = val;
+    const changes = { [key]: { newValue: val } };
+    this.sessionListeners.forEach((cb) => cb(changes));
+  }
+  async getSession<T>(key: string): Promise<T | undefined> {
+    return this.session[key] as T | undefined;
+  }
+  async getAllSession(): Promise<Record<string, unknown>> {
+    return { ...this.session };
+  }
+  async removeSession(key: string): Promise<void> {
+    delete this.session[key];
+    const changes = { [key]: { newValue: undefined } };
+    this.sessionListeners.forEach((cb) => cb(changes));
+  }
+  onSessionStorageChanged(
+    callback: (changes: Record<string, { newValue?: unknown; oldValue?: unknown }>) => void
+  ): () => void {
+    this.sessionListeners.push(callback);
+    return () => {
+      this.sessionListeners = this.sessionListeners.filter(
+        (cb) => cb !== callback
+      );
+    };
   }
 
   async setProxy(_: ProxyConfig): Promise<void> {
@@ -89,6 +123,12 @@ export class WebBrowser extends BaseAdapter {
   onTabRemoved(_callback: (tabID: number) => void): void {
     throw new Error("Method not implemented.");
   }
+  async reloadTab(tabID: number): Promise<void> {
+    console.log(`Reload tab: ${tabID}`);
+  }
+  async getTab(_tabID: number): Promise<Tab | undefined> {
+    return this.getActiveTab();
+  }
   async getActiveTab(): Promise<Tab | undefined> {
     return {
       id: 1,
@@ -104,17 +144,27 @@ export class WebBrowser extends BaseAdapter {
       favIconUrl: "",
     };
   }
+  // messages stay within the page, as there's no background here
+  private messageListeners: ((
+    message: any,
+    sender: MessageSender,
+    sendResponse: (response: any) => void
+  ) => void)[] = [];
+
   onMessage(
-    _callback: (
+    callback: (
       message: any,
       sender: MessageSender,
       sendResponse: (response: any) => void
     ) => void
   ): void {
-    throw new Error("Method not implemented.");
+    this.messageListeners.push(callback);
   }
-  sendMessage(_message: any): Promise<any> {
-    throw new Error("Method not implemented.");
+  async sendMessage(message: any): Promise<any> {
+    return new Promise((resolve) => {
+      this.messageListeners.forEach((cb) => cb(message, {}, resolve));
+      if (!this.messageListeners.length) resolve(undefined);
+    });
   }
 
   onWebRequestAuthRequired(
@@ -122,6 +172,11 @@ export class WebBrowser extends BaseAdapter {
       details: WebAuthenticationChallengeDetails,
       callback?: (response: BlockingResponse) => void
     ) => void
+  ): void {
+    throw new Error("Method not implemented.");
+  }
+  onWebRequestBeforeRequest(
+    _: (details: WebRequestBeforeRequestDetails) => void
   ): void {
     throw new Error("Method not implemented.");
   }
