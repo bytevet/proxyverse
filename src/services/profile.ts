@@ -80,7 +80,7 @@ export type ProxyConfigSimple =
     };
 
 // advanced proxy config, with auto switch support
-export type AutoSwitchType = "domain" | "cidr" | "url" | "disabled";
+export type AutoSwitchType = "domain" | "cidr" | "url" | "regex" | "disabled";
 export type AutoSwitchRule = {
   type: AutoSwitchType;
   condition: string;
@@ -141,7 +141,7 @@ export async function listProfiles(): Promise<ProfilesStorage> {
  */
 export function onProfileUpdate(
   callback: (p: ProfilesStorage, old: ProfilesStorage) => void
-) {
+): () => void {
   if (!storageListenerRegistered) {
     storageListenerRegistered = true;
     Host.onLocalStorageChanged((changes) => {
@@ -153,6 +153,10 @@ export function onProfileUpdate(
     });
   }
   onProfileUpdateListeners.push(callback);
+  return () => {
+    const i = onProfileUpdateListeners.indexOf(callback);
+    if (i >= 0) onProfileUpdateListeners.splice(i, 1);
+  };
 }
 
 async function overwriteProfiles(profiles: ProfilesStorage) {

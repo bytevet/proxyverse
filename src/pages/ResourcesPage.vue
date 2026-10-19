@@ -7,11 +7,8 @@ import {
   IconLoading,
 } from "@arco-design/web-vue/es/icon";
 import { ProxyProfile } from "@/services/profile";
-import {
-  createProfileFinder,
-  getCurrentProxySetting,
-  type ResolvedProfile,
-} from "@/services/proxy";
+import { getCurrentProxySetting, type ResolvedProfile } from "@/services/proxy";
+import { createRouteResolver, currentFacts } from "@/services/proxy/route";
 import {
   countFailures,
   isFailure,
@@ -74,29 +71,45 @@ onUnmounted(() => unsubscribe?.());
 const resources = computed(() => stats.value?.resources ?? []);
 const failureCount = computed(() => countFailures(resources.value));
 
-// simulate which profile is used for each resource URL
-const finder = shallowRef<Awaited<ReturnType<typeof createProfileFinder>>>();
+// the profile used for each resource: what the browser reported when it
+// tells, else what the rules say
+const finder = shallowRef<Awaited<ReturnType<typeof createRouteResolver>>>();
 const resolved = ref<Record<string, ResolvedProfile>>({});
+const rulesChangedAt = ref(0);
+const factsOf = (r: TabResource) => currentFacts(r, rulesChangedAt.value);
+// a cache key: a resource's URL and the route facts that matter
+const routeKey = (r: TabResource) => {
+  const f = factsOf(r);
+  if (f?.proxyInfo !== undefined) {
+    const p = f.proxyInfo;
+    return `${r.url} ${p ? `${p.host}:${p.port}` : "direct"}`;
+  }
+  return f?.ip && !f.fromCache ? `${r.url} ${f.ip}` : r.url;
+};
 
 watch(activeProfile, async (active) => {
   resolved.value = {};
   finder.value =
-    active?.proxyType === "auto" ? await createProfileFinder(active) : undefined;
+    active?.proxyType === "auto" ? await createRouteResolver(active) : undefined;
 });
 
-watch([resources, finder], async ([res, find], _, onCleanup) => {
+watch([resources, finder], async ([res, resolve], _, onCleanup) => {
   let cancelled = false;
   onCleanup(() => (cancelled = true));
-  if (!find) return;
+  if (!resolve) return;
 
-  const urls = [...new Set(res.map((r) => r.url))].filter(
-    (url) => !resolved.value[url]
+  const todo = new Map<string, TabResource>();
+  for (const r of res) {
+    const key = routeKey(r);
+    if (!resolved.value[key]) todo.set(key, r);
+  }
+  const results = await Promise.all(
+    [...todo.values()].map((r) => resolve(r.url, factsOf(r)))
   );
-  const results = await Promise.all(urls.map(find));
-  if (cancelled || urls.length == 0) return;
+  if (cancelled || todo.size == 0) return;
 
   const ret = { ...resolved.value };
-  urls.forEach((url, i) => (ret[url] = results[i]));
+  [...todo.keys()].forEach((key, i) => (ret[key] = results[i]));
   resolved.value = ret;
 });
 
@@ -117,7 +130,7 @@ const parseURL = (url: string) => {
 const majorityProfile = (items: ResourceItem[]) => {
   const counts = new Map<string, { n: number; p: ResolvedProfile }>();
   for (const { resource } of items) {
-    const p = resolved.value[resource.url];
+    const p = resolved.value[routeKey(resource)];
     if (!p) continue;
     const key = p.profile?.profileID ?? "";
     const c = counts.get(key) ?? { n: 0, p };
@@ -148,7 +161,7 @@ const groups = computed<ResourceGroup[]>(() => {
   for (const g of ret) {
     g.profile = majorityProfile(g.items);
     for (const item of g.items) {
-      const p = resolved.value[item.resource.url];
+      const p = resolved.value[routeKey(item.resource)];
       if (p && p.profile?.profileID !== g.profile?.profile?.profileID) {
         item.outlier = p.profile;
       }
@@ -169,8 +182,16 @@ watch(groups, (val) => {
   }
 });
 
-const goBack = () =>
-  router.push({ name: "page.popup", query: { tabID: tabID.value } });
+const onSwitched = (p: ProxyProfile) => {
+  rulesChangedAt.value = Date.now();
+  activeProfile.value = p;
+};
+
+// back to the popup or sidebar it was opened from
+const goBack = () => {
+  if (router.options.history.state.back) router.back();
+  else router.push({ name: "page.popup", query: { tabID: tabID.value } });
+};
 </script>
 
 <template>
@@ -233,7 +254,7 @@ const goBack = () =>
                 :profile="group.profile?.profile"
                 :uncertain="group.profile?.uncertain"
                 :activeProfileID="activeProfile.profileID"
-                @switched="(p) => (activeProfile = p)"
+                @switched="onSwitched"
               />
             </span>
           </template>

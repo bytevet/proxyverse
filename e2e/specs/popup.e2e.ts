@@ -131,6 +131,35 @@ test.describe("popup", () => {
     await expect(body).toHaveAttribute("arco-theme", "dark");
   });
 
+  test("the app first renders in the right theme, without a flash", async ({
+    openPopup,
+  }) => {
+    const popup = await openPopup();
+    const page = popup.page;
+    // the theme when the app first renders into #app
+    await page.addInitScript(() => {
+      new MutationObserver((_, observer) => {
+        if (!document.getElementById("app")?.firstElementChild) return;
+        observer.disconnect();
+        (window as any).firstRenderTheme =
+          document.body.getAttribute("arco-theme") ?? "light";
+      }).observe(document, { childList: true, subtree: true });
+    });
+    const firstRenderTheme = () =>
+      page.evaluate(() => (window as any).firstRenderTheme);
+
+    // following a dark system
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.reload();
+    await expect.poll(firstRenderTheme).toBe("dark");
+
+    // light chosen explicitly wins over the dark system
+    await page.getByTestId("theme-switch").click();
+    await expect(page.locator("body")).not.toHaveAttribute("arco-theme", "dark");
+    await page.reload();
+    await expect.poll(firstRenderTheme).toBe("light");
+  });
+
   test("auto profiles route by rules", async ({
     sw,
     servers,

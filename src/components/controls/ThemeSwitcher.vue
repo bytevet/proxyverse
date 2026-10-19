@@ -1,47 +1,23 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
 import {
   IconSunFill,
   IconMoonFill,
   IconBgColors,
 } from "@arco-design/web-vue/es/icon";
-import {
-  DarkMode,
-  changeDarkMode,
-  getDarkModeSetting,
-  currentDarkMode,
-} from "../../services/preference";
+import { DarkMode, useDarkMode } from "../../services/preference";
 
 const props = defineProps<{
   size?: "mini" | "small" | "medium" | "large";
 }>();
 
-const darkmode = ref<DarkMode>(DarkMode.Dark);
+const { setting: darkmode, shown, change } = useDarkMode();
 
-onMounted(async () => {
-  darkmode.value = await getDarkModeSetting();
-});
-
-const onDarkModeChanged = (newMode: DarkMode) => {
-  changeDarkMode(newMode);
-  darkmode.value = newMode;
-};
-
-const toggleDarkMode = async () => {
-  switch (await currentDarkMode()) {
-    case DarkMode.Dark:
-      onDarkModeChanged(DarkMode.Light);
-      break;
-
-    default:
-      onDarkModeChanged(DarkMode.Dark);
-      break;
-  }
-};
+const toggleDarkMode = () =>
+  change(shown() == DarkMode.Dark ? DarkMode.Light : DarkMode.Dark);
 </script>
 
 <template>
-  <a-dropdown trigger="hover" @select="onDarkModeChanged as any">
+  <a-dropdown trigger="hover" @select="change as any">
     <a-button
       data-testid="theme-switch"
       type="text"

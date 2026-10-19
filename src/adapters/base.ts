@@ -5,21 +5,33 @@ export type WebAuthenticationChallengeDetails =
   | WebRequest.OnAuthRequiredDetailsType;
 export type BlockingResponse = chrome.webRequest.BlockingResponse;
 
-export type WebRequestResponseStartedDetails =
-  | chrome.webRequest.OnResponseStartedDetails
-  | WebRequest.OnResponseStartedDetailsType;
+// Firefox reports the proxy a request used (null when direct), which the
+// webextension-polyfill types lack
+export type WithProxyInfo = {
+  proxyInfo?: { host: string; port: number; type: string } | null;
+};
 
-export type WebRequestCompletedDetails =
+export type WebRequestResponseStartedDetails = (
+  | chrome.webRequest.OnResponseStartedDetails
+  | WebRequest.OnResponseStartedDetailsType
+) &
+  WithProxyInfo;
+
+export type WebRequestCompletedDetails = (
   | chrome.webRequest.OnCompletedDetails
-  | WebRequest.OnCompletedDetailsType;
+  | WebRequest.OnCompletedDetailsType
+) &
+  WithProxyInfo;
 
 export type WebRequestBeforeRequestDetails =
   | chrome.webRequest.OnBeforeRequestDetails
   | WebRequest.OnBeforeRequestDetailsType;
 
-export type WebRequestErrorOccurredDetails =
+export type WebRequestErrorOccurredDetails = (
   | chrome.webRequest.OnErrorOccurredDetails
-  | WebRequest.OnErrorOccurredDetailsType;
+  | WebRequest.OnErrorOccurredDetailsType
+) &
+  WithProxyInfo;
 
 export type MessageSender =
   | chrome.runtime.MessageSender
@@ -54,6 +66,36 @@ export type ProxySettingResultDetails =
        */
       incognitoSpecific?: boolean | undefined;
     };
+
+/**
+ * i18n APIs silently drop substitutions passed as a Proxy (e.g. a Vue
+ * reactive array), so they always get a plain array.
+ */
+export function plainSubstitutions(substitutions?: string | string[]) {
+  return typeof substitutions === "object"
+    ? Array.from(substitutions, String)
+    : substitutions;
+}
+
+/**
+ * A UI language chosen in the extension, overriding the browser's, which
+ * is all the native i18n APIs know (see `src/services/i18n.ts`).
+ */
+export type MessageOverride = {
+  locale: string; // BCP 47, e.g. "zh-CN"
+  getMessage(key: string, substitutions?: string | string[]): string;
+};
+let messageOverride: MessageOverride | undefined;
+
+export function setMessageOverride(override: MessageOverride | undefined) {
+  messageOverride = override;
+}
+
+export type ActionBehavior = "popup" | "sidebar";
+
+// the pages the toolbar icon opens
+export const POPUP_PAGE = "index.html#/popup";
+export const SIDEBAR_PAGE = "index.html#/sidebar";
 
 export type SimpleProxyServer = {
   host: string;
@@ -90,7 +132,7 @@ export abstract class BaseAdapter {
   // this one — the browser dispatches the event everywhere.
   abstract onLocalStorageChanged(
     callback: (changes: Record<string, { newValue?: unknown; oldValue?: unknown }>) => void
-  ): void;
+  ): () => void;
 
   // session storage, cleared when the browser closes
   abstract setSession<T>(key: string, val: T): Promise<void>;
@@ -137,6 +179,17 @@ export abstract class BaseAdapter {
   abstract getActiveTab(): Promise<Tab | undefined>;
   abstract getTab(tabID: number): Promise<Tab | undefined>;
   abstract onTabRemoved(callback: (tabID: number) => void): void;
+  /**
+   * Fires when the active tab of the current window changes, or navigates.
+   * Returns a function removing the listener.
+   */
+  abstract onActiveTabChanged(callback: () => void): () => void;
+
+  // toolbar action: what a click on the toolbar icon opens
+  abstract sidebarSupported(): boolean;
+  abstract applyActionBehavior(behavior: ActionBehavior): Promise<void>;
+  /** Background only: set up what a toolbar click opens, if not a popup. */
+  handleToolbarClicks(): void {}
   abstract reloadTab(tabID: number): Promise<void>;
 
   // messages
@@ -158,9 +211,22 @@ export abstract class BaseAdapter {
   abstract getAllAlarmNames(): Promise<string[]>;
   abstract onAlarm(callback: (name: string) => void): void;
 
-  // i18n
-  abstract currentLocale(): string;
-  abstract getMessage(key: string, substitutions?: string | string[]): string;
+  // i18n: the chosen language if any, else the browser's. Arrow functions,
+  // as `getMessage` is also called unbound, as `$t`.
+  readonly currentLocale = (): string =>
+    messageOverride?.locale ?? this.nativeLocale();
+  readonly getMessage = (
+    key: string,
+    substitutions?: string | string[]
+  ): string =>
+    messageOverride?.getMessage(key, substitutions) ??
+    this.nativeMessage(key, plainSubstitutions(substitutions));
+
+  protected abstract nativeLocale(): string;
+  protected abstract nativeMessage(
+    key: string,
+    substitutions?: string | string[]
+  ): string;
 
   // compatible issues, return an error message in HTML format
   async error(): Promise<string | undefined> {

@@ -38,6 +38,13 @@ const routes: RouteRecordRaw[] = [
     component: PopupPage,
   },
   {
+    // the popup in the browser's side panel / sidebar, following the active tab
+    path: "/sidebar",
+    name: "page.sidebar",
+    component: PopupPage,
+    props: { sidebar: true },
+  },
+  {
     path: "/popup/resources/:tabID",
     name: "popup.resources",
     component: () => import("./pages/ResourcesPage.vue"),

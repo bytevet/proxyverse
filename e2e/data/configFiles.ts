@@ -9,6 +9,18 @@ export function configFile(profiles: ProxyProfile[]): FilePayload {
   return jsonFile({ version: "2025-01", profiles });
 }
 
+/** A SwitchyOmega / ZeroOmega backup (`.bak`) holding `profiles`, keyed by name. */
+export function switchyOmegaFile(
+  profiles: ({ name: string } & Record<string, unknown>)[]
+): FilePayload {
+  const backup = {
+    schemaVersion: 2,
+    "-downloadInterval": 1440,
+    ...Object.fromEntries(profiles.map((p) => ["+" + p.name, p])),
+  };
+  return { ...jsonFile(backup, "OmegaOptions.bak"), mimeType: "" };
+}
+
 function jsonFile(content: unknown, name = "proxyverse.json"): FilePayload {
   return {
     name,

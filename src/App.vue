@@ -1,16 +1,13 @@
 <script setup lang="ts">
-import { h, onBeforeMount, onMounted } from "vue";
+import { h, onMounted } from "vue";
 import { Modal } from "@arco-design/web-vue";
 import { useLocale, addI18nMessages } from "@arco-design/web-vue/es/locale";
 import enUS from "@arco-design/web-vue/es/locale/lang/en-us";
 import zhCN from "@arco-design/web-vue/es/locale/lang/zh-cn";
 import zhTW from "@arco-design/web-vue/es/locale/lang/zh-tw";
 import ptPT from "@arco-design/web-vue/es/locale/lang/pt-pt";
-import {
-  getDarkModeSetting,
-  changeDarkMode,
-  followSystemDarkMode,
-} from "./services/preference";
+import { followDarkMode } from "./services/preference";
+import { followLanguage } from "./services/i18n";
 import type { ArcoLang } from "@arco-design/web-vue/es/locale/interface";
 import { Host } from "./adapters";
 import { useRoute } from "vue-router";
@@ -44,8 +41,8 @@ try {
   console.warn(e);
 }
 
-onBeforeMount(async () => changeDarkMode(await getDarkModeSetting()));
-followSystemDarkMode();
+followDarkMode();
+followLanguage();
 onMounted(async () => {
   const err = await Host.error();
   if (err) {
@@ -53,7 +50,7 @@ onMounted(async () => {
       title: Host.getMessage("feedback_error"),
       content: () => h("div", { innerHTML: err }),
       width: "auto",
-      fullscreen: route.name === "page.popup",
+      fullscreen: route.name === "page.popup" || route.name === "page.sidebar",
     });
   }
 });

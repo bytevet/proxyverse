@@ -38,6 +38,15 @@ function transformManifestForFirefox() {
 
   delete (manifest as any).version_name;
 
+  // Firefox has a sidebar instead of Chrome's side panel
+  delete (manifest as any).side_panel;
+  manifest.permissions = manifest.permissions.filter((p) => p !== "sidePanel");
+  (manifest as any).sidebar_action = {
+    default_panel: "index.html#/sidebar",
+    default_icon: "mini-logo.png",
+    open_at_install: false,
+  };
+
   (manifest as any).browser_specific_settings = {
     gecko: {
       id: "proxyverse@byte.vet",

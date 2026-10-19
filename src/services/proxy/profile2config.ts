@@ -7,14 +7,20 @@ import {
   ProxyServer,
   SystemProfile,
 } from "../profile";
-import { IPv4, IPv6, isValidCIDR, parseCIDR } from "ipaddr.js";
 import {
   newProxyString,
   PACScriptHelper,
   parsePACScript,
 } from "./scriptHelper";
 import { ProxyConfig } from "@/adapters";
-import { isInNet, shExpMatch, UNKNOWN } from "./pacSimulator";
+import {
+  cidrNetMask,
+  isInCIDR,
+  isPlainHostName,
+  shExpMatch,
+  urlRegExp,
+  UNKNOWN,
+} from "./pacSimulator";
 
 export type ProfileLoader = (
   profileID: string
@@ -24,6 +30,12 @@ export type ProfileResult = {
   profile: ProfileConverter | undefined;
   isConfident: boolean;
 };
+
+/** The server a proxy profile uses for a URL. */
+export type ServerChoice =
+  | { server: ProxyServer }
+  | { direct: true }
+  | { uncertain: true };
 
 export class ProfileConverter {
   constructor(
@@ -64,6 +76,39 @@ export class ProfileConverter {
       default:
         return { profile: this, isConfident: true };
     }
+  }
+
+  /**
+   * The server a proxy profile uses for `url`, as its PAC script (see
+   * `genBypassList` and `genAdvancedRules`) decides: the bypass list first,
+   * then the per-scheme servers, then the default one.
+   */
+  findServer(url: URL): ServerChoice {
+    if (this.profile.proxyType != "proxy") {
+      throw new Error("only proxy profiles have servers");
+    }
+
+    const host = url.hostname;
+    for (const item of this.profile.proxyRules.bypassList) {
+      const bypassed =
+        item == "<local>"
+          ? isPlainHostName(host)
+          : cidrNetMask(item)
+          ? isInCIDR(host, item)
+          : shExpMatch(host, item);
+      if (bypassed === UNKNOWN) return { uncertain: true };
+      if (bypassed) return { direct: true };
+    }
+
+    // websockets are resolved like http(s)
+    const scheme = url.protocol.replace(/^ws(s?):$/, "http$1:");
+    const rules = this.profile.proxyRules;
+    const server =
+      (scheme == "ftp:" && rules.ftp) ||
+      (scheme == "https:" && rules.https) ||
+      (scheme == "http:" && rules.http) ||
+      rules.default;
+    return server.scheme == "direct" ? { direct: true } : { server };
   }
 
   /**
@@ -288,34 +333,49 @@ export class ProfileConverter {
           ]
         );
 
-      case "cidr":
-        // if it's a CIDR
-        if (isValidCIDR(rule.condition)) {
-          try {
-            const [ip, maskPrefixLen] = parseCIDR(rule.condition);
-            let mask = (
-              ip.kind() == "ipv4" ? IPv4 : IPv6
-            ).subnetMaskFromPrefixLength(maskPrefixLen);
-
-            return PACScriptHelper.newIfStatement(
-              PACScriptHelper.newCallExpression(
-                PACScriptHelper.newIdentifier("isInNet"),
-                [
-                  PACScriptHelper.newIdentifier("host"),
-                  PACScriptHelper.newSimpleLiteral(ip.toString()),
-                  PACScriptHelper.newSimpleLiteral(mask.toNormalizedString()),
-                ]
-              ),
-              [
-                PACScriptHelper.newReturnStatement(
-                  this.genAutoProfileCallExpression(rule.profileID)
+      case "regex":
+        if (urlRegExp(rule.condition)) {
+          // RegExp("...").test(url)
+          return PACScriptHelper.newIfStatement(
+            PACScriptHelper.newCallExpression(
+              PACScriptHelper.newMemberExpression(
+                PACScriptHelper.newCallExpression(
+                  PACScriptHelper.newIdentifier("RegExp"),
+                  [PACScriptHelper.newSimpleLiteral(rule.condition)]
                 ),
-              ]
-            );
-          } catch (e) {
-            console.error(e);
-          }
+                PACScriptHelper.newIdentifier("test")
+              ),
+              [PACScriptHelper.newIdentifier("url")]
+            ),
+            [
+              PACScriptHelper.newReturnStatement(
+                this.genAutoProfileCallExpression(rule.profileID)
+              ),
+            ]
+          );
         }
+        break;
+
+      case "cidr": {
+        const net = cidrNetMask(rule.condition);
+        if (net) {
+          return PACScriptHelper.newIfStatement(
+            PACScriptHelper.newCallExpression(
+              PACScriptHelper.newIdentifier("isInNet"),
+              [
+                PACScriptHelper.newIdentifier("host"),
+                PACScriptHelper.newSimpleLiteral(net.ip),
+                PACScriptHelper.newSimpleLiteral(net.mask),
+              ]
+            ),
+            [
+              PACScriptHelper.newReturnStatement(
+                this.genAutoProfileCallExpression(rule.profileID)
+              ),
+            ]
+          );
+        }
+      }
     }
 
     return PACScriptHelper.newExpressionStatement(
@@ -348,28 +408,20 @@ export class ProfileConverter {
         }
 
         break;
-      case "cidr":
-        // if it's a CIDR
-        if (isValidCIDR(rule.condition)) {
-          try {
-            const [ip, maskPrefixLen] = parseCIDR(rule.condition);
-            let mask = (
-              ip.kind() == "ipv4" ? IPv4 : IPv6
-            ).subnetMaskFromPrefixLength(maskPrefixLen);
+      case "regex":
+        if (urlRegExp(rule.condition)?.test(url.href)) {
+          return profile.findProfile(url);
+        }
 
-            switch (
-              isInNet(url.hostname, ip.toString(), mask.toNormalizedString())
-            ) {
-              case true:
-                return profile.findProfile(url);
-              case false:
-                break; // not in the CIDR
-              case UNKNOWN:
-                return { profile: profile, isConfident: false }; // unknown
-            }
-          } catch (e) {
-            console.error(e);
-          }
+        break;
+      case "cidr":
+        switch (isInCIDR(url.hostname, rule.condition)) {
+          case true:
+            return profile.findProfile(url);
+          case false:
+            break; // not in the CIDR
+          case UNKNOWN:
+            return { profile: profile, isConfident: false }; // unknown
         }
 
         break;
@@ -510,27 +562,19 @@ export class ProfileConverter {
       }
 
       // if it's a CIDR
-      if (isValidCIDR(item)) {
-        try {
-          const [ip, maskPrefixLen] = parseCIDR(item);
-          let mask = (
-            ip.kind() == "ipv4" ? IPv4 : IPv6
-          ).subnetMaskFromPrefixLength(maskPrefixLen);
-
-          return PACScriptHelper.newIfStatement(
-            PACScriptHelper.newCallExpression(
-              PACScriptHelper.newIdentifier("isInNet"),
-              [
-                PACScriptHelper.newIdentifier("host"),
-                PACScriptHelper.newSimpleLiteral(ip.toString()),
-                PACScriptHelper.newSimpleLiteral(mask.toNormalizedString()),
-              ]
-            ),
-            [directExpr]
-          );
-        } catch (e) {
-          console.error(e);
-        }
+      const net = cidrNetMask(item);
+      if (net) {
+        return PACScriptHelper.newIfStatement(
+          PACScriptHelper.newCallExpression(
+            PACScriptHelper.newIdentifier("isInNet"),
+            [
+              PACScriptHelper.newIdentifier("host"),
+              PACScriptHelper.newSimpleLiteral(net.ip),
+              PACScriptHelper.newSimpleLiteral(net.mask),
+            ]
+          ),
+          [directExpr]
+        );
       }
 
       return PACScriptHelper.newIfStatement(
