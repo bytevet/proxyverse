@@ -32,6 +32,7 @@
   "mode_auto_switch_abbr": {
     "message": "自動"
   },
+
   "mode_auto_switch_via": {
     "message": "此網站經由"
   },
@@ -47,12 +48,14 @@
   "action_reload_tab": {
     "message": "重新載入分頁"
   },
+
   "stats_failed_resources": {
     "message": "$1 個資源載入失敗"
   },
   "stats_details": {
     "message": "詳細資料"
   },
+
   "resources_title": {
     "message": "資源"
   },
@@ -95,7 +98,6 @@
   "resource_type_other": {
     "message": "其他"
   },
-
 
   "mode_direct": {
     "message": "直接連線"
@@ -318,30 +320,39 @@
   "config_feedback_error_occurred": {
     "message": "發生錯誤：$1"
   },
+
   "preferences_section_interface": {
     "message": "介面"
   },
+
   "preferences_language": {
     "message": "語言"
   },
+
   "preferences_language_auto": {
     "message": "跟隨瀏覽器（$1）"
   },
+
   "preferences_theme": {
     "message": "主題"
   },
+
   "preferences_action_behavior": {
     "message": "點擊工具列圖示時開啟"
   },
+
   "preferences_action_behavior_popup": {
     "message": "彈出式視窗"
   },
+
   "preferences_action_behavior_sidebar": {
     "message": "側邊欄"
   },
+
   "preferences_action_behavior_hint": {
     "message": "側邊欄會在網頁旁保持開啟，並跟隨目前的分頁。"
   },
+
   "preferences_action_behavior_sidebar_unsupported": {
     "message": "此瀏覽器版本無法從工具列圖示開啟側邊欄。"
   },
@@ -353,9 +364,11 @@
   "preferences_section_import_export_desc": {
     "message": "將您的代理伺服器設定檔匯出至檔案，以便備份或分享，並可匯入以還原。"
   },
+
   "preferences_section_import_switchyomega": {
     "message": "「匯入設定檔」也支援 ProxySwitchyOmega / ZeroOmega 的備份檔（.bak）。無法完整轉換的項目會在匯入後列出。"
   },
+
   "preferences_tag_beta": {
     "message": "Beta"
   },
@@ -379,48 +392,63 @@
   "preferences_feedback_n_profiles_being_imported": {
     "message": "已匯入 $1 個設定檔"
   },
+
   "preferences_feedback_profiles_not_exported": {
     "message": "以下無效的設定檔未匯出：$1"
   },
+
   "preferences_import_warnings_title": {
     "message": "匯入完成，但有警告"
   },
+
   "preferences_import_warnings_desc": {
     "message": "部分設定無法完整匯入，請檢查以下設定檔。"
   },
+
   "preferences_import_warnings_more": {
     "message": "……還有 $1 項"
   },
+
   "import_warn_invalid_profile": {
     "message": "已略過，無效的設定檔：$1"
   },
+
   "import_warn_reserved_id": {
     "message": "已略過：設定檔 ID「$1」為保留 ID"
   },
+
   "import_warn_duplicate_id": {
     "message": "已略過：設定檔 ID「$1」重複出現"
   },
+
   "import_warn_unknown_reference": {
     "message": "參照了不存在的設定檔：$1"
   },
+
   "import_warn_unknown_profile_type": {
     "message": "已略過：不支援設定檔類型「$1」"
   },
+
   "import_warn_unsupported_condition": {
     "message": "規則「$1」無法轉換，已匯入為停用的規則"
   },
+
   "import_warn_ip_condition": {
     "message": "IP 規則「$1」也會比對解析到此範圍的主機名稱"
   },
+
   "import_warn_bypass_dropped": {
     "message": "不支援旁路規則「$1」，已略過"
   },
+
   "import_warn_pac_auth_dropped": {
     "message": "不支援 PAC 代理的驗證資訊，已略過"
   },
+
   "import_warn_pac_file_url": {
     "message": "無法更新本機 PAC 檔案「$1」，已匯入其最後載入的腳本"
   },
+
   "import_warn_rule_list_static": {
     "message": "來自「$1」的規則已匯入為固定規則，不會自動更新"
   },
