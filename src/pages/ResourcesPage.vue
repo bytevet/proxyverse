@@ -203,7 +203,7 @@ const goBack = () => {
         data-testid="resources-back"
         @click="goBack"
       >
-        <template #icon><icon-left /></template>
+        <template #icon><icon-left class="flip-rtl" /></template>
       </a-button>
       <a-typography-text bold class="title">
         {{ $t("resources_title") }}

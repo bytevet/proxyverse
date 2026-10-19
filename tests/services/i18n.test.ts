@@ -3,6 +3,7 @@ import {
   LANGUAGES,
   catalogLookup,
   formatMessage,
+  textDirection,
   type Catalog,
 } from "@/services/i18n";
 
@@ -41,6 +42,20 @@ describe("formatMessage", () => {
 
   test("an unknown message is empty, like chrome.i18n", () => {
     expect(formatMessage(undefined)).toBe("");
+  });
+});
+
+describe("textDirection", () => {
+  test.each([
+    ["ar", "rtl"],
+    ["ar-EG", "rtl"],
+    ["en-US", "ltr"],
+    ["pt-BR", "ltr"],
+    ["zh-TW", "ltr"],
+    // no Hebrew catalog: the browser shows English
+    ["he", "ltr"],
+  ])("%s", (locale, dir) => {
+    expect(textDirection(locale)).toBe(dir);
   });
 });
 

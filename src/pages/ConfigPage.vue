@@ -13,8 +13,11 @@ import {
   onProfileUpdate,
 } from "../services/profile";
 import ThemeSwitcher from "../components/controls/ThemeSwitcher.vue";
+import { isRightToLeft } from "../services/i18n";
 
 const profiles = ref<ProfilesStorage>({});
+// the sidebar sits at the start of the line, its resize handle at the end
+const rtl = isRightToLeft();
 
 onMounted(async () => {
   profiles.value = await listProfiles();
@@ -24,7 +27,7 @@ onMounted(async () => {
 
 <template>
   <a-layout class="config-layout">
-    <a-layout-sider :resize-directions="['right']" class="sidebar">
+    <a-layout-sider :resize-directions="[rtl ? 'left' : 'right']" class="sidebar">
       <div class="sidebar-container">
         <section class="logo">
           <img src="/full-logo.svg" />
@@ -101,7 +104,7 @@ onMounted(async () => {
         <RouterView :key="$route.fullPath" />
       </a-layout-content>
       <a-layout-footer>
-        <a-typography-text type="secondary"
+        <a-typography-text type="secondary" dir="ltr"
           >made by
           <a-link :hoverable="false" href="https://byte.vet">ByteVet</a-link>
           with ❤️</a-typography-text
