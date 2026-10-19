@@ -32,16 +32,19 @@ onMounted(async () => {
 
         <section class="settings">
           <a-button-group type="text" size="large">
-            <a-tooltip :content="$t('nav_preference')" position="bottom">
-              <a-button
-                data-testid="sidebar-preference"
-                @click="$router.push({ name: 'preference' })"
-              >
-                <template #icon>
-                  <icon-settings size="large" />
-                </template>
-              </a-button>
-            </a-tooltip>
+            <a-button
+              data-testid="sidebar-preference"
+              :class="{ active: $route.name === 'preference' }"
+              @click="$router.push({ name: 'preference' })"
+            >
+              <template #icon>
+                <icon-settings size="medium" />
+              </template>
+              {{ $t("nav_preference") }}
+            </a-button>
+
+            <a-divider direction="vertical" />
+
             <ThemeSwitcher size="large" />
           </a-button-group>
         </section>
@@ -156,6 +159,10 @@ onMounted(async () => {
 
     .arco-btn {
       color: var(--color-text-2);
+
+      &.active {
+        color: rgb(var(--primary-6));
+      }
     }
   }
 }

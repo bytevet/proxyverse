@@ -122,4 +122,42 @@ test.describe("firefox smoke", () => {
     await expectRoute(servers.url("auth.test"), "auth");
     expect(servers.log.entries.some((e) => e.route === "auth" && e.auth === "ok")).toBe(true);
   });
+
+  test("the toolbar icon can open the sidebar instead of the popup", async () => {
+    await ff.openExtensionPage("/preference");
+    const popupAfter = (behavior: string): Promise<string> =>
+      ff.driver.executeAsyncScript(
+        `const [behavior, done] = arguments;
+        browser.storage.local.set({ "ui.actionBehavior": behavior })
+          .then(() => new Promise((r) => setTimeout(r, 500)))
+          .then(() => browser.action.getPopup({}))
+          .then(done, (e) => done(String(e)));`,
+        behavior
+      );
+
+    // no popup: a click toggles the sidebar instead
+    expect(await popupAfter("sidebar")).toBe("");
+    expect(await popupAfter("popup")).toMatch(/\/index\.html#\/popup$/);
+
+    await ff.openExtensionPage("/sidebar");
+    await ff.byTestId("popup-profile-direct");
+  });
+
+  test("the chosen UI language applies", async () => {
+    const setLanguage = (language: string) =>
+      ff.driver.executeAsyncScript(
+        `const [language, done] = arguments;
+        browser.storage.local.set({ "ui.language": language }).then(() => done());`,
+        language
+      );
+
+    await ff.openExtensionPage("/popup");
+    await setLanguage("zh_CN");
+    await ff.driver.navigate().refresh();
+    await expect
+      .poll(async () => (await ff.byTestId("popup-profile-direct")).getText())
+      .toBe("直接连接");
+
+    await setLanguage("auto");
+  });
 });

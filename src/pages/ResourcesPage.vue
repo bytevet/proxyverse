@@ -187,8 +187,11 @@ const onSwitched = (p: ProxyProfile) => {
   activeProfile.value = p;
 };
 
-const goBack = () =>
-  router.push({ name: "page.popup", query: { tabID: tabID.value } });
+// back to the popup or sidebar it was opened from
+const goBack = () => {
+  if (router.options.history.state.back) router.back();
+  else router.push({ name: "page.popup", query: { tabID: tabID.value } });
+};
 </script>
 
 <template>

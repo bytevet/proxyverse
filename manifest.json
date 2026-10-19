@@ -12,6 +12,9 @@
   "action": {
     "default_popup": "index.html#/popup"
   },
+  "side_panel": {
+    "default_path": "index.html#/sidebar"
+  },
   "background": {
     "service_worker": "service-worker.js",
     "type": "module"
@@ -24,6 +27,7 @@
     "webRequest",
     "webRequestAuthProvider",
     "activeTab",
-    "alarms"
+    "alarms",
+    "sidePanel"
   ]
 }

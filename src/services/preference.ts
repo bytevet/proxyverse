@@ -1,3 +1,4 @@
+import { readonly, ref } from "vue";
 import { Host } from "@/adapters";
 
 const keyDarkMode = "theme.darkmode";
@@ -19,61 +20,66 @@ function detectDeviceDarkMode() {
   return DarkMode.Light;
 }
 
-/**
- * Get the current DarkMode setting. If not set, then returns `DarkMode.Default`
- */
-export async function getDarkModeSetting(): Promise<DarkMode> {
+// This page's copy of the setting, kept in sync with the storage
+const setting = ref<DarkMode>(DarkMode.Default);
+
+/** The stored setting; `DarkMode.Default` (follow the system) if unset. */
+async function getDarkModeSetting(): Promise<DarkMode> {
   return Host.getWithDefault<DarkMode>(keyDarkMode, DarkMode.Default);
 }
 
-/**
- * Return the current real DarkMode, can only be either Light or Dark.
- * @returns {DarkMode.Dark | DarkMode.Light}
- */
-export async function currentDarkMode(): Promise<
-  DarkMode.Dark | DarkMode.Light
-> {
-  const ret = await Host.getWithDefault<DarkMode>(
-    keyDarkMode,
-    DarkMode.Default
-  );
-  if (ret != DarkMode.Default) {
-    return ret;
-  }
-
-  return detectDeviceDarkMode();
+/** Apply the stored setting to this page. */
+export async function applyStoredDarkMode() {
+  setting.value = await getDarkModeSetting();
+  applyDarkMode(setting.value);
 }
 
 export async function changeDarkMode(newMode: DarkMode) {
-  await Host.set<DarkMode>(keyDarkMode, newMode);
+  setting.value = newMode;
   applyDarkMode(newMode);
+  await Host.set<DarkMode>(keyDarkMode, newMode);
 }
 
 /**
- * Re-apply the theme when the system theme changes, if following the system.
- * Call once per page.
+ * Keep this page's theme up to date: with the setting, when it's changed in
+ * another page, and with the system theme, when following it. Call once per
+ * page.
  */
-export function followSystemDarkMode() {
+export function followDarkMode() {
   window
     .matchMedia?.("(prefers-color-scheme: dark)")
-    .addEventListener("change", async () => {
-      if ((await getDarkModeSetting()) == DarkMode.Default) {
-        applyDarkMode(DarkMode.Default);
-      }
+    .addEventListener("change", () => {
+      if (setting.value == DarkMode.Default) applyDarkMode(DarkMode.Default);
     });
+
+  Host.onLocalStorageChanged((changes) => {
+    if (!(keyDarkMode in changes)) return;
+    setting.value =
+      (changes[keyDarkMode].newValue as DarkMode | undefined) ??
+      DarkMode.Default;
+    applyDarkMode(setting.value);
+  });
 }
 
-function applyDarkMode(newMode: DarkMode) {
-  if (newMode == DarkMode.Default) {
-    newMode = detectDeviceDarkMode();
-  }
+/** The theme setting of this page, and the theme it currently shows. */
+export function useDarkMode() {
+  return {
+    setting: readonly(setting),
+    // not reactive: the system theme isn't
+    shown: () =>
+      setting.value == DarkMode.Default ? detectDeviceDarkMode() : setting.value,
+    change: changeDarkMode,
+  };
+}
 
-  switch (newMode) {
-    case DarkMode.Dark:
-      document?.body?.setAttribute("arco-theme", "dark");
-      break;
-    case DarkMode.Light:
-      document?.body?.removeAttribute("arco-theme");
-      break;
+function applyDarkMode(setting: DarkMode) {
+  const mode =
+    setting == DarkMode.Default ? detectDeviceDarkMode() : setting;
+  document.documentElement.style.colorScheme =
+    mode == DarkMode.Dark ? "dark" : "light";
+  if (mode == DarkMode.Dark) {
+    document.body.setAttribute("arco-theme", "dark");
+  } else {
+    document.body.removeAttribute("arco-theme");
   }
 }

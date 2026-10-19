@@ -1,9 +1,5 @@
-import {
-  config2json,
-  exportableProfiles,
-  json2config,
-} from "@/services/config/schema";
-import { ProxyProfile } from "@/services/profile";
+import { exportConfig, importConfig } from "@/services/config";
+import { ProxyProfile, SystemProfile } from "@/services/profile";
 import { expect, test, describe } from "vitest";
 
 const mockInnerConfig: Record<
@@ -17,6 +13,8 @@ const mockInnerConfig: Record<
     defaultProfileID: "direct",
     pacScript: {
       data: "function FindProxyForURL(url, host) {\n  // …\n  return 'DIRECT';\n}",
+      lastFetched: 1700000000000,
+      lastError: "HTTP 500",
     },
     profileID: "90750184-fb8f-4130-ad83-c997a7207300",
     profileName: "PAC Script",
@@ -255,49 +253,135 @@ const mockJSONToBeImportedWithError = {
   ],
 };
 
-describe("testing exporting config", () => {
-  test("export JSON config", async () => {
-    const jsonStr = config2json(mockInnerConfig);
+const importJSON = (obj: unknown) => importConfig(JSON.stringify(obj), {});
 
-    expect(JSON.parse(jsonStr)).toMatchObject(mockExportedJSON);
+describe("exporting config", () => {
+  test("exports the profile fields only", () => {
+    const { json, count, skipped } = exportConfig(mockInnerConfig);
+
+    expect(JSON.parse(json)).toEqual(mockExportedJSON);
+    expect(count).toBe(mockExportedJSON.profiles.length);
+    expect(skipped).toEqual([]);
   });
 
-  test("only valid profiles are exportable", () => {
+  test("leaves out invalid profiles and names them", () => {
     const [first] = Object.values(mockInnerConfig);
-    expect(exportableProfiles({})).toEqual([]);
-    expect(
-      exportableProfiles({ bad: { ...first, profileID: "bad", color: "red" } })
-    ).toEqual([]);
-    expect(exportableProfiles(mockInnerConfig)).toHaveLength(
-      mockExportedJSON.profiles.length
-    );
+    expect(exportConfig({}).count).toBe(0);
+
+    const { json, count, skipped } = exportConfig({
+      ...mockInnerConfig,
+      bad: { ...first, profileID: "bad", profileName: "Bad", color: "red" },
+    });
+    expect(count).toBe(mockExportedJSON.profiles.length);
+    expect(skipped).toEqual(["Bad"]);
+    expect(JSON.parse(json)).toEqual(mockExportedJSON);
+  });
+
+  test("an export imports back unchanged", async () => {
+    const { json } = exportConfig(mockInnerConfig);
+    const { profiles, warnings } = await importConfig(json, {});
+    expect(profiles).toEqual(mockExportedJSON.profiles);
+    expect(warnings).toEqual([]);
   });
 });
 
-describe("testing parsing config", () => {
-  test("parse malformed JSON config", async () => {
-    expect(() => json2config("{blah")).toThrow("Invalid config data");
+describe("importing config", () => {
+  test("rejects malformed JSON", async () => {
+    await expect(importConfig("{blah", {})).rejects.toThrow(
+      "Invalid config data"
+    );
   });
 
-  test("parse empty JSON config", async () => {
-    expect(() => json2config("{}")).toThrow(/Could not validate data:/);
+  test("rejects unrecognized files", async () => {
+    await expect(importConfig("{}", {})).rejects.toThrow(
+      "Unrecognized config file"
+    );
   });
 
-  test("parse normal JSON config", async () => {
-    const profiles = json2config(JSON.stringify(mockJSONToBeImported));
-    expect(profiles).toHaveLength(1);
+  test("rejects unknown versions", async () => {
+    await expect(
+      importJSON({ version: "2099-01", profiles: [] })
+    ).rejects.toThrow(/Unsupported config file/);
+  });
 
-    const expectedProfile: any = {
-      ...mockJSONToBeImported["profiles"][0],
-    };
+  test("imports profiles, dropping unknown fields", async () => {
+    const { profiles, warnings } = await importJSON(mockJSONToBeImported);
+    expect(warnings).toEqual([]);
+
+    const expectedProfile: any = { ...mockJSONToBeImported.profiles[0] };
     delete expectedProfile.dummy;
-
-    expect(profiles[0]).toMatchObject(expectedProfile);
+    expect(profiles).toEqual([expectedProfile]);
   });
 
-  test("parse normal JSON config with invalid value", async () => {
-    expect(() =>
-      json2config(JSON.stringify(mockJSONToBeImportedWithError))
-    ).toThrow("Could not validate data: .profiles.0.proxyRules.default.port");
+  test("skips an invalid profile and keeps the others", async () => {
+    const { profiles, warnings } = await importJSON({
+      version: "2025-01",
+      profiles: [
+        ...mockJSONToBeImportedWithError.profiles,
+        ...mockExportedJSON.profiles,
+      ],
+    });
+
+    expect(profiles).toHaveLength(mockExportedJSON.profiles.length);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toMatchObject({
+      profileName: "HTTP (with Auth)",
+      key: "import_warn_invalid_profile",
+    });
+    expect(warnings[0].args![0]).toMatch(/^proxyRules\.default\.port: /);
+  });
+
+  test("skips reserved and repeated profile IDs", async () => {
+    const [proxy] = mockExportedJSON.profiles.filter(
+      (p) => p.proxyType === "proxy"
+    );
+    const { profiles, warnings } = await importJSON({
+      version: "2025-01",
+      profiles: [
+        { ...proxy, profileID: "direct" },
+        proxy,
+        { ...proxy, profileName: "Again" },
+      ],
+    });
+
+    expect(profiles).toEqual([proxy]);
+    expect(warnings).toEqual([
+      {
+        profileName: proxy.profileName,
+        key: "import_warn_reserved_id",
+        args: ["direct"],
+      },
+      {
+        profileName: "Again",
+        key: "import_warn_duplicate_id",
+        args: [proxy.profileID],
+      },
+    ]);
+  });
+
+  test("warns about rules routing to unknown profiles", async () => {
+    const auto = {
+      color: "#3491FA",
+      profileID: "auto",
+      profileName: "Auto",
+      proxyType: "auto",
+      defaultProfileID: "stored",
+      rules: [
+        { type: "domain", condition: "a.com", profileID: "missing" },
+        { type: "domain", condition: "b.com", profileID: "missing" },
+        { type: "domain", condition: "c.com", profileID: "direct" },
+      ],
+    };
+    const file = JSON.stringify({ version: "2025-01", profiles: [auto] });
+
+    const stored = { stored: { ...SystemProfile.DIRECT, profileID: "stored" } };
+    const { warnings } = await importConfig(file, stored);
+    expect(warnings).toEqual([
+      {
+        profileName: "Auto",
+        key: "import_warn_unknown_reference",
+        args: ["missing"],
+      },
+    ]);
   });
 });

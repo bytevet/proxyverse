@@ -10,7 +10,7 @@
     "message": "配置"
   },
   "nav_custom_profiles": {
-    "message": "自定义配置文件"
+    "message": "自定义配置"
   },
   "nav_system_profiles": {
     "message": "预设"
@@ -31,6 +31,69 @@
   },
   "mode_auto_switch_abbr": {
     "message": "自动"
+  },
+  "mode_auto_switch_via": {
+    "message": "此网站经由"
+  },
+  "mode_auto_switch_uncertain": {
+    "message": "推测结果。实际使用的代理可能不同，因为基于 IP 的规则无法对主机名进行判断。"
+  },
+  "mode_auto_switch_scope_host": {
+    "message": "此网站"
+  },
+  "mode_auto_switch_rule_saved": {
+    "message": "已为 $1 保存规则"
+  },
+  "action_reload_tab": {
+    "message": "重新加载标签页"
+  },
+  "stats_failed_resources": {
+    "message": "$1 个资源加载失败"
+  },
+  "stats_details": {
+    "message": "详情"
+  },
+  "resources_title": {
+    "message": "资源"
+  },
+  "resources_filter_all": {
+    "message": "全部"
+  },
+  "resources_filter_failed": {
+    "message": "失败"
+  },
+  "resources_empty": {
+    "message": "暂无资源记录。重新加载页面即可记录。"
+  },
+  "resource_type_main": {
+    "message": "主文档"
+  },
+  "resource_type_iframe": {
+    "message": "iframe"
+  },
+  "resource_type_stylesheet": {
+    "message": "css"
+  },
+  "resource_type_script": {
+    "message": "脚本"
+  },
+  "resource_type_image": {
+    "message": "图片"
+  },
+  "resource_type_font": {
+    "message": "字体"
+  },
+  "resource_type_xhr": {
+    "message": "xhr"
+  },
+  "resource_type_media": {
+    "message": "媒体"
+  },
+  "resource_type_websocket": {
+    "message": "ws"
+  },
+  "resource_type_other": {
+    "message": "其他"
   },
 
 
@@ -53,11 +116,59 @@
   "config_proxy_type_pac": {
     "message": "PAC 脚本"
   },
+  "config_section_pac_url": {
+    "message": "PAC 脚本 URL"
+  },
+  "config_section_pac_url_placeholder": {
+    "message": "https://example.com/proxy.pac"
+  },
+  "config_section_pac_url_hint": {
+    "message": "可选。设置后，将在后台定期更新脚本内容。"
+  },
+  "config_action_pac_fetch": {
+    "message": "立即获取"
+  },
+  "config_feedback_pac_fetched": {
+    "message": "PAC 脚本获取成功。"
+  },
+  "config_feedback_pac_fetch_failed": {
+    "message": "PAC 脚本获取失败：$1"
+  },
+  "config_pac_last_fetched": {
+    "message": "上次获取：$1"
+  },
+  "config_pac_last_error": {
+    "message": "上次获取出错：$1"
+  },
+  "config_pac_manual_edit_warning": {
+    "message": "已设置来源 URL，手动修改将在下次更新时被覆盖。"
+  },
+  "config_section_pac_refresh_interval": {
+    "message": "更新间隔"
+  },
+  "config_section_pac_refresh_interval_hint": {
+    "message": "在后台重新获取 PAC 脚本的频率。"
+  },
+  "config_pac_refresh_interval_minutes": {
+    "message": "每 $1 分钟"
+  },
+  "config_pac_refresh_interval_one_hour": {
+    "message": "每小时"
+  },
+  "config_pac_refresh_interval_hours": {
+    "message": "每 $1 小时"
+  },
+  "config_pac_refresh_interval_one_day": {
+    "message": "每天"
+  },
+  "config_pac_refresh_interval_disabled": {
+    "message": "已停用（仅手动获取）"
+  },
   "config_proxy_type_auto": {
     "message": "自动切换"
   },
   "config_proxy_type_default": {
-    "message": "默认"
+    "message": "与默认相同"
   },
   "config_section_proxy_server": {
     "message": "代理服务器"
@@ -124,6 +235,27 @@
   "config_section_auto_switch_type_cidr_malformed": {
     "message": "无效 CIDR。请使用 \"192.168.1.1/24\" 或 \"2001:db8::/32\" 等格式。"
   },
+  "config_section_auto_switch_type_regex": {
+    "message": "URL 正则"
+  },
+  "config_section_auto_switch_type_regex_malformed": {
+    "message": "无效的正则表达式"
+  },
+  "config_section_auto_switch_help_domain": {
+    "message": "使用通配符匹配主机名：* 匹配任意字符（包括点），? 匹配单个字符。“example.com”仅匹配该主机；如需匹配其子域名，请添加“*.example.com”。端口和路径不参与匹配。"
+  },
+  "config_section_auto_switch_help_url": {
+    "message": "使用通配符（* 和 ?）匹配完整 URL，例如“http://example.com/api/*”。\n浏览器不会向代理规则提供 https:// URL 的路径和查询参数（Chrome 52 及以上、Firefox 51 及以上），因此 https:// 规则最多只能匹配到主机，例如“https://example.com/*”。"
+  },
+  "config_section_auto_switch_help_regex": {
+    "message": "用于匹配完整 URL 的 JavaScript 正则表达式，区分大小写；除非使用 ^ 和 $$ 锚定，否则可匹配 URL 中的任意位置，例如“^https?://(www\\.)?example\\.com/”。\n浏览器不会向代理规则提供 https:// URL 的路径和查询参数（Chrome 52 及以上、Firefox 51 及以上）：https:// URL 只会被视为“https://example.com/”，因此无法匹配其路径。"
+  },
+  "config_section_auto_switch_help_cidr": {
+    "message": "匹配目标 IP 地址位于该网段内的请求，例如“192.168.0.0/16”或“2001:db8::/32”。通过主机名发起的请求，会在其解析到该网段时匹配，这需要进行一次 DNS 查询。"
+  },
+  "config_section_auto_switch_help_disabled": {
+    "message": "保留该规则但暂时跳过，直到重新选择条件类型。"
+  },
   "config_section_auto_switch_type_disabled": {
     "message": "临时禁用"
   },
@@ -134,7 +266,7 @@
     "message": "分流至"
   },
   "config_section_auto_switch_actions": {
-    "message": "动作"
+    "message": "操作"
   },
   "config_section_auto_switch_add_rule": {
     "message": "添加规则"
@@ -184,7 +316,34 @@
     "message": "未知配置"
   },
   "config_feedback_error_occurred": {
-    "message": "发生错误： $1"
+    "message": "发生错误：$1"
+  },
+  "preferences_section_interface": {
+    "message": "界面"
+  },
+  "preferences_language": {
+    "message": "语言"
+  },
+  "preferences_language_auto": {
+    "message": "跟随浏览器（$1）"
+  },
+  "preferences_theme": {
+    "message": "主题"
+  },
+  "preferences_action_behavior": {
+    "message": "点击工具栏图标时打开"
+  },
+  "preferences_action_behavior_popup": {
+    "message": "弹出窗口"
+  },
+  "preferences_action_behavior_sidebar": {
+    "message": "侧边栏"
+  },
+  "preferences_action_behavior_hint": {
+    "message": "侧边栏会在网页旁保持打开，并跟随当前标签页。"
+  },
+  "preferences_action_behavior_sidebar_unsupported": {
+    "message": "当前浏览器版本不支持通过工具栏图标打开侧边栏。"
   },
 
   "preferences_section_import_export": {
@@ -193,6 +352,12 @@
 
   "preferences_section_import_export_desc": {
     "message": "将代理配置导出成文件以便进行备份或分享，也可导入文件还原配置。"
+  },
+  "preferences_section_import_switchyomega": {
+    "message": "“导入配置”也支持 ProxySwitchyOmega / ZeroOmega 的备份文件（.bak）。无法完全转换的内容会在导入后列出。"
+  },
+  "preferences_tag_beta": {
+    "message": "Beta"
   },
 
   "preferences_action_profile_export": {
@@ -212,11 +377,59 @@
   },
 
   "preferences_feedback_n_profiles_being_imported": {
-    "message": "已导入$1 份有效配置"
+    "message": "已导入 $1 个配置"
+  },
+  "preferences_feedback_profiles_not_exported": {
+    "message": "以下无效配置未导出：$1"
+  },
+  "preferences_import_warnings_title": {
+    "message": "导入完成，但有警告"
+  },
+  "preferences_import_warnings_desc": {
+    "message": "部分设置无法完全导入，请检查以下配置。"
+  },
+  "preferences_import_warnings_more": {
+    "message": "……另有 $1 项"
+  },
+  "import_warn_invalid_profile": {
+    "message": "已跳过，无效配置：$1"
+  },
+  "import_warn_reserved_id": {
+    "message": "已跳过：配置 ID“$1”为保留 ID"
+  },
+  "import_warn_duplicate_id": {
+    "message": "已跳过：配置 ID“$1”重复出现"
+  },
+  "import_warn_unknown_reference": {
+    "message": "引用了不存在的配置：$1"
+  },
+  "import_warn_unknown_profile_type": {
+    "message": "已跳过：不支持配置类型“$1”"
+  },
+  "import_warn_unsupported_condition": {
+    "message": "规则“$1”无法转换，已作为禁用规则导入"
+  },
+  "import_warn_ip_condition": {
+    "message": "IP 规则“$1”也会匹配解析到该网段的主机名"
+  },
+  "import_warn_bypass_dropped": {
+    "message": "不支持 Bypass 规则“$1”，已忽略"
+  },
+  "import_warn_pac_auth_dropped": {
+    "message": "不支持 PAC 代理的认证信息，已忽略"
+  },
+  "import_warn_pac_file_url": {
+    "message": "无法更新本地 PAC 文件“$1”，已导入其最后加载的脚本"
+  },
+  "import_warn_rule_list_static": {
+    "message": "来自“$1”的规则已作为固定规则导入，不会自动更新"
   },
 
   "form_is_required": {
     "message": "$1是必填项"
+  },
+  "form_invalid_url": {
+    "message": "$1 必须是有效的 http:// 或 https:// URL"
   },
 
   "feedback_error": {

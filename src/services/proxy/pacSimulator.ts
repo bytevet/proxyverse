@@ -36,6 +36,15 @@ export function shExpMatch(url: string, pattern: string) {
   return re.test(url);
 }
 
+/** The URL regex rule `pattern` as a RegExp, or undefined if it's invalid. */
+export function urlRegExp(pattern: string): RegExp | undefined {
+  try {
+    return new RegExp(pattern);
+  } catch {
+    return;
+  }
+}
+
 export function isInNet(ipaddr: string, pattern: string, maskstr: string) {
   const match = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(ipaddr);
   if (match == null) {

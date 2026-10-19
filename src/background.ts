@@ -25,6 +25,11 @@ import {
   refreshActivePacIfStale,
 } from "./services/proxy/pacFetcher";
 import { onProfileUpdate } from "./services/profile";
+import {
+  ActionBehavior,
+  getActionBehavior,
+  onActionBehaviorChanged,
+} from "./services/ui";
 
 // indicator
 const activeProfile = async () =>
@@ -43,6 +48,14 @@ const refreshIndicator = () => {
 Host.onProxyChanged(refreshIndicator);
 onActiveProfileChanged(refreshIndicator);
 refreshIndicator();
+
+// What the toolbar icon opens: the popup or the sidebar. Applied at every
+// start, since the browser forgets a popup set at runtime when it restarts.
+Host.handleToolbarClicks();
+const applyActionBehavior = (behavior: ActionBehavior) =>
+  Host.applyActionBehavior(behavior).catch(console.error);
+onActionBehaviorChanged(applyActionBehavior);
+getActionBehavior().then(applyActionBehavior);
 
 // Keep the proxy config in sync with the stored profiles, whichever context
 // changed them (config page, popup, import, PAC refresh).

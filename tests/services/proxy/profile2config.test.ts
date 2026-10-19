@@ -378,3 +378,57 @@ describe("testing findProfile function", () => {
     expect(result.isConfident).toBe(true);
   });
 });
+
+describe("URL regex rules", () => {
+  const regexProfile = (condition: string): ProfileAutoSwitch => ({
+    profileID: "regexAuto",
+    color: "",
+    profileName: "",
+    proxyType: "auto",
+    rules: [{ type: "regex", condition, profileID: "simpleProxy" }],
+    defaultProfileID: "direct",
+  });
+  const loader = async (id: string) => profiles[id];
+
+  test("generates a RegExp test on the URL", async () => {
+    const cfg = await new ProfileConverter(
+      regexProfile("^https?://(www\\.)?example\\.com/"),
+      loader
+    ).toProxyConfig();
+    expect(cfg.pacScript?.data).toContain(`
+    if (RegExp('^https?://(www\\\\.)?example\\\\.com/').test(url)) {
+        return profiles['simpleProxy'](url, host);
+    }`);
+  });
+
+  test("an invalid regex is skipped with an alert", async () => {
+    const cfg = await new ProfileConverter(
+      regexProfile("^http://(a"),
+      loader
+    ).toProxyConfig();
+    expect(cfg.pacScript?.data).toContain(
+      `alert('Invalid condition regex: ^http://(a, skipped');`
+    );
+    expect(cfg.pacScript?.data).not.toContain("RegExp(");
+  });
+
+  test("findProfile matches the whole URL", async () => {
+    const profile = new ProfileConverter(
+      regexProfile("^http://example\\.com/api/"),
+      loader
+    );
+    const match = await profile.findProfile(
+      new URL("http://example.com/api/v1")
+    );
+    expect(match.profile?.profile.profileID).toBe("simpleProxy");
+
+    const miss = await profile.findProfile(new URL("http://example.com/web"));
+    expect(miss.profile?.profile.profileID).toBe("direct");
+
+    const invalid = new ProfileConverter(regexProfile("(a"), loader);
+    expect(
+      (await invalid.findProfile(new URL("http://a.com/"))).profile?.profile
+        .profileID
+    ).toBe("direct");
+  });
+});

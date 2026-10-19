@@ -12,6 +12,8 @@ import {
   WebRequestBeforeRequestDetails,
   WebRequestErrorOccurredDetails,
   WebRequestResponseStartedDetails,
+  ActionBehavior,
+  POPUP_PAGE,
 } from "./base";
 
 // `browser` is globally typed as `typeof chrome` by @types/chrome; use Firefox typings here
@@ -31,8 +33,9 @@ export class Firefox extends BaseAdapter {
 
   onLocalStorageChanged(
     callback: (changes: Record<string, { newValue?: unknown; oldValue?: unknown }>) => void
-  ): void {
+  ): () => void {
     browser.storage.local.onChanged.addListener(callback);
+    return () => browser.storage.local.onChanged.removeListener(callback);
   }
 
   async setSession<T>(key: string, val: T): Promise<void> {
@@ -131,6 +134,49 @@ export class Firefox extends BaseAdapter {
     browser.tabs.onRemoved.addListener(callback);
   }
 
+  onActiveTabChanged(callback: () => void): () => void {
+    let windowID: number | undefined;
+    browser.windows.getCurrent().then((w) => (windowID = w.id));
+    const onActivated = (info: { windowId: number }) => {
+      if (info.windowId === windowID) callback();
+    };
+    const onUpdated = (
+      _: number,
+      change: { url?: string },
+      tab: { active: boolean; windowId?: number }
+    ) => {
+      if (tab.active && tab.windowId === windowID && change.url) callback();
+    };
+    browser.tabs.onActivated.addListener(onActivated);
+    browser.tabs.onUpdated.addListener(onUpdated);
+    return () => {
+      browser.tabs.onActivated.removeListener(onActivated);
+      browser.tabs.onUpdated.removeListener(onUpdated);
+    };
+  }
+
+  sidebarSupported(): boolean {
+    return browser.sidebarAction !== undefined;
+  }
+
+  // With no popup, a click fires `action.onClicked`, which the background
+  // turns into `sidebarAction.toggle()` (see `handleToolbarClicks`).
+  async applyActionBehavior(behavior: ActionBehavior): Promise<void> {
+    const sidebar = behavior === "sidebar" && this.sidebarSupported();
+    await browser.action.setPopup({ popup: sidebar ? "" : POPUP_PAGE });
+  }
+
+  /**
+   * Toggle the sidebar on toolbar clicks. Call at the top level of the
+   * background: the toggle must run synchronously in the click handler, and
+   * clicks only reach it while no popup is set, i.e. in sidebar mode.
+   */
+  handleToolbarClicks() {
+    browser.action.onClicked.addListener(() => {
+      browser.sidebarAction.toggle();
+    });
+  }
+
   async reloadTab(tabID: number): Promise<void> {
     await browser.tabs.reload(tabID);
   }
@@ -211,10 +257,10 @@ export class Firefox extends BaseAdapter {
     browser.alarms.onAlarm.addListener((alarm) => callback(alarm.name));
   }
 
-  currentLocale(): string {
+  protected nativeLocale(): string {
     return browser.i18n.getUILanguage();
   }
-  getMessage(key: string, substitutions?: string | string[]): string {
+  protected nativeMessage(key: string, substitutions?: string | string[]) {
     return browser.i18n.getMessage(key, substitutions);
   }
 
@@ -222,7 +268,7 @@ export class Firefox extends BaseAdapter {
   async error(): Promise<string | undefined> {
     // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/proxy/settings
     if (!(await browser.extension.isAllowedIncognitoAccess())) {
-      return browser.i18n.getMessage("firefox_incognito_access_error_html");
+      return this.getMessage("firefox_incognito_access_error_html");
     }
 
     return;

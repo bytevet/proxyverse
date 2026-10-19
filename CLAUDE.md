@@ -37,6 +37,10 @@ The Vite config defines three entry points that produce the extension bundle:
 
 Popup routes: `#/popup` and `#/popup/resources/:tabID` (Resources View, lazy-loaded). `#/popup?tabID=N` makes the popup act on tab N instead of the active tab; e2e tests rely on it.
 
+`#/sidebar` is the same page in the browser's side panel (Chrome/Edge `sidePanel`) or sidebar (Firefox `sidebar_action`): it stays open, so it follows the active tab of its window (`Host.onActiveTabChanged`) and profile changes. What the toolbar icon opens is the `ui.actionBehavior` setting (`src/services/ui.ts`, "popup" or "sidebar"), applied by the background at every start and on change (`Host.applyActionBehavior`; on Firefox a click with no popup toggles the sidebar). Playwright can't drive the side panel: e2e opens `#/sidebar` as a tab instead.
+
+The theme (`src/services/preference.ts`) is applied before the app mounts (`main.ts`), so it never renders in the wrong one; `useDarkMode()` is the page's shared state and follows changes made in other pages.
+
 ### Browser adapter layer (`src/adapters/`)
 
 `BaseAdapter` defines the abstract contract for all browser APIs (storage, proxy, webRequest, tabs, i18n). Concrete implementations: `Chrome`, `Firefox`, `WebBrowser` (dev stub). A singleton `Host` is auto-detected at import time and used everywhere. This is the only layer that touches `chrome.*` or `browser.*` APIs directly.
@@ -45,6 +49,7 @@ Popup routes: `#/popup` and `#/popup/resources/:tabID` (Resources View, lazy-loa
 
 The core complexity lives here:
 - **`profile2config.ts`** -- `ProfileConverter` turns a `ProxyProfile` into a `ProxyConfig` (for `chrome.proxy.settings`). For non-PAC profiles and auto-switch profiles, it **generates PAC scripts via AST** using `escodegen`/`acorn` node builders in `scriptHelper.ts`. Auto-switch profiles compose multiple sub-profiles by generating `register()` calls that build a lookup table.
+- **Rule types** -- `domain` (`shExpMatch` on the host), `url` (`shExpMatch` on the URL), `regex` (`RegExp(...).test(url)`), `cidr` (`isInNet`), `disabled`. Browsers strip the path and query of https URLs before a PAC script sees them (Chrome 52+, Firefox 51+), so `url`/`regex` rules can't match https paths; the editor's help popover per type says so.
 - **`pacSimulator.ts`** -- JS reimplementations of PAC functions (`shExpMatch`, `isInNet`) used to simulate PAC evaluation in-extension (e.g., for tab badge resolution). `isInNet` returns `UNKNOWN` when given a hostname instead of an IP (can't do DNS in extension context).
 - **`auth.ts`** -- Resolves proxy auth credentials by walking the profile tree (auto-switch profiles delegate to sub-profiles).
 - **`index.ts`** -- `setProxy`/`refreshProxy` apply a profile and save the `"active-profile"` snapshot (`refreshProxy` updates the snapshot too). `createProfileFinder(profile)` simulates which profile serves a URL (popup and badge). `refreshProxyOnProfileUpdate` re-applies the active profile when a storage change touches it or any profile it routes to (`profileTreeIDs`); the background calls it from `onProfileUpdate`, so writers of profiles don't need to.
@@ -63,9 +68,11 @@ Profiles are stored in `chrome.storage.local` under key `"profiles"`. Types: `Pr
 
 UI pickers share one reactive profile list (`src/components/configs/useProfileOptions.ts`) and the `ProfileOptions` dropdown items.
 
-### Config import/export (`src/services/config/schema/`)
+### Config import/export (`src/services/config/`)
 
-Schema definitions for importing/exporting profile configurations using `io-ts` for runtime type validation.
+`importConfig(text, storedProfiles)` detects the file format and returns `{profiles, warnings}`; warnings are i18n keys (`import_warn_*`) the Preference page lists in a modal. `exportConfig` writes our format and names the profiles it skipped as invalid.
+- **`proxyverse/`** -- Our format (`version: "2025-01"`), validated with `zod/mini`. Unknown keys are stripped (so runtime fields like `pacScript.lastFetched` never reach a file), and each profile is validated on its own: an invalid one, a reserved ID (`direct`/`system`) or a repeated ID is skipped with a warning.
+- **`switchyomega/`** -- SwitchyOmega / ZeroOmega backups (`schemaVersion` 2, `+<name>` profiles, maybe base64). Profile IDs are UUIDv5 of the name, so re-importing overwrites. An enabled attached rule list (`__ruleListOf_<switch>`) is merged into its switch profile; rule lists become static auto profiles. Conditions map to our rules only where the match is exact (`conditions.ts`): URL regexes to `regex` rules, host regexes to `domain` wildcards via `regex.ts` (only those with an exact wildcard equivalent). Anything else (time, weekday, host levels, other regexes) becomes a `disabled` rule holding the condition text, plus a warning. Wildcards never carry `+()[]{}^$|\`: Firefox's PAC `shExpMatch` treats them as regex syntax.
 
 ## Critical Gotcha: `deepClone()` must use JSON round-trip
 
@@ -97,4 +104,4 @@ The `vite.config.ts` `TRANSFORMER_CONFIG` rewrites `manifest.json` at build time
 
 ## i18n
 
-Translation strings live in `public/_locales/{locale}/messages.json`. Translations are managed via Transifex.
+Translation strings live in `public/_locales/{locale}/messages.json`. Translations are managed via Transifex. `chrome.i18n` only knows the browser's language, so a language chosen in Preference (`ui.language`, `src/services/i18n.ts`) is loaded from those files before the app mounts and installed as the adapters' message override (per-message fallback to `en`, Chrome's `$1`/`$$`/placeholder formatting); changing it reloads every open page. Add a new locale to `LANGUAGES` too (a unit test checks they match).

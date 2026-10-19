@@ -14,15 +14,13 @@ import {
   WebRequestBeforeRequestDetails,
   WebRequestErrorOccurredDetails,
   WebRequestResponseStartedDetails,
+  ActionBehavior,
 } from "./base";
 
 import i18nData from "@/../public/_locales/en/messages.json";
+import { formatMessage, lowerCaseKeys } from "./messages";
 
-const _i18n: {
-  [key: string]: {
-    message: string;
-  };
-} = i18nData;
+const english = lowerCaseKeys(i18nData);
 
 export class WebBrowser extends BaseAdapter {
   get flavor() {
@@ -47,8 +45,11 @@ export class WebBrowser extends BaseAdapter {
 
   onLocalStorageChanged(
     callback: (changes: Record<string, { newValue?: unknown; oldValue?: unknown }>) => void
-  ): void {
+  ): () => void {
     this.storageListeners.push(callback);
+    return () => {
+      this.storageListeners = this.storageListeners.filter((l) => l !== callback);
+    };
   }
 
   private session: Record<string, unknown> = {};
@@ -122,6 +123,15 @@ export class WebBrowser extends BaseAdapter {
   }
   onTabRemoved(_callback: (tabID: number) => void): void {
     throw new Error("Method not implemented.");
+  }
+  onActiveTabChanged(_callback: () => void): () => void {
+    return () => {};
+  }
+  sidebarSupported(): boolean {
+    return false;
+  }
+  async applyActionBehavior(behavior: ActionBehavior): Promise<void> {
+    console.log(`Toolbar icon opens: ${behavior}`);
   }
   async reloadTab(tabID: number): Promise<void> {
     console.log(`Reload tab: ${tabID}`);
@@ -208,26 +218,10 @@ export class WebBrowser extends BaseAdapter {
     // no-op for local dev
   }
 
-  currentLocale(): string {
+  protected nativeLocale(): string {
     return "en-US";
   }
-  getMessage(key: string, substitutions?: string | string[]): string {
-    let ret = key;
-    if (_i18n && _i18n[key]) {
-      ret = _i18n[key]["message"] || key;
-    }
-
-    if (!substitutions) {
-      return ret;
-    }
-
-    if (typeof substitutions === "string") {
-      substitutions = [substitutions];
-    }
-
-    for (let i = 0; i < substitutions.length; i++) {
-      ret = ret.replace(`$${i + 1}`, substitutions[i]);
-    }
-    return ret;
+  protected nativeMessage(key: string, substitutions?: string | string[]) {
+    return formatMessage(english[key.toLowerCase()], substitutions);
   }
 }
