@@ -9,10 +9,70 @@ import {
   server,
   standardProfiles,
 } from "../data/profiles";
-import { configFile, fixtureFile } from "../data/configFiles";
+import {
+  configFile,
+  fixtureFile,
+  switchyOmegaFile,
+} from "../data/configFiles";
 import type { ProxyProfile } from "@/services/profile";
 
 test.describe("preference", () => {
+  test("the toolbar icon opens the popup or the sidebar", async ({
+    sw,
+    openConfig,
+  }) => {
+    const page = await openConfig("/preference");
+    const toolbar = () =>
+      sw.eval(async () => ({
+        popup: await chrome.action.getPopup({}),
+        panel: (await chrome.sidePanel.getOptions({})).enabled,
+        onClick: (await chrome.sidePanel.getPanelBehavior())
+          .openPanelOnActionClick,
+      }));
+
+    await expect(page.getByTestId("pref-action-popup")).toHaveClass(/checked/);
+
+    await page.getByTestId("pref-action-sidebar").click();
+    await expect.poll(() => sw.getLocal("ui.actionBehavior")).toBe("sidebar");
+    await expect
+      .poll(toolbar)
+      .toEqual({ popup: "", panel: true, onClick: true });
+
+    await page.getByTestId("pref-action-popup").click();
+    await expect
+      .poll(toolbar)
+      .toEqual({
+        popup: `${sw.origin}/index.html#/popup`,
+        panel: false,
+        onClick: false,
+      });
+  });
+
+  test("the theme control stays in sync with the header and other pages", async ({
+    openConfig,
+    openPopup,
+  }) => {
+    const popup = await openPopup();
+    const page = await openConfig("/preference");
+    await page.emulateMedia({ colorScheme: "light" });
+    const header = page.getByTestId("theme-switch");
+
+    await page.getByTestId("pref-theme-dark").click();
+    await expect(page.locator("body")).toHaveAttribute("arco-theme", "dark");
+    await expect(header.locator(".arco-icon-moon-fill")).toBeVisible();
+    // another open page follows
+    await expect(popup.page.locator("body")).toHaveAttribute("arco-theme", "dark");
+
+    // the header switcher updates the control
+    await header.click();
+    await expect(page.locator("body")).not.toHaveAttribute("arco-theme", "dark");
+    await expect(page.getByTestId("pref-theme-light")).toHaveClass(/checked/);
+    await expect(popup.page.locator("body")).not.toHaveAttribute(
+      "arco-theme",
+      "dark"
+    );
+  });
+
   test("export downloads all valid profiles", async ({
     sw,
     servers,
@@ -109,6 +169,90 @@ test.describe("preference", () => {
       timeout: 2_000,
     });
     expect(await sw.getProfiles()).toEqual({});
+  });
+
+  test("import a SwitchyOmega backup and route with it", async ({
+    sw,
+    servers,
+    page,
+    openConfig,
+    activate,
+  }) => {
+    const backup = switchyOmegaFile([
+      {
+        name: "Omega A",
+        profileType: "FixedProfile",
+        color: "#99ccee",
+        fallbackProxy: { scheme: "http", host: "127.0.0.1", port: servers.ports.proxyA },
+        bypassList: [],
+      },
+      {
+        name: "Omega Switch",
+        profileType: "SwitchProfile",
+        color: "#99dd99",
+        defaultProfileName: "direct",
+        rules: [
+          {
+            condition: { conditionType: "HostWildcardCondition", pattern: "*.a.test" },
+            profileName: "Omega A",
+          },
+        ],
+      },
+    ]);
+
+    const pref = new Preference(await openConfig("/preference"));
+    await pref.import(backup);
+    await expect(toast(pref.page, "2 profiles have been imported")).toBeVisible();
+    await expect(pref.page.getByTestId("import-warnings")).toBeHidden();
+
+    const stored = Object.values(await sw.getProfiles());
+    const id = (name: string) => stored.find((p) => p.profileName === name)!.profileID;
+    await expect(pref.page.getByTestId(`sidebar-profile-${id("Omega Switch")}`)).toContainText(
+      "Omega Switch"
+    );
+
+    await activate(id("Omega Switch"));
+    // `*.a.test` covers a.test itself in SwitchyOmega
+    await expectRoute(page, servers.url("x.a.test"), "proxyA");
+    await expectRoute(page, servers.url("a.test"), "proxyA");
+    await expectRoute(page, servers.url("site.test"), "direct");
+
+    // importing again overwrites the same profiles instead of adding new ones
+    const renamed = stored.map((p) => ({ ...p, profileName: "Renamed" }));
+    await sw.setProfiles(renamed);
+    await pref.import(backup);
+    await expect
+      .poll(async () => Object.values(await sw.getProfiles()).map((p) => p.profileName).sort())
+      .toEqual(["Omega A", "Omega Switch"]);
+    expect(Object.keys(await sw.getProfiles()).sort()).toEqual(
+      stored.map((p) => p.profileID).sort()
+    );
+  });
+
+  test("SwitchyOmega import lists what it couldn't convert", async ({ openConfig }) => {
+    const pref = new Preference(await openConfig("/preference"));
+    await pref.import(
+      switchyOmegaFile([
+        {
+          name: "Office hours",
+          profileType: "SwitchProfile",
+          defaultProfileName: "direct",
+          rules: [
+            {
+              condition: { conditionType: "TimeCondition", startHour: 9, endHour: 17 },
+              profileName: "direct",
+            },
+          ],
+        },
+      ])
+    );
+
+    const warnings = pref.page.getByTestId("import-warnings");
+    await expect(warnings).toBeVisible();
+    await expect(warnings).toContainText("Office hours");
+    await expect(warnings).toContainText(
+      'Rule "Time: 9~17" can\'t be converted and was imported as disabled'
+    );
   });
 
   test("deleting a sub-profile of the active auto profile re-applies the proxy", async ({

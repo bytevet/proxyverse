@@ -44,6 +44,20 @@ test.describe("auto switch profiles", () => {
       await expectRoute(page, servers.url("url.test", "/home"), "direct");
     });
 
+    test("URL regex", async ({ sw, servers, page, activate }) => {
+      const { proxyA } = standardProfiles(servers);
+      const auto = autoProfile({ profileID: "auto" }, [
+        rule("regex", "^http://(www\\.)?re\\.test:\\d+/api/", "proxyA"),
+      ]);
+      await sw.setProfiles([proxyA, auto]);
+      await activate("auto");
+
+      await expectRoute(page, servers.url("re.test", "/api/items"), "proxyA");
+      await expectRoute(page, servers.url("www.re.test", "/api/"), "proxyA");
+      await expectRoute(page, servers.url("re.test", "/home"), "direct");
+      await expectRoute(page, servers.url("xre.test", "/api/"), "direct");
+    });
+
     test("CIDR on an IP literal", async ({ sw, servers, page, activate }) => {
       const { proxyA } = standardProfiles(servers);
       const auto = autoProfile({ profileID: "auto" }, [
@@ -220,6 +234,27 @@ test.describe("auto switch profiles", () => {
 
     await editor.setRule(0, { condition: "10.0.0.0/8" });
     await expect(fieldError(condition)).toBeHidden();
+
+    await editor.setRule(0, { type: "URL RegExp", condition: "^https://(a" });
+    await expect(fieldError(condition)).toHaveText("Invalid regular expression");
+
+    await editor.setRule(0, { condition: "^https://(a|b)\\.test/" });
+    await expect(fieldError(condition)).toBeHidden();
+  });
+
+  test("explains the selected condition type", async ({ openEditor }) => {
+    const editor = await openEditor();
+    await editor.setType("auto");
+    const help = editor.byId("rule-0-help");
+    const content = editor.page.getByTestId("rule-0-help-content");
+
+    await help.hover();
+    await expect(content).toContainText("Matches the host name with wildcards");
+
+    await editor.setRule(0, { type: "URL RegExp" });
+    await help.hover();
+    await expect(content).toContainText("unless anchored with ^ and $, e.g.");
+    await expect(content).toContainText("Chrome since version 52");
   });
 
   test("adds, duplicates and deletes rules", async ({ openEditor }) => {

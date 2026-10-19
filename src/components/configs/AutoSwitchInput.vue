@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { IconCopy, IconPlus, IconDelete } from "@arco-design/web-vue/es/icon";
+import {
+  IconCopy,
+  IconPlus,
+  IconDelete,
+  IconQuestionCircle,
+} from "@arco-design/web-vue/es/icon";
 import type { FieldRule } from "@arco-design/web-vue";
 
 import { Host } from "@/adapters";
@@ -12,6 +17,7 @@ import {
 import ProfileSelector from "./ProfileSelector.vue";
 import { BrowserFlavor } from "@/adapters/base";
 import { isValidCIDR } from "ipaddr.js";
+import { urlRegExp } from "@/services/proxy/pacSimulator";
 
 const props = defineProps<{
   currentProfileID?: string;
@@ -25,6 +31,8 @@ const getPlaceholder = (type: AutoSwitchType) => {
       return "*.example.com";
     case "url":
       return "http://example.com/api/*";
+    case "regex":
+      return "^https?://(www\\.)?example\\.com/";
     case "cidr":
       return "192.168.1.1/24";
     default:
@@ -61,6 +69,10 @@ const autoSwitchTypes: { label: string; value: AutoSwitchType }[] = [
   {
     label: Host.getMessage("config_section_auto_switch_type_url"),
     value: "url",
+  },
+  {
+    label: Host.getMessage("config_section_auto_switch_type_regex"),
+    value: "regex",
   },
   {
     label: Host.getMessage("config_section_auto_switch_type_cidr"),
@@ -133,6 +145,21 @@ const getConditionInputRule = (type: AutoSwitchType): FieldRule<string> => {
         },
       };
 
+    case "regex":
+      return {
+        required: true,
+        validator: (value: string | undefined, cb: (message?: string) => void) => {
+          if (!value || !urlRegExp(value)) {
+            cb(
+              Host.getMessage("config_section_auto_switch_type_regex_malformed")
+            );
+            return;
+          }
+
+          cb();
+        },
+      };
+
     case "cidr":
       return {
         required: true,
@@ -198,12 +225,28 @@ const getConditionInputRule = (type: AutoSwitchType): FieldRule<string> => {
           :rules="getConditionInputRule(record.type)"
           validate-trigger="blur"
         >
-          <a-input
-            :data-testid="`rule-${rowIndex}-condition`"
-            v-model="record.condition"
-            :placeholder="getPlaceholder(record.type)"
-            :disabled="record.type === 'disabled'"
-          />
+          <div class="condition-input">
+            <a-input
+              :data-testid="`rule-${rowIndex}-condition`"
+              v-model="record.condition"
+              :placeholder="getPlaceholder(record.type)"
+              :disabled="record.type === 'disabled'"
+            />
+            <a-popover position="top">
+              <icon-question-circle
+                class="condition-help"
+                :data-testid="`rule-${rowIndex}-help`"
+              />
+              <template #content>
+                <div
+                  class="condition-help-content"
+                  :data-testid="`rule-${rowIndex}-help-content`"
+                >
+                  {{ $t(`config_section_auto_switch_help_${record.type}`) }}
+                </div>
+              </template>
+            </a-popover>
+          </div>
         </a-form-item>
       </template>
 
@@ -301,5 +344,23 @@ const getConditionInputRule = (type: AutoSwitchType): FieldRule<string> => {
   .arco-form-item {
     margin-bottom: 0;
   }
+
+  .condition-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .condition-help {
+    flex: none;
+    cursor: help;
+    color: var(--color-text-3);
+  }
+}
+
+.condition-help-content {
+  max-width: 360px;
+  white-space: pre-line;
 }
 </style>

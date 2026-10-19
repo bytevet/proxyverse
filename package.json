@@ -26,11 +26,11 @@
     "acorn": "^8.19.0",
     "escodegen": "^2.1.0",
     "espree": "^11.2.0",
-    "io-ts": "^2.2.22",
     "ipaddr.js": "^2.5.0",
     "tldts": "^7.4.18",
     "vue": "^3.5.44",
-    "vue-router": "^5.4.0"
+    "vue-router": "^5.4.0",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@arco-design/web-vue": "^2.58.0",

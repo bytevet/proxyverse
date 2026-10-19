@@ -9,9 +9,8 @@ export class Popup {
     const page = await context.newPage();
     const query = tabID === undefined ? "" : `?tabID=${tabID}`;
     await page.goto(`${sw.origin}/index.html#/popup${query}`);
+    // the app mounts once the theme is applied
     await expect(page.getByTestId("popup-profile-direct")).toBeVisible();
-    // the app stores the theme setting once it has applied it
-    await expect.poll(() => sw.getLocal("theme.darkmode")).not.toBeUndefined();
     return new Popup(page);
   }
 

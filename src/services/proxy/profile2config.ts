@@ -18,6 +18,7 @@ import {
   isInCIDR,
   isPlainHostName,
   shExpMatch,
+  urlRegExp,
   UNKNOWN,
 } from "./pacSimulator";
 
@@ -332,6 +333,29 @@ export class ProfileConverter {
           ]
         );
 
+      case "regex":
+        if (urlRegExp(rule.condition)) {
+          // RegExp("...").test(url)
+          return PACScriptHelper.newIfStatement(
+            PACScriptHelper.newCallExpression(
+              PACScriptHelper.newMemberExpression(
+                PACScriptHelper.newCallExpression(
+                  PACScriptHelper.newIdentifier("RegExp"),
+                  [PACScriptHelper.newSimpleLiteral(rule.condition)]
+                ),
+                PACScriptHelper.newIdentifier("test")
+              ),
+              [PACScriptHelper.newIdentifier("url")]
+            ),
+            [
+              PACScriptHelper.newReturnStatement(
+                this.genAutoProfileCallExpression(rule.profileID)
+              ),
+            ]
+          );
+        }
+        break;
+
       case "cidr": {
         const net = cidrNetMask(rule.condition);
         if (net) {
@@ -380,6 +404,12 @@ export class ProfileConverter {
         break;
       case "url":
         if (shExpMatch(url.href, rule.condition)) {
+          return profile.findProfile(url);
+        }
+
+        break;
+      case "regex":
+        if (urlRegExp(rule.condition)?.test(url.href)) {
           return profile.findProfile(url);
         }
 

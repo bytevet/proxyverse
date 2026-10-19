@@ -67,6 +67,23 @@ export type ProxySettingResultDetails =
       incognitoSpecific?: boolean | undefined;
     };
 
+/**
+ * i18n APIs silently drop substitutions passed as a Proxy (e.g. a Vue
+ * reactive array), so adapters give them a plain array. A free function:
+ * `getMessage` is called unbound, as `$t`.
+ */
+export function plainSubstitutions(substitutions?: string | string[]) {
+  return typeof substitutions === "object"
+    ? Array.from(substitutions, String)
+    : substitutions;
+}
+
+export type ActionBehavior = "popup" | "sidebar";
+
+// the pages the toolbar icon opens
+export const POPUP_PAGE = "index.html#/popup";
+export const SIDEBAR_PAGE = "index.html#/sidebar";
+
 export type SimpleProxyServer = {
   host: string;
   port?: number;
@@ -102,7 +119,7 @@ export abstract class BaseAdapter {
   // this one — the browser dispatches the event everywhere.
   abstract onLocalStorageChanged(
     callback: (changes: Record<string, { newValue?: unknown; oldValue?: unknown }>) => void
-  ): void;
+  ): () => void;
 
   // session storage, cleared when the browser closes
   abstract setSession<T>(key: string, val: T): Promise<void>;
@@ -149,6 +166,17 @@ export abstract class BaseAdapter {
   abstract getActiveTab(): Promise<Tab | undefined>;
   abstract getTab(tabID: number): Promise<Tab | undefined>;
   abstract onTabRemoved(callback: (tabID: number) => void): void;
+  /**
+   * Fires when the active tab of the current window changes, or navigates.
+   * Returns a function removing the listener.
+   */
+  abstract onActiveTabChanged(callback: () => void): () => void;
+
+  // toolbar action: what a click on the toolbar icon opens
+  abstract sidebarSupported(): boolean;
+  abstract applyActionBehavior(behavior: ActionBehavior): Promise<void>;
+  /** Background only: set up what a toolbar click opens, if not a popup. */
+  handleToolbarClicks(): void {}
   abstract reloadTab(tabID: number): Promise<void>;
 
   // messages

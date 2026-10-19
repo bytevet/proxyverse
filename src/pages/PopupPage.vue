@@ -15,8 +15,13 @@ import {
   listProfiles,
   SystemProfile,
   ProxyProfile,
+  onProfileUpdate,
 } from "../services/profile";
-import { setProxy, getCurrentProxySetting } from "../services/proxy";
+import {
+  setProxy,
+  getCurrentProxySetting,
+  onActiveProfileChanged,
+} from "../services/proxy";
 import { Host } from "@/adapters";
 import { type Tab } from "@/adapters/base";
 import AutoModeActionBar from "@/components/AutoModeActionBar.vue";
@@ -27,6 +32,12 @@ import {
   type TabStatsResult,
 } from "@/services/stats";
 
+const props = defineProps<{
+  // in the side panel / sidebar: stays open, so it follows the active tab
+  // and the profiles changed elsewhere
+  sidebar?: boolean;
+}>();
+
 const router = useRouter();
 const route = useRoute();
 const profiles = ref<ProfilesStorage>({});
@@ -34,32 +45,64 @@ const currentTab = ref<Tab | undefined>();
 const activeProfile = ref<ProxyProfile | undefined>();
 const tabStats = ref<TabStatsResult | undefined>();
 let unsubscribeTabStats: (() => void) | undefined;
+const unsubscribes: (() => void)[] = [];
 
 const selectedKeys = computed(() => {
   return activeProfile.value?.profileID ? [activeProfile.value.profileID] : [];
 });
 
+const loadActiveProfile = async () => {
+  activeProfile.value = (await getCurrentProxySetting()).activeProfile;
+};
+
+/** Show `tab`: its route, rule actions and failed requests. */
+const showTab = (tab: Tab | undefined) => {
+  unsubscribeTabStats?.();
+  unsubscribeTabStats = undefined;
+  tabStats.value = undefined;
+  currentTab.value = tab;
+  if (tab?.id === undefined) return;
+
+  // the user sees the failures here, so the badge can stop signaling them
+  acknowledgeTabStats(tab.id);
+  unsubscribeTabStats = subscribeTabStats(
+    tab.id,
+    (stats) => (tabStats.value = stats)
+  );
+};
+
 onMounted(async () => {
   profiles.value = await listProfiles();
-  const proxy = await getCurrentProxySetting();
-  activeProfile.value = proxy.activeProfile;
+  await loadActiveProfile();
 
   // `?tabID=` makes the popup act on a given tab, used by e2e tests
   const tabID = Number(route.query.tabID);
-  currentTab.value = tabID
-    ? await Host.getTab(tabID)
-    : await Host.getActiveTab();
-  if (currentTab.value?.id !== undefined) {
-    // the user sees the failures here, so the badge can stop signaling them
-    acknowledgeTabStats(currentTab.value.id);
-    unsubscribeTabStats = subscribeTabStats(
-      currentTab.value.id,
-      (stats) => (tabStats.value = stats)
+  showTab(tabID ? await Host.getTab(tabID) : await Host.getActiveTab());
+
+  if (props.sidebar) {
+    // keep only the latest lookup when tabs switch in quick succession
+    let lookup = 0;
+    const showActiveTab = async () => {
+      const n = ++lookup;
+      const tab = await Host.getActiveTab();
+      if (n === lookup) showTab(tab);
+    };
+    unsubscribes.push(
+      Host.onActiveTabChanged(showActiveTab),
+      onProfileUpdate((p) => {
+        profiles.value = p;
+        // the active profile may route to the changed ones
+        loadActiveProfile();
+      }),
+      onActiveProfileChanged(loadActiveProfile)
     );
   }
 });
 
-onUnmounted(() => unsubscribeTabStats?.());
+onUnmounted(() => {
+  unsubscribeTabStats?.();
+  unsubscribes.forEach((unsubscribe) => unsubscribe());
+});
 
 const jumpTo = (to: RouteLocationRaw) => {
   const path = router.resolve(to).fullPath;

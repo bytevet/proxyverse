@@ -14,6 +14,10 @@ import {
   WebRequestBeforeRequestDetails,
   WebRequestErrorOccurredDetails,
   WebRequestResponseStartedDetails,
+  plainSubstitutions,
+  ActionBehavior,
+  POPUP_PAGE,
+  SIDEBAR_PAGE,
 } from "./base";
 
 export class Chrome extends BaseAdapter {
@@ -34,8 +38,9 @@ export class Chrome extends BaseAdapter {
 
   onLocalStorageChanged(
     callback: (changes: Record<string, { newValue?: unknown; oldValue?: unknown }>) => void
-  ): void {
+  ): () => void {
     chrome.storage.local.onChanged.addListener(callback);
+    return () => chrome.storage.local.onChanged.removeListener(callback);
   }
 
   async setSession<T>(key: string, val: T): Promise<void> {
@@ -108,6 +113,41 @@ export class Chrome extends BaseAdapter {
 
   onTabRemoved(callback: (tabID: number) => void): void {
     chrome.tabs.onRemoved.addListener(callback);
+  }
+
+  onActiveTabChanged(callback: () => void): () => void {
+    let windowID: number | undefined;
+    chrome.windows.getCurrent().then((w) => (windowID = w.id));
+    const onActivated = (info: chrome.tabs.OnActivatedInfo) => {
+      if (info.windowId === windowID) callback();
+    };
+    const onUpdated = (
+      _: number,
+      change: chrome.tabs.OnUpdatedInfo,
+      tab: chrome.tabs.Tab
+    ) => {
+      if (tab.active && tab.windowId === windowID && change.url) callback();
+    };
+    chrome.tabs.onActivated.addListener(onActivated);
+    chrome.tabs.onUpdated.addListener(onUpdated);
+    return () => {
+      chrome.tabs.onActivated.removeListener(onActivated);
+      chrome.tabs.onUpdated.removeListener(onUpdated);
+    };
+  }
+
+  sidebarSupported(): boolean {
+    // setPanelBehavior: Chrome 116+
+    return typeof chrome.sidePanel?.setPanelBehavior === "function";
+  }
+
+  async applyActionBehavior(behavior: ActionBehavior): Promise<void> {
+    const sidebar = behavior === "sidebar" && this.sidebarSupported();
+    await chrome.action.setPopup({ popup: sidebar ? "" : POPUP_PAGE });
+    if (!this.sidebarSupported()) return;
+    // off the browser's side panel menu unless chosen
+    await chrome.sidePanel.setOptions({ enabled: sidebar, path: SIDEBAR_PAGE });
+    await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: sidebar });
   }
 
   async reloadTab(tabID: number): Promise<void> {
@@ -194,6 +234,6 @@ export class Chrome extends BaseAdapter {
     return chrome.i18n.getUILanguage();
   }
   getMessage(key: string, substitutions?: string | string[]): string {
-    return chrome.i18n.getMessage(key, substitutions);
+    return chrome.i18n.getMessage(key, plainSubstitutions(substitutions));
   }
 }

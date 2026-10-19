@@ -47,8 +47,8 @@ async function wrapProxySetting(setting: ProxySettingResultDetails) {
  * Subscribe to changes of the active profile, including edits of it (e.g.
  * a new color), in any extension context.
  */
-export function onActiveProfileChanged(callback: () => void) {
-  Host.onLocalStorageChanged((changes) => {
+export function onActiveProfileChanged(callback: () => void): () => void {
+  return Host.onLocalStorageChanged((changes) => {
     if (keyActiveProfile in changes) callback();
   });
 }

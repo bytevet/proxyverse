@@ -237,6 +237,27 @@
   "config_section_auto_switch_type_cidr_malformed": {
     "message": "Invalid CIDR. Please use the format like `192.168.1.1/24` or `2001:db8::/32`"
   },
+  "config_section_auto_switch_type_regex": {
+    "message": "URL RegExp"
+  },
+  "config_section_auto_switch_type_regex_malformed": {
+    "message": "Invalid regular expression"
+  },
+  "config_section_auto_switch_help_domain": {
+    "message": "Matches the host name with wildcards: * matches any characters (dots included), ? matches one. \"example.com\" matches that host only; add \"*.example.com\" for its subdomains. Ports and paths aren't part of the match."
+  },
+  "config_section_auto_switch_help_url": {
+    "message": "Matches the whole URL with wildcards (* and ?), e.g. \"http://example.com/api/*\".\nBrowsers hide the path and query of https:// URLs from proxy rules (Chrome since version 52, Firefox since 51), so an https:// pattern can only match up to the host, e.g. \"https://example.com/*\"."
+  },
+  "config_section_auto_switch_help_regex": {
+    "message": "A JavaScript regular expression tested against the whole URL. It is case-sensitive and matches anywhere in the URL unless anchored with ^ and $$, e.g. \"^https?://(www\\.)?example\\.com/\".\nBrowsers hide the path and query of https:// URLs from proxy rules (Chrome since version 52, Firefox since 51): an https:// URL is seen as \"https://example.com/\" only, so its path can't be matched."
+  },
+  "config_section_auto_switch_help_cidr": {
+    "message": "Matches requests to an IP address in the range, e.g. \"192.168.0.0/16\" or \"2001:db8::/32\". A request by host name matches when the name resolves into the range, which costs a DNS lookup."
+  },
+  "config_section_auto_switch_help_disabled": {
+    "message": "The rule is kept but skipped, until you pick a condition type again."
+  },
   "config_section_auto_switch_type_disabled": {
     "message": "Temporarily Skip"
   },
@@ -300,12 +321,48 @@
     "message": "Error occurred: $1"
   },
 
+  "preferences_section_interface": {
+    "message": "Interface"
+  },
+
+  "preferences_theme": {
+    "message": "Theme"
+  },
+
+  "preferences_action_behavior": {
+    "message": "Toolbar icon opens"
+  },
+
+  "preferences_action_behavior_popup": {
+    "message": "Popup"
+  },
+
+  "preferences_action_behavior_sidebar": {
+    "message": "Sidebar"
+  },
+
+  "preferences_action_behavior_hint": {
+    "message": "The sidebar stays open beside your pages and follows the active tab."
+  },
+
+  "preferences_action_behavior_sidebar_unsupported": {
+    "message": "This browser version can't open a sidebar from the toolbar icon."
+  },
+
   "preferences_section_import_export": {
     "message": "Import & Export"
   },
 
   "preferences_section_import_export_desc": {
     "message": "Export your proxy profiles to a file for backup or sharing, or import them to restore profiles when needed."
+  },
+
+  "preferences_section_import_switchyomega": {
+    "message": "Import Profiles also accepts a ProxySwitchyOmega / ZeroOmega backup (.bak). Anything that can't be converted exactly is listed after the import."
+  },
+
+  "preferences_tag_beta": {
+    "message": "Beta"
   },
 
   "preferences_action_profile_export": {
@@ -326,6 +383,66 @@
 
   "preferences_feedback_n_profiles_being_imported": {
     "message": "$1 profiles have been imported"
+  },
+
+  "preferences_feedback_profiles_not_exported": {
+    "message": "Invalid profiles were not exported: $1"
+  },
+
+  "preferences_import_warnings_title": {
+    "message": "Imported with warnings"
+  },
+
+  "preferences_import_warnings_desc": {
+    "message": "Some settings couldn't be imported exactly. Please review these profiles."
+  },
+
+  "preferences_import_warnings_more": {
+    "message": "… and $1 more"
+  },
+
+  "import_warn_invalid_profile": {
+    "message": "Skipped, invalid profile: $1"
+  },
+
+  "import_warn_reserved_id": {
+    "message": "Skipped: the profile ID \"$1\" is reserved"
+  },
+
+  "import_warn_duplicate_id": {
+    "message": "Skipped: the profile ID \"$1\" appears more than once"
+  },
+
+  "import_warn_unknown_reference": {
+    "message": "Refers to a profile that doesn't exist: $1"
+  },
+
+  "import_warn_unknown_profile_type": {
+    "message": "Skipped: profile type \"$1\" isn't supported"
+  },
+
+  "import_warn_unsupported_condition": {
+    "message": "Rule \"$1\" can't be converted and was imported as disabled"
+  },
+
+  "import_warn_ip_condition": {
+    "message": "IP rule \"$1\" also matches host names resolving into this range"
+  },
+
+  "import_warn_bypass_dropped": {
+    "message": "Bypass rule \"$1\" isn't supported and was left out"
+  },
+
+  "import_warn_pac_auth_dropped": {
+    "message": "PAC proxy credentials aren't supported and were left out"
+  },
+
+  "import_warn_pac_file_url": {
+    "message": "The local PAC file \"$1\" can't be refreshed; its last loaded script was imported"
+  },
+
+  "import_warn_rule_list_static": {
+    "message": "Rules from \"$1\" were imported as fixed rules and won't update automatically"
   },
 
   "form_is_required": {

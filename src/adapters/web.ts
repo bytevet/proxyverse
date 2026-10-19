@@ -14,6 +14,7 @@ import {
   WebRequestBeforeRequestDetails,
   WebRequestErrorOccurredDetails,
   WebRequestResponseStartedDetails,
+  ActionBehavior,
 } from "./base";
 
 import i18nData from "@/../public/_locales/en/messages.json";
@@ -47,8 +48,11 @@ export class WebBrowser extends BaseAdapter {
 
   onLocalStorageChanged(
     callback: (changes: Record<string, { newValue?: unknown; oldValue?: unknown }>) => void
-  ): void {
+  ): () => void {
     this.storageListeners.push(callback);
+    return () => {
+      this.storageListeners = this.storageListeners.filter((l) => l !== callback);
+    };
   }
 
   private session: Record<string, unknown> = {};
@@ -122,6 +126,15 @@ export class WebBrowser extends BaseAdapter {
   }
   onTabRemoved(_callback: (tabID: number) => void): void {
     throw new Error("Method not implemented.");
+  }
+  onActiveTabChanged(_callback: () => void): () => void {
+    return () => {};
+  }
+  sidebarSupported(): boolean {
+    return false;
+  }
+  async applyActionBehavior(behavior: ActionBehavior): Promise<void> {
+    console.log(`Toolbar icon opens: ${behavior}`);
   }
   async reloadTab(tabID: number): Promise<void> {
     console.log(`Reload tab: ${tabID}`);

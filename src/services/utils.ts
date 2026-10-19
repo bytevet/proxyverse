@@ -26,3 +26,11 @@ export function parseWebURL(url?: string): URL | undefined {
     return undefined;
   }
 }
+
+/** Decode base64 holding UTF-8 text. */
+export function decodeBase64(text: string): string {
+  const binary = atob(text.replace(/\s/g, ""));
+  return new TextDecoder().decode(
+    Uint8Array.from(binary, (c) => c.charCodeAt(0))
+  );
+}
