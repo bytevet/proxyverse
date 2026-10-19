@@ -18,6 +18,7 @@ declare module 'vue' {
     ACollapse: typeof import('@arco-design/web-vue')['Collapse']
     ACollapseItem: typeof import('@arco-design/web-vue')['CollapseItem']
     AColorPicker: typeof import('@arco-design/web-vue')['ColorPicker']
+    AConfigProvider: typeof import('@arco-design/web-vue')['ConfigProvider']
     ADgroup: typeof import('@arco-design/web-vue')['Dgroup']
     ADivider: typeof import('@arco-design/web-vue')['Divider']
     ADoption: typeof import('@arco-design/web-vue')['Doption']

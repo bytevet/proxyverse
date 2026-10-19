@@ -7,3 +7,39 @@ html {
   min-height: 100vh;
   display: flex;
 }
+
+/* arrows that point along the reading direction */
+[dir="rtl"] .flip-rtl {
+  transform: scaleX(-1);
+}
+
+/* each value in its own direction: hosts and URLs stay left to right */
+[dir="rtl"] input,
+[dir="rtl"] textarea {
+  unicode-bidi: plaintext;
+}
+
+/* Arco only mirrors a few components: mirror the spacing of the ones we use
+   (the shorthands also clear the side Arco set) */
+[dir="rtl"] .arco-btn:not(.arco-btn-only-icon) .arco-btn-icon {
+  margin-inline: 0 8px;
+}
+[dir="rtl"] .arco-btn-size-mini:not(.arco-btn-only-icon) .arco-btn-icon {
+  margin-inline-end: 4px;
+}
+[dir="rtl"] .arco-btn-size-small:not(.arco-btn-only-icon) .arco-btn-icon {
+  margin-inline-end: 6px;
+}
+[dir="rtl"] .arco-menu .arco-menu-item .arco-menu-icon {
+  margin-inline: 0 16px;
+}
+[dir="rtl"] .arco-form-item-label-col {
+  padding-inline: 0 16px;
+}
+[dir="rtl"] .arco-checkbox-label,
+[dir="rtl"] .arco-radio-label {
+  margin-inline: 8px 0;
+}
+[dir="rtl"] .arco-link-icon {
+  margin-inline: 0 6px;
+}
