@@ -325,6 +325,14 @@
     "message": "Interface"
   },
 
+  "preferences_language": {
+    "message": "Language"
+  },
+
+  "preferences_language_auto": {
+    "message": "Follow browser ($1)"
+  },
+
   "preferences_theme": {
     "message": "Theme"
   },

@@ -1,6 +1,6 @@
 import { test, expect } from "../fixtures";
 import { expectRoute } from "../fixtures/routing";
-import { toast } from "../pages/arco";
+import { chooseOption, toast } from "../pages/arco";
 import { Preference } from "../pages/preference";
 import {
   autoProfile,
@@ -70,6 +70,47 @@ test.describe("preference", () => {
     await expect(popup.page.locator("body")).not.toHaveAttribute(
       "arco-theme",
       "dark"
+    );
+  });
+
+  test("the UI language can be chosen", async ({
+    sw,
+    openConfig,
+    openPopup,
+  }) => {
+    const popup = await openPopup();
+    const page = await openConfig("/preference");
+    const importButton = page.getByTestId("import-profiles");
+    await expect(importButton).toHaveText("Import Profiles");
+
+    await chooseOption(page, page.getByTestId("pref-language"), "简体中文");
+    await expect.poll(() => sw.getLocal("ui.language")).toBe("zh_CN");
+
+    // the page reloads in Chinese
+    await expect(importButton).toHaveText("导入配置");
+    await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
+    await expect(page.getByText("界面", { exact: true })).toBeVisible();
+    // Arco's own texts follow
+    await importButton.click();
+    await expect(
+      page.locator(".arco-popconfirm:visible .arco-btn-primary")
+    ).toHaveText("确定");
+    // so do the other open pages
+    await expect(popup.page.getByTestId("popup-profile-direct")).toHaveText(
+      "直接连接"
+    );
+
+    // back to the browser's language
+    await page.keyboard.press("Escape");
+    // "Follow browser (<browser language>)", in Chinese
+    await page.getByTestId("pref-language").click();
+    await page
+      .locator(".arco-select-dropdown:visible .arco-select-option")
+      .filter({ hasText: /^\s*跟随浏览器（/ })
+      .click();
+    await expect(importButton).toHaveText("Import Profiles");
+    await expect(popup.page.getByTestId("popup-profile-direct")).toHaveText(
+      "Direct"
     );
   });
 

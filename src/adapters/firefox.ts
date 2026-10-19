@@ -12,7 +12,6 @@ import {
   WebRequestBeforeRequestDetails,
   WebRequestErrorOccurredDetails,
   WebRequestResponseStartedDetails,
-  plainSubstitutions,
   ActionBehavior,
   POPUP_PAGE,
 } from "./base";
@@ -258,18 +257,18 @@ export class Firefox extends BaseAdapter {
     browser.alarms.onAlarm.addListener((alarm) => callback(alarm.name));
   }
 
-  currentLocale(): string {
+  protected nativeLocale(): string {
     return browser.i18n.getUILanguage();
   }
-  getMessage(key: string, substitutions?: string | string[]): string {
-    return browser.i18n.getMessage(key, plainSubstitutions(substitutions));
+  protected nativeMessage(key: string, substitutions?: string | string[]) {
+    return browser.i18n.getMessage(key, substitutions);
   }
 
   // compatible issues
   async error(): Promise<string | undefined> {
     // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/proxy/settings
     if (!(await browser.extension.isAllowedIncognitoAccess())) {
-      return browser.i18n.getMessage("firefox_incognito_access_error_html");
+      return this.getMessage("firefox_incognito_access_error_html");
     }
 
     return;

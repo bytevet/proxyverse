@@ -55,6 +55,7 @@ declare module 'vue' {
     AutoSwitchInput: typeof import('./src/components/configs/AutoSwitchInput.vue')['default']
     AutoSwitchPacPreview: typeof import('./src/components/configs/AutoSwitchPacPreview.vue')['default']
     FailedResourcesAlert: typeof import('./src/components/FailedResourcesAlert.vue')['default']
+    IconBrowserPanel: typeof import('./src/components/icons/IconBrowserPanel.vue')['default']
     PreferencePage: typeof import('./src/components/PreferencePage.vue')['default']
     ProfileConfig: typeof import('./src/components/ProfileConfig.vue')['default']
     ProfileOptions: typeof import('./src/components/configs/ProfileOptions.vue')['default']

@@ -104,4 +104,4 @@ The `vite.config.ts` `TRANSFORMER_CONFIG` rewrites `manifest.json` at build time
 
 ## i18n
 
-Translation strings live in `public/_locales/{locale}/messages.json`. Translations are managed via Transifex.
+Translation strings live in `public/_locales/{locale}/messages.json`. Translations are managed via Transifex. `chrome.i18n` only knows the browser's language, so a language chosen in Preference (`ui.language`, `src/services/i18n.ts`) is loaded from those files before the app mounts and installed as the adapters' message override (per-message fallback to `en`, Chrome's `$1`/`$$`/placeholder formatting); changing it reloads every open page. Add a new locale to `LANGUAGES` too (a unit test checks they match).

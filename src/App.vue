@@ -7,6 +7,7 @@ import zhCN from "@arco-design/web-vue/es/locale/lang/zh-cn";
 import zhTW from "@arco-design/web-vue/es/locale/lang/zh-tw";
 import ptPT from "@arco-design/web-vue/es/locale/lang/pt-pt";
 import { followDarkMode } from "./services/preference";
+import { followLanguage } from "./services/i18n";
 import type { ArcoLang } from "@arco-design/web-vue/es/locale/interface";
 import { Host } from "./adapters";
 import { useRoute } from "vue-router";
@@ -41,6 +42,7 @@ try {
 }
 
 followDarkMode();
+followLanguage();
 onMounted(async () => {
   const err = await Host.error();
   if (err) {

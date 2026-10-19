@@ -5,12 +5,20 @@ import type { ImportWarning } from "@/services/config";
 import { listProfiles, saveManyProfiles } from "@/services/profile";
 import { DarkMode, useDarkMode } from "@/services/preference";
 import {
+  LANGUAGES,
+  type Language,
+  browserLanguageName,
+  getLanguage,
+  setLanguage,
+} from "@/services/i18n";
+import {
   type ActionBehavior,
   getActionBehavior,
   onActionBehaviorChanged,
   setActionBehavior,
 } from "@/services/ui";
 import { useFileDialog } from "@vueuse/core";
+import IconBrowserPanel from "@/components/icons/IconBrowserPanel.vue";
 import { Notification } from "@arco-design/web-vue";
 import {
   IconSettings,
@@ -25,8 +33,18 @@ import {
 const darkMode = useDarkMode();
 const sidebarSupported = Host.sidebarSupported();
 const actionBehavior = ref<ActionBehavior>("popup");
+// a change reloads every open page, this one included (followLanguage)
+const language = ref<Language>("auto");
+const languageOptions = [
+  {
+    value: "auto",
+    label: Host.getMessage("preferences_language_auto", browserLanguageName()),
+  },
+  ...LANGUAGES.map((l) => ({ value: l.code, label: l.name })),
+];
 let unsubscribeActionBehavior: (() => void) | undefined;
 onMounted(async () => {
+  language.value = await getLanguage();
   actionBehavior.value = await getActionBehavior();
   unsubscribeActionBehavior = onActionBehaviorChanged(
     (b) => (actionBehavior.value = b)
@@ -156,6 +174,16 @@ const exportProfiles = async () => {
       }}</a-divider>
 
       <a-form :model="{}" auto-label-width>
+        <a-form-item :label="$t('preferences_language')">
+          <a-select
+            data-testid="pref-language"
+            :options="languageOptions"
+            :model-value="language"
+            @change="(v) => setLanguage(v as Language)"
+            :style="{ width: '320px', maxWidth: '100%' }"
+          />
+        </a-form-item>
+
         <a-form-item :label="$t('preferences_theme')">
           <a-radio-group
             type="button"
@@ -188,14 +216,14 @@ const exportProfiles = async () => {
             @change="(v) => changeActionBehavior(v as ActionBehavior)"
           >
             <a-radio value="popup" data-testid="pref-action-popup">
-              {{ $t("preferences_action_behavior_popup") }}
+              <icon-browser-panel panel="popup" /> {{ $t("preferences_action_behavior_popup") }}
             </a-radio>
             <a-radio
               value="sidebar"
               data-testid="pref-action-sidebar"
               :disabled="!sidebarSupported"
             >
-              {{ $t("preferences_action_behavior_sidebar") }}
+              <icon-browser-panel panel="sidebar" /> {{ $t("preferences_action_behavior_sidebar") }}
             </a-radio>
           </a-radio-group>
         </a-form-item>

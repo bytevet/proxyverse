@@ -69,13 +69,26 @@ export type ProxySettingResultDetails =
 
 /**
  * i18n APIs silently drop substitutions passed as a Proxy (e.g. a Vue
- * reactive array), so adapters give them a plain array. A free function:
- * `getMessage` is called unbound, as `$t`.
+ * reactive array), so they always get a plain array.
  */
 export function plainSubstitutions(substitutions?: string | string[]) {
   return typeof substitutions === "object"
     ? Array.from(substitutions, String)
     : substitutions;
+}
+
+/**
+ * A UI language chosen in the extension, overriding the browser's, which
+ * is all the native i18n APIs know (see `src/services/i18n.ts`).
+ */
+export type MessageOverride = {
+  locale: string; // BCP 47, e.g. "zh-CN"
+  getMessage(key: string, substitutions?: string | string[]): string;
+};
+let messageOverride: MessageOverride | undefined;
+
+export function setMessageOverride(override: MessageOverride | undefined) {
+  messageOverride = override;
 }
 
 export type ActionBehavior = "popup" | "sidebar";
@@ -198,9 +211,22 @@ export abstract class BaseAdapter {
   abstract getAllAlarmNames(): Promise<string[]>;
   abstract onAlarm(callback: (name: string) => void): void;
 
-  // i18n
-  abstract currentLocale(): string;
-  abstract getMessage(key: string, substitutions?: string | string[]): string;
+  // i18n: the chosen language if any, else the browser's. Arrow functions,
+  // as `getMessage` is also called unbound, as `$t`.
+  readonly currentLocale = (): string =>
+    messageOverride?.locale ?? this.nativeLocale();
+  readonly getMessage = (
+    key: string,
+    substitutions?: string | string[]
+  ): string =>
+    messageOverride?.getMessage(key, substitutions) ??
+    this.nativeMessage(key, plainSubstitutions(substitutions));
+
+  protected abstract nativeLocale(): string;
+  protected abstract nativeMessage(
+    key: string,
+    substitutions?: string | string[]
+  ): string;
 
   // compatible issues, return an error message in HTML format
   async error(): Promise<string | undefined> {

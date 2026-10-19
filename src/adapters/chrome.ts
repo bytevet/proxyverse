@@ -14,7 +14,6 @@ import {
   WebRequestBeforeRequestDetails,
   WebRequestErrorOccurredDetails,
   WebRequestResponseStartedDetails,
-  plainSubstitutions,
   ActionBehavior,
   POPUP_PAGE,
   SIDEBAR_PAGE,
@@ -230,10 +229,10 @@ export class Chrome extends BaseAdapter {
     chrome.alarms.onAlarm.addListener((alarm) => callback(alarm.name));
   }
 
-  currentLocale(): string {
+  protected nativeLocale(): string {
     return chrome.i18n.getUILanguage();
   }
-  getMessage(key: string, substitutions?: string | string[]): string {
-    return chrome.i18n.getMessage(key, plainSubstitutions(substitutions));
+  protected nativeMessage(key: string, substitutions?: string | string[]) {
+    return chrome.i18n.getMessage(key, substitutions);
   }
 }

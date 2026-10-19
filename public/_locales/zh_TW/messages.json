@@ -10,20 +10,20 @@
     "message": "設定"
   },
   "nav_custom_profiles": {
-    "message": "自訂檔案"
+    "message": "自訂設定檔"
   },
   "nav_system_profiles": {
     "message": "預設"
   },
 
   "theme_light_mode": {
-    "message": "日間模式"
+    "message": "淺色模式"
   },
   "theme_dark_mode": {
-    "message": "黑暗模式"
+    "message": "深色模式"
   },
   "theme_auto_mode": {
-    "message": "遵循系統"
+    "message": "跟隨系統"
   },
 
   "mode_auto_switch": {
@@ -32,16 +32,79 @@
   "mode_auto_switch_abbr": {
     "message": "自動"
   },
+  "mode_auto_switch_via": {
+    "message": "此網站經由"
+  },
+  "mode_auto_switch_uncertain": {
+    "message": "推測結果。實際使用的代理可能不同，因為以 IP 為準的規則無法判斷主機名稱。"
+  },
+  "mode_auto_switch_scope_host": {
+    "message": "此網站"
+  },
+  "mode_auto_switch_rule_saved": {
+    "message": "已為 $1 儲存規則"
+  },
+  "action_reload_tab": {
+    "message": "重新載入分頁"
+  },
+  "stats_failed_resources": {
+    "message": "$1 個資源載入失敗"
+  },
+  "stats_details": {
+    "message": "詳細資料"
+  },
+  "resources_title": {
+    "message": "資源"
+  },
+  "resources_filter_all": {
+    "message": "全部"
+  },
+  "resources_filter_failed": {
+    "message": "失敗"
+  },
+  "resources_empty": {
+    "message": "尚無資源紀錄。重新載入頁面即可記錄。"
+  },
+  "resource_type_main": {
+    "message": "主文件"
+  },
+  "resource_type_iframe": {
+    "message": "iframe"
+  },
+  "resource_type_stylesheet": {
+    "message": "css"
+  },
+  "resource_type_script": {
+    "message": "腳本"
+  },
+  "resource_type_image": {
+    "message": "圖片"
+  },
+  "resource_type_font": {
+    "message": "字型"
+  },
+  "resource_type_xhr": {
+    "message": "xhr"
+  },
+  "resource_type_media": {
+    "message": "媒體"
+  },
+  "resource_type_websocket": {
+    "message": "ws"
+  },
+  "resource_type_other": {
+    "message": "其他"
+  },
 
 
   "mode_direct": {
-    "message": "直通模式"
+    "message": "直接連線"
   },
   "mode_system": {
     "message": "使用系統代理"
   },
   "mode_profile_create": {
-    "message": "建立新的檔案"
+    "message": "建立新設定檔"
   },
 
   "config_proxy_type": {
@@ -52,6 +115,54 @@
   },
   "config_proxy_type_pac": {
     "message": "PAC 腳本"
+  },
+  "config_section_pac_url": {
+    "message": "PAC 腳本 URL"
+  },
+  "config_section_pac_url_placeholder": {
+    "message": "https://example.com/proxy.pac"
+  },
+  "config_section_pac_url_hint": {
+    "message": "選填。設定後，會在背景定期更新腳本內容。"
+  },
+  "config_action_pac_fetch": {
+    "message": "立即取得"
+  },
+  "config_feedback_pac_fetched": {
+    "message": "已成功取得 PAC 腳本。"
+  },
+  "config_feedback_pac_fetch_failed": {
+    "message": "無法取得 PAC 腳本：$1"
+  },
+  "config_pac_last_fetched": {
+    "message": "上次取得：$1"
+  },
+  "config_pac_last_error": {
+    "message": "上次取得時發生錯誤：$1"
+  },
+  "config_pac_manual_edit_warning": {
+    "message": "已設定來源 URL，手動編輯的內容會在下次更新時被覆寫。"
+  },
+  "config_section_pac_refresh_interval": {
+    "message": "更新頻率"
+  },
+  "config_section_pac_refresh_interval_hint": {
+    "message": "在背景重新取得 PAC 腳本的頻率。"
+  },
+  "config_pac_refresh_interval_minutes": {
+    "message": "每 $1 分鐘"
+  },
+  "config_pac_refresh_interval_one_hour": {
+    "message": "每小時"
+  },
+  "config_pac_refresh_interval_hours": {
+    "message": "每 $1 小時"
+  },
+  "config_pac_refresh_interval_one_day": {
+    "message": "每天"
+  },
+  "config_pac_refresh_interval_disabled": {
+    "message": "停用（僅限手動）"
   },
   "config_proxy_type_auto": {
     "message": "自動切換"
@@ -78,7 +189,7 @@
     "message": "如果您的代理需要驗證，請設定使用者名稱和密碼"
   },
   "config_section_proxy_auth_unsupported": {
-    "message": "當前的代理類型不支援認證"
+    "message": "目前的代理類型不支援驗證"
   },
   "config_section_proxy_auth_title": {
     "message": "代理認證"
@@ -116,13 +227,34 @@
     "message": "無效 URL"
   },
   "config_section_auto_switch_type_url_malformed_chrome": {
-    "message": "基於资安理由，Chrome 不支援 HTTPS URL 中的路徑匹配。進一步了解 https://issues.chromium.org/40083832"
+    "message": "基於資安理由，Chrome 不支援比對 HTTPS URL 中的路徑。進一步了解：https://issues.chromium.org/40083832"
   },
   "config_section_auto_switch_type_cidr": {
     "message": "CIDR"
   },
   "config_section_auto_switch_type_cidr_malformed": {
     "message": "無效 CIDR。請使用`192.168.1.1/24`或`2001:db8::/32`等格式。"
+  },
+  "config_section_auto_switch_type_regex": {
+    "message": "URL 規則運算式"
+  },
+  "config_section_auto_switch_type_regex_malformed": {
+    "message": "無效的規則運算式"
+  },
+  "config_section_auto_switch_help_domain": {
+    "message": "以萬用字元比對主機名稱：* 代表任意字元（包含點），? 代表單一字元。「example.com」僅比對該主機；若要包含子網域，請另外加上「*.example.com」。連接埠和路徑不納入比對。"
+  },
+  "config_section_auto_switch_help_url": {
+    "message": "以萬用字元（* 和 ?）比對完整 URL，例如「http://example.com/api/*」。\n瀏覽器不會將 https:// URL 的路徑和查詢參數提供給代理規則（Chrome 52 起、Firefox 51 起），因此 https:// 的規則最多只能比對到主機，例如「https://example.com/*」。"
+  },
+  "config_section_auto_switch_help_regex": {
+    "message": "以 JavaScript 規則運算式比對完整 URL，區分大小寫；除非以 ^ 和 $$ 錨定，否則可比對 URL 中的任何位置，例如「^https?://(www\\.)?example\\.com/」。\n瀏覽器不會將 https:// URL 的路徑和查詢參數提供給代理規則（Chrome 52 起、Firefox 51 起）：https:// URL 只會被視為「https://example.com/」，因此無法比對其路徑。"
+  },
+  "config_section_auto_switch_help_cidr": {
+    "message": "比對目標 IP 位址位於此範圍內的請求，例如「192.168.0.0/16」或「2001:db8::/32」。以主機名稱發出的請求，會在名稱解析到此範圍時符合，這需要一次 DNS 查詢。"
+  },
+  "config_section_auto_switch_help_disabled": {
+    "message": "保留此規則但暫時略過，直到重新選擇條件類型。"
   },
   "config_section_auto_switch_type_disabled": {
     "message": "暫時略過"
@@ -140,13 +272,13 @@
     "message": "新增規則"
   },
   "config_section_auto_switch_delete_rule": {
-    "message": "刪除當前規則"
+    "message": "刪除此規則"
   },
   "config_section_auto_switch_duplicate_rule": {
-    "message": "重複當前規則"
+    "message": "複製此規則"
   },
   "config_section_auto_switch_default_profile": {
-    "message": "預設檔案"
+    "message": "預設設定檔"
   },
   "config_section_auto_switch_pac_preview": {
     "message": "預覽 PAC 腳本"
@@ -156,7 +288,7 @@
     "message": "編輯"
   },
   "config_action_delete": {
-    "message": "刪除檔案"
+    "message": "刪除設定檔"
   },
   "config_action_delete_double_confirm": {
     "message": "您確定要刪除目前的設定檔嗎？"
@@ -172,19 +304,46 @@
   },
 
   "config_feedback_saved": {
-    "message": "檔案已儲存"
+    "message": "設定檔已儲存"
   },
   "config_feedback_copied": {
     "message": "已複製"
   },
   "config_feedback_deleted": {
-    "message": "檔案已刪除"
+    "message": "設定檔已刪除"
   },
   "config_feedback_unknown_profile": {
-    "message": "不明檔案"
+    "message": "不明的設定檔"
   },
   "config_feedback_error_occurred": {
-    "message": "發生錯誤： $1"
+    "message": "發生錯誤：$1"
+  },
+  "preferences_section_interface": {
+    "message": "介面"
+  },
+  "preferences_language": {
+    "message": "語言"
+  },
+  "preferences_language_auto": {
+    "message": "跟隨瀏覽器（$1）"
+  },
+  "preferences_theme": {
+    "message": "主題"
+  },
+  "preferences_action_behavior": {
+    "message": "點擊工具列圖示時開啟"
+  },
+  "preferences_action_behavior_popup": {
+    "message": "彈出式視窗"
+  },
+  "preferences_action_behavior_sidebar": {
+    "message": "側邊欄"
+  },
+  "preferences_action_behavior_hint": {
+    "message": "側邊欄會在網頁旁保持開啟，並跟隨目前的分頁。"
+  },
+  "preferences_action_behavior_sidebar_unsupported": {
+    "message": "此瀏覽器版本無法從工具列圖示開啟側邊欄。"
   },
 
   "preferences_section_import_export": {
@@ -193,6 +352,12 @@
 
   "preferences_section_import_export_desc": {
     "message": "將您的代理伺服器設定檔匯出至檔案，以便備份或分享，並可匯入以還原。"
+  },
+  "preferences_section_import_switchyomega": {
+    "message": "「匯入設定檔」也支援 ProxySwitchyOmega / ZeroOmega 的備份檔（.bak）。無法完整轉換的項目會在匯入後列出。"
+  },
+  "preferences_tag_beta": {
+    "message": "Beta"
   },
 
   "preferences_action_profile_export": {
@@ -214,9 +379,57 @@
   "preferences_feedback_n_profiles_being_imported": {
     "message": "已匯入 $1 個設定檔"
   },
+  "preferences_feedback_profiles_not_exported": {
+    "message": "以下無效的設定檔未匯出：$1"
+  },
+  "preferences_import_warnings_title": {
+    "message": "匯入完成，但有警告"
+  },
+  "preferences_import_warnings_desc": {
+    "message": "部分設定無法完整匯入，請檢查以下設定檔。"
+  },
+  "preferences_import_warnings_more": {
+    "message": "……還有 $1 項"
+  },
+  "import_warn_invalid_profile": {
+    "message": "已略過，無效的設定檔：$1"
+  },
+  "import_warn_reserved_id": {
+    "message": "已略過：設定檔 ID「$1」為保留 ID"
+  },
+  "import_warn_duplicate_id": {
+    "message": "已略過：設定檔 ID「$1」重複出現"
+  },
+  "import_warn_unknown_reference": {
+    "message": "參照了不存在的設定檔：$1"
+  },
+  "import_warn_unknown_profile_type": {
+    "message": "已略過：不支援設定檔類型「$1」"
+  },
+  "import_warn_unsupported_condition": {
+    "message": "規則「$1」無法轉換，已匯入為停用的規則"
+  },
+  "import_warn_ip_condition": {
+    "message": "IP 規則「$1」也會比對解析到此範圍的主機名稱"
+  },
+  "import_warn_bypass_dropped": {
+    "message": "不支援旁路規則「$1」，已略過"
+  },
+  "import_warn_pac_auth_dropped": {
+    "message": "不支援 PAC 代理的驗證資訊，已略過"
+  },
+  "import_warn_pac_file_url": {
+    "message": "無法更新本機 PAC 檔案「$1」，已匯入其最後載入的腳本"
+  },
+  "import_warn_rule_list_static": {
+    "message": "來自「$1」的規則已匯入為固定規則，不會自動更新"
+  },
 
   "form_is_required": {
-    "message": "$1 是必需的"
+    "message": "$1 為必填"
+  },
+  "form_invalid_url": {
+    "message": "$1 必須是有效的 http:// 或 https:// URL"
   },
 
   "feedback_error": {

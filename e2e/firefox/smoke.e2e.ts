@@ -142,4 +142,22 @@ test.describe("firefox smoke", () => {
     await ff.openExtensionPage("/sidebar");
     await ff.byTestId("popup-profile-direct");
   });
+
+  test("the chosen UI language applies", async () => {
+    const setLanguage = (language: string) =>
+      ff.driver.executeAsyncScript(
+        `const [language, done] = arguments;
+        browser.storage.local.set({ "ui.language": language }).then(() => done());`,
+        language
+      );
+
+    await ff.openExtensionPage("/popup");
+    await setLanguage("zh_CN");
+    await ff.driver.navigate().refresh();
+    await expect
+      .poll(async () => (await ff.byTestId("popup-profile-direct")).getText())
+      .toBe("直接连接");
+
+    await setLanguage("auto");
+  });
 });
