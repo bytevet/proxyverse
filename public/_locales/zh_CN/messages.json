@@ -32,6 +32,7 @@
   "mode_auto_switch_abbr": {
     "message": "自动"
   },
+
   "mode_auto_switch_via": {
     "message": "此网站经由"
   },
@@ -47,12 +48,14 @@
   "action_reload_tab": {
     "message": "重新加载标签页"
   },
+
   "stats_failed_resources": {
     "message": "$1 个资源加载失败"
   },
   "stats_details": {
     "message": "详情"
   },
+
   "resources_title": {
     "message": "资源"
   },
@@ -95,7 +98,6 @@
   "resource_type_other": {
     "message": "其他"
   },
-
 
   "mode_direct": {
     "message": "直接连接"
@@ -189,10 +191,10 @@
     "message": "如果您的代理需要身份验证，请设置用户名和密码"
   },
   "config_section_proxy_auth_unsupported": {
-    "message": "当前代理类型暂不支持鉴权"
+    "message": "当前代理类型不支持身份验证"
   },
   "config_section_proxy_auth_title": {
-    "message": "代理认证信息"
+    "message": "代理身份验证"
   },
   "config_section_proxy_auth_username": {
     "message": "用户名"
@@ -202,13 +204,13 @@
   },
 
   "config_section_bypass_list": {
-    "message": "Bypass 列表"
+    "message": "代理绕过列表"
   },
   "config_section_advance": {
     "message": "高级配置"
   },
   "config_reference_bypass_list": {
-    "message": "详细了解 Bypass 列表"
+    "message": "详细了解代理绕过列表"
   },
 
   "config_section_auto_switch_rules": {
@@ -233,7 +235,7 @@
     "message": "CIDR"
   },
   "config_section_auto_switch_type_cidr_malformed": {
-    "message": "无效 CIDR。请使用 \"192.168.1.1/24\" 或 \"2001:db8::/32\" 等格式。"
+    "message": "无效 CIDR。请使用 `192.168.1.1/24` 或 `2001:db8::/32` 等格式。"
   },
   "config_section_auto_switch_type_regex": {
     "message": "URL 正则"
@@ -260,7 +262,7 @@
     "message": "临时禁用"
   },
   "config_section_auto_switch_condition": {
-    "message": "匹配规则"
+    "message": "匹配条件"
   },
   "config_section_auto_switch_profile": {
     "message": "分流至"
@@ -318,30 +320,39 @@
   "config_feedback_error_occurred": {
     "message": "发生错误：$1"
   },
+
   "preferences_section_interface": {
     "message": "界面"
   },
+
   "preferences_language": {
     "message": "语言"
   },
+
   "preferences_language_auto": {
     "message": "跟随浏览器（$1）"
   },
+
   "preferences_theme": {
     "message": "主题"
   },
+
   "preferences_action_behavior": {
     "message": "点击工具栏图标时打开"
   },
+
   "preferences_action_behavior_popup": {
     "message": "弹出窗口"
   },
+
   "preferences_action_behavior_sidebar": {
     "message": "侧边栏"
   },
+
   "preferences_action_behavior_hint": {
     "message": "侧边栏会在网页旁保持打开，并跟随当前标签页。"
   },
+
   "preferences_action_behavior_sidebar_unsupported": {
     "message": "当前浏览器版本不支持通过工具栏图标打开侧边栏。"
   },
@@ -353,9 +364,11 @@
   "preferences_section_import_export_desc": {
     "message": "将代理配置导出成文件以便进行备份或分享，也可导入文件还原配置。"
   },
+
   "preferences_section_import_switchyomega": {
     "message": "“导入配置”也支持 ProxySwitchyOmega / ZeroOmega 的备份文件（.bak）。无法完全转换的内容会在导入后列出。"
   },
+
   "preferences_tag_beta": {
     "message": "Beta"
   },
@@ -369,7 +382,7 @@
   },
 
   "preferences_feedback_no_profile_to_be_exported": {
-    "message": "没有可以导出的配置"
+    "message": "没有可导出的有效配置"
   },
 
   "preferences_tips_profile_overwrite": {
@@ -379,54 +392,69 @@
   "preferences_feedback_n_profiles_being_imported": {
     "message": "已导入 $1 个配置"
   },
+
   "preferences_feedback_profiles_not_exported": {
     "message": "以下无效配置未导出：$1"
   },
+
   "preferences_import_warnings_title": {
     "message": "导入完成，但有警告"
   },
+
   "preferences_import_warnings_desc": {
     "message": "部分设置无法完全导入，请检查以下配置。"
   },
+
   "preferences_import_warnings_more": {
     "message": "……另有 $1 项"
   },
+
   "import_warn_invalid_profile": {
     "message": "已跳过，无效配置：$1"
   },
+
   "import_warn_reserved_id": {
     "message": "已跳过：配置 ID“$1”为保留 ID"
   },
+
   "import_warn_duplicate_id": {
     "message": "已跳过：配置 ID“$1”重复出现"
   },
+
   "import_warn_unknown_reference": {
     "message": "引用了不存在的配置：$1"
   },
+
   "import_warn_unknown_profile_type": {
     "message": "已跳过：不支持配置类型“$1”"
   },
+
   "import_warn_unsupported_condition": {
     "message": "规则“$1”无法转换，已作为禁用规则导入"
   },
+
   "import_warn_ip_condition": {
     "message": "IP 规则“$1”也会匹配解析到该网段的主机名"
   },
+
   "import_warn_bypass_dropped": {
-    "message": "不支持 Bypass 规则“$1”，已忽略"
+    "message": "不支持代理绕过规则“$1”，已忽略"
   },
+
   "import_warn_pac_auth_dropped": {
     "message": "不支持 PAC 代理的认证信息，已忽略"
   },
+
   "import_warn_pac_file_url": {
     "message": "无法更新本地 PAC 文件“$1”，已导入其最后加载的脚本"
   },
+
   "import_warn_rule_list_static": {
     "message": "来自“$1”的规则已作为固定规则导入，不会自动更新"
   },
 
   "form_is_required": {
-    "message": "$1是必填项"
+    "message": "$1 是必填项"
   },
   "form_invalid_url": {
     "message": "$1 必须是有效的 http:// 或 https:// URL"
@@ -437,7 +465,7 @@
   },
 
   "firefox_incognito_access_error_html": {
-    "message": "<div class=\"arco-typography\"> 由于 Firefox 的限制，Proxyverse 无法在隐私浏览窗口运行，因而无法正常工作。</div>\n<div class=\"arco-typography\"> 请在隐私窗口中开启扩展。 </div>\n<div class=\"arco-typography\"><a class=\"arco-link arco-link-status-normal\" href=\"https://mzl.la/3pbGH96\">获取更多帮助</a></div>"
+    "message": "<div class=\"arco-typography\"> 由于 Firefox 的限制，Proxyverse 未获准在隐私浏览窗口中运行，因此无法正常工作。 </div>\n<div class=\"arco-typography\"> 请允许此扩展在隐私窗口中运行。 </div>\n<div class=\"arco-typography\"><a class=\"arco-link arco-link-status-normal\" href=\"https://mzl.la/3pbGH96\">了解更多</a></div>"
   },
 
   "_": {
