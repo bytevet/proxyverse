@@ -279,7 +279,7 @@ const setProxyByProfile = async (val: ProxyProfile) => {
         background-color: var(--indicator-color);
 
         position: absolute;
-        left: 0;
+        inset-inline-start: 0;
         top: 0;
       }
     }

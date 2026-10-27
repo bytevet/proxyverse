@@ -120,7 +120,8 @@ const onClearAuth = () => {
     :validate-trigger="props.validateTrigger"
   >
     <a-space>
-      <a-input-group>
+      <!-- scheme://host:port reads left to right -->
+      <a-input-group dir="ltr">
         <a-select
           :data-testid="`${props.field}-scheme`"
           :options="options"
