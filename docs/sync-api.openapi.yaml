@@ -1,0 +1,431 @@
+openapi: 3.1.0
+info:
+  title: Proxyverse Sync API
+  version: "1"
+  description: |
+    Settings sync for the Proxyverse browser extension, hosted by byte.vet.
+    Normative behavior: `proxyverse/docs/sync-protocol.md` (the "spec").
+    Wire types on the server: `src/lib/proxyverse/types.ts`.
+
+    Every request carries `Authorization: Bearer <access_token>` (scope
+    `sync`), `X-Proxyverse-Device` and `X-Proxyverse-Version`.
+
+    **Devices.** An unknown `X-Proxyverse-Device` is registered implicitly on
+    its first authenticated call; `PUT /devices/{deviceID}` only adds
+    metadata. A device removed with `DELETE /devices/{deviceID}` is revoked:
+    every later request from it gets `403 device_revoked`.
+
+    **Errors** are RFC 9457 problem details (`application/problem+json`) with
+    a stable `code` (spec §4.5). `429 rate_limited` and `503 unavailable`
+    carry `Retry-After`; `426 client_too_old` means the extension version is
+    below the server's minimum.
+servers:
+  - url: https://byte.vet/api/proxyverse/v1
+  - url: https://northernlight.byte.vet/api/proxyverse/v1
+    description: Preview
+security:
+  - oauth2: [sync]
+
+paths:
+  /devices:
+    get:
+      operationId: listDevices
+      summary: List the account's devices
+      parameters:
+        - $ref: "#/components/parameters/Device"
+        - $ref: "#/components/parameters/Version"
+      responses:
+        "200":
+          description: Devices, including the caller.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Device" }
+        default: { $ref: "#/components/responses/Problem" }
+
+  /devices/{deviceID}:
+    parameters:
+      - $ref: "#/components/parameters/DeviceID"
+      - $ref: "#/components/parameters/Device"
+      - $ref: "#/components/parameters/Version"
+    put:
+      operationId: putDevice
+      summary: Register or update a device (spec §4.1)
+      description: Idempotent upsert; also updates `lastSeen`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DeviceInput" }
+      responses:
+        "200":
+          description: The stored device.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Device" }
+        default: { $ref: "#/components/responses/Problem" }
+    delete:
+      operationId: revokeDevice
+      summary: Remove (revoke) a device
+      description: The device's future requests get `403 device_revoked`.
+      responses:
+        "204": { description: Revoked. }
+        default: { $ref: "#/components/responses/Problem" }
+
+  /changes:
+    get:
+      operationId: getChanges
+      summary: Pull changes (spec §4.2)
+      description: |
+        Every record (including tombstones) with `rev > since`, ordered by
+        `rev`. `since=0` returns the full current state. A `since` older than
+        the tombstone horizon gets `410 cursor_expired`; do a full resync.
+      parameters:
+        - $ref: "#/components/parameters/Device"
+        - $ref: "#/components/parameters/Version"
+        - name: since
+          in: query
+          required: true
+          schema: { type: integer, minimum: 0 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 1000, default: 500 }
+      responses:
+        "200":
+          description: A page of changes.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChangesResult" }
+        default: { $ref: "#/components/responses/Problem" }
+
+  /records:
+    post:
+      operationId: pushRecords
+      summary: Push records (spec §4.3)
+      description: |
+        Each record is processed on its own, in order (no batch atomicity).
+        Conflicts are last-writer-wins on `hlc`; a losing record is rejected
+        as `stale` with the stored record in `current`. Per-record failures
+        never fail the request.
+
+        A record that would push the account over its quota (2,000 records /
+        8 MiB) is rejected on its own as `quota_exceeded` (spec §4.5) instead
+        of the whole request failing.
+
+        The request body is limited to 2 MiB.
+      parameters:
+        - $ref: "#/components/parameters/Device"
+        - $ref: "#/components/parameters/Version"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [records]
+              properties:
+                records:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  items: { $ref: "#/components/schemas/PushRecord" }
+      responses:
+        "200":
+          description: Per-record outcome.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PushResult" }
+        default: { $ref: "#/components/responses/Problem" }
+
+  /snapshots:
+    parameters:
+      - $ref: "#/components/parameters/Device"
+      - $ref: "#/components/parameters/Version"
+    get:
+      operationId: listSnapshots
+      summary: List snapshots (spec §4.4)
+      responses:
+        "200":
+          description: Snapshots, newest first.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/SnapshotMeta" }
+        default: { $ref: "#/components/responses/Problem" }
+    post:
+      operationId: createSnapshot
+      summary: Create a snapshot now
+      description: >-
+        Snapshots the current live records. Send
+        `{ "reason": "before-overwrite" }` before "Upload this device" on first
+        sign-in (spec §5.7); with no body, or any other reason, the snapshot is
+        recorded as `manual`.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  enum: [manual, before-overwrite]
+      responses:
+        "201":
+          description: The new snapshot (`reason` = `before-overwrite` or `manual`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SnapshotMeta" }
+        default: { $ref: "#/components/responses/Problem" }
+
+  /snapshots/{id}:
+    parameters:
+      - $ref: "#/components/parameters/SnapshotID"
+      - $ref: "#/components/parameters/Device"
+      - $ref: "#/components/parameters/Version"
+    get:
+      operationId: getSnapshot
+      summary: Get a snapshot's records (for previewing a restore)
+      responses:
+        "200":
+          description: Snapshot contents.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [records]
+                properties:
+                  records:
+                    type: array
+                    items: { $ref: "#/components/schemas/SyncRecord" }
+        default: { $ref: "#/components/responses/Problem" }
+
+  /snapshots/{id}/restore:
+    parameters:
+      - $ref: "#/components/parameters/SnapshotID"
+      - $ref: "#/components/parameters/Device"
+      - $ref: "#/components/parameters/Version"
+    post:
+      operationId: restoreSnapshot
+      summary: Restore a snapshot (spec §6.3)
+      description: |
+        Takes a `before-restore` snapshot, then writes every record of the
+        snapshot and a tombstone for every live record absent from it, as new
+        revisions so every device pulls them as ordinary changes. All of them
+        carry the HLC `max(stored T + 1, now):0000:server` and the restoring
+        device's `deviceID`. Restore never rewinds `rev`.
+      responses:
+        "200":
+          description: Restore result.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [rev, written]
+                properties:
+                  rev:
+                    {
+                      type: integer,
+                      description: Account rev after the restore.,
+                    }
+                  written: { type: integer, description: Records written. }
+        default: { $ref: "#/components/responses/Problem" }
+
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      description: Authorization code with PKCE (S256), public client.
+      flows:
+        authorizationCode:
+          authorizationUrl: https://byte.vet/api/auth/oauth2/authorize
+          tokenUrl: https://byte.vet/api/auth/oauth2/token
+          refreshUrl: https://byte.vet/api/auth/oauth2/token
+          scopes:
+            sync: Read and write Proxyverse sync data.
+
+  parameters:
+    Device:
+      name: X-Proxyverse-Device
+      in: header
+      required: true
+      description: This device's id. Unknown ids are registered implicitly.
+      schema: { type: string, format: uuid }
+    Version:
+      name: X-Proxyverse-Version
+      in: header
+      required: true
+      description: Extension version, e.g. `2.3.0`. Below the server minimum → `426 client_too_old`.
+      schema: { type: string }
+    DeviceID:
+      name: deviceID
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    SnapshotID:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+
+  responses:
+    Problem:
+      description: |
+        Error (spec §4.5). 400 `invalid_request`, 401 `invalid_token`,
+        403 `device_revoked`, 404 `not_found`, 410 `cursor_expired`,
+        413 `quota_exceeded`, 426 `client_too_old`, 429 `rate_limited`,
+        503 `unavailable`.
+      headers:
+        Retry-After:
+          description: Seconds to wait; sent with 429 and 503.
+          schema: { type: integer }
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+
+  schemas:
+    RecordID:
+      type: string
+      description: |
+        `profile:<profileID>` or `pref:<key>` (`theme.darkmode`,
+        `ui.language`, `ui.actionBehavior`). At most 200 UTF-8 bytes.
+        `profile:direct` and `profile:system` are reserved.
+      pattern: "^(profile:.+|pref:.+)$"
+    HLC:
+      type: string
+      description: "Hybrid logical clock `TTTTTTTTTTTTTTT:CCCC:DEVICEID` (spec §3.3); compares lexicographically."
+      pattern: "^\\d{15}:\\d{4}:[A-Za-z0-9-]{1,64}$"
+    SyncRecord:
+      type: object
+      required: [id, rev, hlc, deviceID, deleted, schema, encoding, data]
+      properties:
+        id: { $ref: "#/components/schemas/RecordID" }
+        rev: { type: integer, minimum: 1, description: Server-assigned. }
+        hlc: { $ref: "#/components/schemas/HLC" }
+        deviceID: { type: string }
+        deleted: { type: boolean }
+        schema: { type: string, examples: ["2025-01"] }
+        encoding: { type: string, examples: ["json"] }
+        data:
+          description: Payload; `null` for tombstones. Opaque when `encoding` is not `json`.
+    PushRecord:
+      type: object
+      required: [id, hlc, deleted, schema, encoding, data]
+      properties:
+        id: { $ref: "#/components/schemas/RecordID" }
+        baseRev:
+          type: integer
+          minimum: 0
+          description: Informational; the conflict decision uses only `hlc`.
+        hlc: { $ref: "#/components/schemas/HLC" }
+        deleted: { type: boolean }
+        schema:
+          type: string
+          description: Payload schema version; unknown versions are rejected (`unknown_schema`) unless `encoding` is not `json`.
+        encoding:
+          type: string
+          description: "`json` is validated; other encodings are stored opaquely (spec §3.4)."
+        data:
+          description: Payload (≤ 256 KiB as JSON); must be `null` when `deleted`.
+    RejectReason:
+      type: string
+      enum:
+        [
+          stale,
+          invalid_record,
+          reserved_id,
+          too_large,
+          clock_skew,
+          unknown_schema,
+          quota_exceeded,
+        ]
+    PushResult:
+      type: object
+      required: [accepted, rejected]
+      properties:
+        accepted:
+          type: array
+          items:
+            type: object
+            required: [id, rev]
+            properties:
+              id: { type: string }
+              rev: { type: integer }
+        rejected:
+          type: array
+          items:
+            type: object
+            required: [id, reason]
+            properties:
+              id: { type: string }
+              reason: { $ref: "#/components/schemas/RejectReason" }
+              current:
+                $ref: "#/components/schemas/SyncRecord"
+                description: The stored record; present for `stale`.
+    ChangesResult:
+      type: object
+      required: [records, cursor, hasMore]
+      properties:
+        records:
+          type: array
+          items: { $ref: "#/components/schemas/SyncRecord" }
+        cursor: { type: integer, description: Pass as `since` next time. }
+        hasMore: { type: boolean }
+    Device:
+      type: object
+      required: [id, name, browser, extVersion, createdAt, lastSeen]
+      properties:
+        id: { type: string }
+        name: { type: [string, "null"] }
+        browser: { type: [string, "null"] }
+        extVersion: { type: [string, "null"] }
+        createdAt: { type: integer, description: Unix ms. }
+        lastSeen: { type: integer, description: Unix ms. }
+    DeviceInput:
+      type: object
+      properties:
+        name: { type: string, examples: ["Chrome on macOS"] }
+        browser: { type: string, examples: ["chrome"] }
+        extVersion: { type: string, examples: ["2.3.0"] }
+    SnapshotMeta:
+      type: object
+      required: [id, createdAt, reason, rev, recordCount, createdBy]
+      properties:
+        id: { type: string }
+        createdAt: { type: integer, description: Unix ms. }
+        reason:
+          type: string
+          enum: [daily, manual, before-restore, before-overwrite]
+        rev: { type: integer }
+        recordCount: { type: integer }
+        createdBy:
+          type: string
+          description: Device id, or `server` for automatic snapshots.
+    Problem:
+      type: object
+      description: RFC 9457 problem details; extra members may appear.
+      required: [type, title, status, code]
+      properties:
+        type:
+          type: string
+          format: uri
+          examples: ["https://byte.vet/docs/proxyverse-sync#cursor_expired"]
+        title: { type: string }
+        status: { type: integer }
+        code:
+          type: string
+          enum:
+            [
+              invalid_request,
+              invalid_token,
+              device_revoked,
+              not_found,
+              cursor_expired,
+              quota_exceeded,
+              client_too_old,
+              rate_limited,
+              unavailable,
+            ]
+        detail: { type: string }

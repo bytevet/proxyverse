@@ -91,6 +91,18 @@ export function setMessageOverride(override: MessageOverride | undefined) {
   messageOverride = override;
 }
 
+export const IDENTITY_UNAVAILABLE =
+  "The identity API is unavailable in this browser";
+
+/** What this extension build runs on; sync names devices after it. */
+export type ExtensionInfo = {
+  /** The manifest version, e.g. "2.3.0". */
+  version: string;
+  browser: "chrome" | "edge" | "firefox" | "web";
+  /** runtime.getPlatformInfo's os, e.g. "mac", "win", "linux". */
+  os: string;
+};
+
 export type ActionBehavior = "popup" | "sidebar";
 
 // the pages the toolbar icon opens
@@ -191,6 +203,13 @@ export abstract class BaseAdapter {
   /** Background only: set up what a toolbar click opens, if not a popup. */
   handleToolbarClicks(): void {}
   abstract reloadTab(tabID: number): Promise<void>;
+
+  // identity: sign-in through a browser-hosted web auth flow (cloud sync)
+  /** Resolves with the final redirect URL of the flow. */
+  abstract launchWebAuthFlow(url: string, interactive: boolean): Promise<string>;
+  /** The extension's redirect URL for `path`, e.g. "/oauth". */
+  abstract getRedirectURL(path: string): string;
+  abstract extensionInfo(): Promise<ExtensionInfo>;
 
   // messages
   abstract onMessage(

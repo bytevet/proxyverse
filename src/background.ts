@@ -30,6 +30,7 @@ import {
   getActionBehavior,
   onActionBehaviorChanged,
 } from "./services/ui";
+import { initSync } from "./services/sync/background";
 
 // indicator
 const activeProfile = async () =>
@@ -84,6 +85,9 @@ function initPacRefresh() {
 }
 
 initPacRefresh();
+
+// cloud sync of profiles and preferences through byte.vet
+initSync();
 
 // proxy auth provider
 class ProxyAuthProvider {

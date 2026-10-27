@@ -40,34 +40,41 @@ between accounts.
 ### 2.1 Discovery
 
 `GET https://byte.vet/.well-known/oauth-authorization-server` (RFC 8414) returns
-`authorization_endpoint`, `token_endpoint`, `revocation_endpoint` and
-`scopes_supported`. The client must not hard-code endpoint paths other than this
-one.
+`authorization_endpoint`, `token_endpoint`, `revocation_endpoint`,
+`userinfo_endpoint` and `scopes_supported`. The issuer is
+`https://byte.vet/api/auth`, so the endpoints are
+`/api/auth/oauth2/{authorize,token,revoke,userinfo}`. The client must not
+hard-code endpoint paths other than the discovery URL.
 
 ### 2.2 Client registration
 
-The extension is a **public client** (no secret). One `client_id`
-(`proxyverse-extension`) with these redirect URIs registered:
+The extension is a **public client** (no secret, `token_endpoint_auth_method
+none`, PKCE S256 required). Production uses `client_id` `proxyverse-extension`;
+the preview server (`northernlight.byte.vet`) uses `proxyverse-extension-dev`.
+Redirect URIs registered:
 
 | Build | Redirect URI |
 |---|---|
 | Chrome Web Store | `https://<chrome-ext-id>.chromiumapp.org/oauth` |
 | Edge Add-ons | `https://<edge-ext-id>.chromiumapp.org/oauth` |
 | Firefox AMO | `https://<firefox-hash>.extensions.allizom.org/oauth` (from `browser.identity.getRedirectURL()`) |
-| Dev builds | Their own IDs, registered on a non-production `client_id` |
+| Dev builds | A fixed ID from a pinned dev key, registered on `proxyverse-extension-dev` |
 
 The server must match redirect URIs exactly.
 
 ### 2.3 Sign-in flow
 
 1. Generate `code_verifier` (43–128 chars), `code_challenge = BASE64URL(SHA256(verifier))`, and a random `state`.
-2. `identity.launchWebAuthFlow({ url: authorize?response_type=code&client_id&redirect_uri&scope=sync&code_challenge&code_challenge_method=S256&state, interactive: true })`.
+2. `identity.launchWebAuthFlow({ url: authorize?response_type=code&client_id&redirect_uri&scope=openid email offline_access sync&code_challenge&code_challenge_method=S256&state, interactive: true })`. It runs from the extension page, not the service worker: signing in can take minutes, longer than an idle service worker lives.
 3. Verify `state`; `POST token_endpoint` with `grant_type=authorization_code`, `code`, `redirect_uri`, `client_id`, `code_verifier`.
-4. Response: `access_token` (JWT or opaque, lifetime ≈ 1 h), `refresh_token`
-   (rotating, single use, sliding expiry ≈ 90 days), `expires_in`, `scope`.
+4. Response: `access_token` (opaque, 1 h), `refresh_token` (rotating, single
+   use, each rotation gives a fresh 90 days), `expires_in`, `scope`. No
+   `id_token` is issued to the public client.
+5. `GET userinfo_endpoint` with the access token gives the account `email` for the UI.
 
-Scope: `sync` (read + write the caller's own record store and snapshots).
-Optional OpenID scopes (`openid email`) let the UI show who is signed in.
+Scopes: `sync` (read + write the caller's own record store and snapshots),
+`offline_access` (without it there is no refresh token), `openid email` (for
+userinfo).
 
 ### 2.4 Token handling
 
@@ -75,15 +82,23 @@ Optional OpenID scopes (`openid email`) let the UI show who is signed in.
   service worker calls the sync API; UI pages ask it via messages.
 - Before each request, refresh if the access token expires within 60 s.
 - Refresh tokens rotate: persist the new one before using the new access token.
-  If a refresh returns `invalid_grant`, enter the *signed-out (expired)* state
-  and ask the user to sign in again. Local data is kept.
-- Sign-out: `POST revocation_endpoint` with the refresh token (best effort),
-  then delete `sync.auth` and `sync.state`. Local profiles stay.
+  Reusing a spent refresh token (outside a short replay window) revokes the
+  whole token family, so refreshes are serialized across extension contexts
+  (Web Lock `sync-auth`). If a refresh returns `invalid_grant`, enter the
+  *signed-out (expired)* state and ask the user to sign in again. Local data
+  is kept.
+- Sign-out: `POST revocation_endpoint` form-encoded
+  `token=<refresh>&token_type_hint=refresh_token&client_id=<id>` (best
+  effort; it also revokes that token's access tokens), then delete
+  `sync.auth` and `sync.state`. Local profiles stay.
 
 ### 2.5 Permissions
 
-`identity` is new. Declare it under `optional_permissions` and request it when
-the user clicks "Sign in", so existing users get no update prompt. API calls to
+`identity` is new, a required permission on every browser. It carries no
+permission warning, so it shows nothing at install, and an update adding it
+shouldn't disable the extension for re-approval (browsers do that only for
+permissions with a warning). Requested as an optional permission at sign-in
+instead, Chrome would show a vague "wants to access your content" prompt. API calls to
 `https://byte.vet/*` are already covered by `host_permissions: <all_urls>`.
 
 ## 3. Data model
@@ -112,6 +127,11 @@ the user clicks "Sign in", so existing users get no update prompt. API calls to
 | `pref:ui.language` | `ui.language` | `{ "value": "auto" \| <LanguageCode> }` |
 | `pref:ui.actionBehavior` | `ui.actionBehavior` | `{ "value": "popup" \| "sidebar" }` |
 
+Preference payloads: `theme.darkmode` `{value: 0|1|2}`, `ui.language`
+`{value: "auto" | /^[a-z]{2,3}(_[A-Z]{2})?$/}` (lenient, so a new locale needs
+no schema bump), `ui.actionBehavior` `{value: "popup"|"sidebar"}`. Any other
+`pref:` key is `invalid_record`. Tombstones must have `data: null`.
+
 Never synced: `active-profile`, `tabstats:*`, `sync.*`, and the reserved
 profiles `direct` / `system` (server rejects them). New preference keys are
 added to this table explicitly; nothing syncs by default.
@@ -135,8 +155,8 @@ Device rules (persist the last HLC in `sync.state.clock`):
 - **Receiving a record:** `last = max(last, received.hlc)` before the next
   local edit, so a device never issues an HLC lower than one it has seen.
 
-Server rule: reject a write whose `T` is more than **5 min ahead** of server
-time (`clock_skew`). This keeps one device with a broken clock from winning
+Server rule: the HLC must match `^\d{15}:\d{4}:[A-Za-z0-9-]{1,64}$`; reject a
+write whose `T` is more than **5 min ahead** of server time (`clock_skew`). This keeps one device with a broken clock from winning
 every conflict forever. The client then shows "check your system clock".
 
 Why HLC rather than arrival order: a device that edits offline for a week and
@@ -166,7 +186,10 @@ A client that receives a record with a schema or encoding it doesn't know:
 - never pushes over it (its local copy is stale by definition);
 - shows "a newer Proxyverse version synced data this version can't read".
 
-The server validates `data` against the schema version it names and rejects
+The server validates `data` against the schema version it names (a vendored
+copy of the client's zod `ProxyProfile`; stored data is the parsed result, so
+unknown keys are stripped as on the client), checks that `data.profileID`
+equals the id suffix, and rejects
 invalid payloads (`invalid_record`) and schema versions it doesn't know
 (`unknown_schema`). So the server must be upgraded before a client that
 writes a new schema ships.
@@ -201,18 +224,28 @@ de-duplicate identical records.
 
 Base: `https://byte.vet/api/proxyverse/v1` (all paths below are relative to it, e.g. `GET /api/proxyverse/v1/changes`). JSON in and out. Every request sends
 `Authorization: Bearer <access_token>`, `X-Proxyverse-Device: <deviceID>` and
-`X-Proxyverse-Version: <extension version>`. Errors use RFC 9457 problem
-details with a stable `code` field.
+`X-Proxyverse-Version: <extension version>`; both headers are required and
+`deviceID` must be a UUID. An unknown device is registered implicitly on its
+first authenticated call. Errors use RFC 9457 problem details
+(`application/problem+json`, members `type`, `title`, `status`, `code`,
+`detail`) with a stable `code` field.
+
+The machine-readable contract is `docs/sync-api.openapi.yaml`, vendored from
+the byte.vet webapp repo, which owns it.
 
 ### 4.1 Register device — `PUT /devices/{deviceID}`
 
-Body `{ "name": "Chrome on macOS", "browser": "chrome", "extVersion": "2.3.0" }`.
-Idempotent; also updates `lastSeen`. `GET /devices` lists them; `DELETE
+Body `{ "name": "Chrome on macOS", "browser": "chrome", "extVersion": "2.3.0" }`
+(each optional, ≤ 200 chars; omitted fields keep their stored value).
+Idempotent; also updates `lastSeen`. Optional, since any call registers the
+device, but it gives the device a name. `GET /devices` lists them; `DELETE
 /devices/{id}` removes one (its future requests get `device_revoked`).
 
 ### 4.2 Pull changes — `GET /changes?since=<rev>&limit=<n>`
 
-Returns every record (including tombstones) with `rev > since`, ordered by `rev`.
+Returns every record (including tombstones) with `rev > since`, ordered by
+`rev`. `limit` defaults to 500, maximum 1000. With no records, `cursor` is
+`max(since, current rev)`.
 
 ```jsonc
 { "records": [ /* Record */ ], "cursor": 1850, "hasMore": false }
@@ -249,10 +282,10 @@ which device pushes first.
 
 ### 4.4 Snapshots
 
-- `GET /snapshots` → `[{ "id", "createdAt", "reason", "rev", "recordCount", "createdBy" }]`
+- `GET /snapshots` → a bare array `[{ "id", "createdAt", "reason", "rev", "recordCount", "createdBy" }]`, newest first.
 - `GET /snapshots/{id}` → `{ "records": [ /* Record */ ] }` (for previewing a restore)
-- `POST /snapshots` → create one now (`reason: "manual"`).
-- `POST /snapshots/{id}/restore` → see §6.
+- `POST /snapshots` → `201`, create one now. Optional body `{ "reason": "before-overwrite" }`; any other body records `manual`.
+- `POST /snapshots/{id}/restore` → `{ "rev", "written" }`, see §6.
 
 ### 4.5 Errors
 
@@ -260,14 +293,18 @@ which device pushes first.
 |---|---|---|
 | 400 | `invalid_request` | Bug; log, don't retry. |
 | 401 | `invalid_token` | Refresh once, retry; then signed-out (expired). |
+| 403 | `invalid_token` | Token lacks scope `sync` or belongs to another client. Refreshing won't help: signed-out (expired). |
 | 403 | `device_revoked` | Sign out locally. |
 | 410 | `cursor_expired` | Full resync (§5.5). |
 | 413 | `quota_exceeded` | Stop pushing; show quota message. |
 | 426 | `client_too_old` | Stop syncing; ask the user to update. |
-| 429 / 503 | `rate_limited` / `unavailable` | Honor `Retry-After`, else exponential backoff (30 s → 30 min, with jitter). |
+| 404 | `not_found` | Unknown snapshot or device; show an error. |
+| 429 / 503 | `rate_limited` / `unavailable` | Honor `Retry-After`, else exponential backoff (30 s → 30 min, with jitter). Limit: 60 requests/min per account and per device. |
 
 Per-record rejection reasons: `stale`, `invalid_record`, `reserved_id`,
-`too_large`, `clock_skew`, `unknown_schema`.
+`too_large`, `clock_skew`, `unknown_schema`, and `quota_exceeded` (a record
+that would take the account over quota is rejected on its own; the rest of the
+batch still applies).
 
 ## 5. Client sync engine
 
@@ -278,7 +315,7 @@ overlapping triggers can't interleave.
 ### 5.1 Local state (`storage.local`, never synced)
 
 ```jsonc
-"sync.auth":  { "accessToken", "refreshToken", "expiresAt", "account": { "email" } },
+"sync.auth":  { "accessToken", "refreshToken", "expiresAt", "account": { "sub", "email" }, "expired"? },
 "sync.state": {
   "deviceID": "7b1e…",
   "cursor": 1850,
@@ -286,10 +323,17 @@ overlapping triggers can't interleave.
   "base":  { "<recordID>": { "rev": 1842, "hlc": "…", "hash": "…" } }, // last state agreed with server
   "local": { "<recordID>": { "hlc": "…", "hash": "…" } },              // current local version
   "held":  { "<recordID>": { /* Record with unknown schema/encoding */ } },
-  "lastSync": { "at": 0, "error": null }
+  "phase": "idle",                        // or "needs-first-choice", "error"
+  "synced": true,                         // the first sync (§5.7) is done
+  "lastSync": { "at": 0, "error"?: { "code", "message"? } },
+  "failed":  { "<recordID>": { "reason", "hash" } }, // refused for good; not re-pushed until edited
+  "backoff": { "until": 0, "attempts": 1 }            // after 429/503/network errors
 },
-"sync.settings": { "enabled": true, "syncPrefs": true, "localOnly": ["<profileID>"] }
+"sync.settings": { "syncPrefs": true, "localOnly": ["<profileID>"] }
 ```
+
+Being signed in (`sync.auth` present and not `expired`) is what turns sync on;
+there is no separate on/off setting. A cleared key holds `null`.
 
 A record is **dirty** when `local[id].hash != base[id].hash`. There is no
 separate outbox: after a service worker restart the dirty set is recomputed by
@@ -408,11 +452,14 @@ A snapshot is a copy of all live records at a `rev`. The server creates one:
 - at most once per day, before the first write of the day;
 - before a restore, and when a client asks (`POST /snapshots`).
 
-Retention: all snapshots from the last 30 days, at least the 10 most recent.
+The daily snapshot is taken before the first write of a UTC day, and only if
+live records exist. Retention: all snapshots from the last 30 days, at least the
+10 most recent.
 
-**Restore** writes every record of the snapshot, and a tombstone for every
-live record absent from it, as new writes with server-issued HLC
-`max(all stored hlc).T + 1 : 0000 : server`. They get new `rev`s, so every
+**Restore** first takes a `before-restore` snapshot, then writes every record
+of the snapshot, and a tombstone for every live record absent from it, as new
+writes with server-issued HLC `max(max stored T + 1, now) : 0000 : server`
+and the restoring device's `deviceID`. They get new `rev`s, so every
 device picks them up through the normal pull. Restore never rewinds `rev`.
 
 ### 6.4 Security
@@ -434,7 +481,7 @@ device picks them up through the normal pull. Restore never rewinds `rev`.
 | `src/background.ts` | Start engine; storage listeners; `sync:poll` alarm; message handlers for the UI. |
 | Preference page | Sign in/out, status, "Sync now", sync prefs toggle, snapshots and restore. |
 | Profile editor | "This device only" switch, with the reference warning. |
-| `manifest.json` | `identity` in `optional_permissions`. |
+| `manifest.json` | `identity` in `permissions`. |
 
 ## 8. Open questions
 

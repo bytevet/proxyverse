@@ -15,6 +15,8 @@ import {
   WebRequestErrorOccurredDetails,
   WebRequestResponseStartedDetails,
   ActionBehavior,
+  ExtensionInfo,
+  IDENTITY_UNAVAILABLE,
   POPUP_PAGE,
   SIDEBAR_PAGE,
 } from "./base";
@@ -151,6 +153,33 @@ export class Chrome extends BaseAdapter {
 
   async reloadTab(tabID: number): Promise<void> {
     await chrome.tabs.reload(tabID);
+  }
+
+  async launchWebAuthFlow(url: string, interactive: boolean): Promise<string> {
+    // undefined until the optional permission is granted
+    const identity = chrome.identity as typeof chrome.identity | undefined;
+    if (!identity?.launchWebAuthFlow) throw new Error(IDENTITY_UNAVAILABLE);
+    const redirect = await identity.launchWebAuthFlow({ url, interactive });
+    if (!redirect) throw new Error("The web auth flow returned no redirect URL");
+    return redirect;
+  }
+
+  getRedirectURL(path: string): string {
+    const identity = chrome.identity as typeof chrome.identity | undefined;
+    if (!identity?.getRedirectURL) throw new Error(IDENTITY_UNAVAILABLE);
+    return identity.getRedirectURL(path);
+  }
+
+
+
+  async extensionInfo(): Promise<ExtensionInfo> {
+    const { os } = await chrome.runtime.getPlatformInfo();
+    return {
+      version: chrome.runtime.getManifest().version,
+      // Edge runs this adapter too; only its user agent tells them apart
+      browser: navigator.userAgent.includes("Edg/") ? "edge" : "chrome",
+      os,
+    };
   }
 
   onMessage(

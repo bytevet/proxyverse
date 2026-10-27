@@ -160,4 +160,45 @@ test.describe("firefox smoke", () => {
 
     await setLanguage("auto");
   });
+  // last: it leaves the extension signed in to sync
+  test("syncs profiles with the fake byte.vet", async () => {
+    const { proxyA, proxyB } = standardProfiles(servers);
+    const tokens = servers.sync.issueTokens(undefined, "proxyverse-extension-dev");
+    const local = (items: Record<string, unknown>) =>
+      ff.driver.executeAsyncScript(
+        `const [items, done] = arguments;
+        browser.storage.local.set(items).then(() => done(), (e) => done(String(e)));`,
+        items
+      );
+
+    await ff.openExtensionPage("/preference");
+    await ff.setProfiles([proxyA]);
+    // a completed sign-in: the Firefox auth window can't be driven here
+    await local({
+      "sync.devOrigin": servers.syncOrigin,
+      "sync.auth": {
+        accessToken: tokens.access_token,
+        refreshToken: tokens.refresh_token,
+        expiresAt: Date.now() + tokens.expires_in * 1000,
+        account: servers.sync.user,
+      },
+    });
+    await expect
+      .poll(() => servers.sync.get("profile:proxyA")?.data, { timeout: 15_000 })
+      .toMatchObject({ profileID: "proxyA" });
+
+    servers.sync.seed([{ id: "profile:proxyB", data: proxyB, deviceID: "other-device" }]);
+    await ff.driver.navigate().refresh();
+    await (await ff.byTestId("pref-sync-now")).click();
+    await expect
+      .poll(
+        () =>
+          ff.driver.executeAsyncScript(
+            `const [done] = arguments;
+            browser.storage.local.get("profiles").then((r) => done(Object.keys(r.profiles ?? {}).sort()));`
+          ),
+        { timeout: 15_000 }
+      )
+      .toEqual(["proxyA", "proxyB"]);
+  });
 });

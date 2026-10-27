@@ -19,6 +19,7 @@ import {
 } from "@/services/ui";
 import { useFileDialog } from "@vueuse/core";
 import IconBrowserPanel from "@/components/icons/IconBrowserPanel.vue";
+import SyncSection from "@/components/sync/SyncSection.vue";
 import { Notification } from "@arco-design/web-vue";
 import {
   IconSettings,
@@ -270,6 +271,8 @@ const exportProfiles = async () => {
         </a-popconfirm>
       </a-space>
     </section>
+
+    <SyncSection @backup="exportProfiles" />
   </a-page-header>
 
   <a-modal

@@ -1,5 +1,5 @@
 import { Host, SimpleProxyServer } from "@/adapters";
-import { deepClone } from "./utils";
+import { deepClone, withLock } from "./utils";
 
 export type ProxyAuthInfo = {
   username: string;
@@ -159,28 +159,35 @@ export function onProfileUpdate(
   };
 }
 
-async function overwriteProfiles(profiles: ProfilesStorage) {
-  await Host.set(keyProfileStorage, deepClone(profiles));
+/**
+ * Read, change and write back the stored profiles while holding a lock shared
+ * by every extension context, so concurrent writers (the config page, PAC
+ * refresh, sync) never overwrite each other's changes. `mutate` changes the
+ * map in place.
+ */
+export function updateProfiles(
+  mutate: (profiles: ProfilesStorage) => void | Promise<void>
+): Promise<void> {
+  return withLock("proxyverse-profiles", async () => {
+    const data = await listProfiles();
+    await mutate(data);
+    await Host.set(keyProfileStorage, deepClone(data));
+  });
 }
 
-/**
- * Save a single profile to the storage.
- * Please be noticed that this is not promise-safe. If you want to save multiple profiles, use `saveManyProfiles` instead.
- *
- * @param profile
- */
+/** Save a single profile to the storage. */
 export async function saveProfile(profile: ProxyProfile) {
-  const data = await listProfiles();
-  data[profile.profileID] = deepClone(profile);
-  await overwriteProfiles(data);
+  await updateProfiles((data) => {
+    data[profile.profileID] = deepClone(profile);
+  });
 }
 
 export async function saveManyProfiles(profiles: ProxyProfile[]) {
-  let data = await listProfiles();
-  profiles.forEach((p) => {
-    data[p.profileID] = deepClone(p);
+  await updateProfiles((data) => {
+    profiles.forEach((p) => {
+      data[p.profileID] = deepClone(p);
+    });
   });
-  await overwriteProfiles(data);
 }
 
 export function getSystemProfile(profileID: string): ProxyProfile | undefined {
@@ -211,7 +218,7 @@ export async function getProfile(
 }
 
 export async function deleteProfile(profileID: string) {
-  const data = await listProfiles();
-  delete data[profileID];
-  await overwriteProfiles(data);
+  await updateProfiles((data) => {
+    delete data[profileID];
+  });
 }

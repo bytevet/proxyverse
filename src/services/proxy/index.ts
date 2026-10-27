@@ -86,15 +86,17 @@ export async function refreshProxy() {
     return;
   }
 
-  const newProfile = await getProfile(current.activeProfile.profileID);
-
   // if it's preset profiles, then do nothing
-  if (!newProfile || ["system", "direct"].includes(current.activeProfile.proxyType)) {
+  if (["system", "direct"].includes(current.activeProfile.proxyType)) {
     return;
   }
 
+  // The active profile was deleted (here, or by sync on another device):
+  // fall back to direct rather than keep applying a profile that's gone.
+  const newProfile = await getProfile(current.activeProfile.profileID);
+
   // also refreshes the active profile snapshot
-  await setProxy(newProfile);
+  await setProxy(newProfile ?? SystemProfile.DIRECT);
 }
 
 /**

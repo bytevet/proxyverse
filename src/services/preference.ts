@@ -1,13 +1,9 @@
 import { readonly, ref } from "vue";
 import { Host } from "@/adapters";
 
-const keyDarkMode = "theme.darkmode";
+import { DarkMode, keyDarkMode } from "./theme";
 
-export enum DarkMode {
-  Default = 0,
-  Dark = 1,
-  Light = 2,
-}
+export { DarkMode, keyDarkMode };
 
 function detectDeviceDarkMode() {
   if (

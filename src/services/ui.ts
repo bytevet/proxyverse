@@ -3,7 +3,7 @@ import type { ActionBehavior } from "@/adapters/base";
 
 export type { ActionBehavior } from "@/adapters/base";
 
-const keyActionBehavior = "ui.actionBehavior";
+export const keyActionBehavior = "ui.actionBehavior";
 
 /** What a click on the toolbar icon opens: the popup unless chosen otherwise. */
 export async function getActionBehavior(): Promise<ActionBehavior> {

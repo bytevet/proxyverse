@@ -25,8 +25,11 @@ import {
   SystemProfile,
   deleteProfile,
   getProfile,
+  listProfiles,
   saveProfile,
 } from "@/services/profile";
+import { getSyncSettings, setSyncSettings } from "@/services/sync/state";
+import { useSyncStatus } from "./sync/useSyncStatus";
 import { Host } from "@/adapters";
 import { fetchPacScript } from "@/services/proxy/pacFetcher";
 import { refreshProxy } from "@/services/proxy";
@@ -102,8 +105,43 @@ const savedSnapshot = ref<string>();
 const editing = computed(
   () =>
     newProfileMode ||
+    localOnly.value !== savedLocalOnly.value ||
     (savedSnapshot.value !== undefined && savedSnapshot.value !== snapshot())
 );
+
+// "This device only" (spec §5.6): a sync setting of this device, not part of
+// the profile, so it never reaches exports or other devices. Shown once
+// signed in to sync.
+const syncStatus = useSyncStatus();
+const localOnly = ref(false);
+const savedLocalOnly = ref(false);
+// names of synced auto switch profiles that route to this one
+const syncedReferrers = ref<string[]>([]);
+
+const loadLocalOnly = async (profileID: string) => {
+  const settings = await getSyncSettings();
+  localOnly.value = savedLocalOnly.value = settings.localOnly.includes(profileID);
+  syncedReferrers.value = Object.values(await listProfiles())
+    .filter(
+      (p) =>
+        p.proxyType === "auto" &&
+        p.profileID !== profileID &&
+        !settings.localOnly.includes(p.profileID) &&
+        (p.defaultProfileID === profileID ||
+          p.rules.some((r) => r.type !== "disabled" && r.profileID === profileID))
+    )
+    .map((p) => p.profileName);
+};
+
+const saveLocalOnly = async (profileID: string) => {
+  const settings = await getSyncSettings();
+  const others = settings.localOnly.filter((id) => id !== profileID);
+  await setSyncSettings({
+    ...settings,
+    localOnly: localOnly.value ? [...others, profileID] : others,
+  });
+  savedLocalOnly.value = localOnly.value;
+};
 
 const bypassList = computed({
   get: () => {
@@ -216,6 +254,10 @@ const saveProfileEvent = async () => {
   }
 
   try {
+    // before the profile, so a new local-only profile never syncs
+    if (localOnly.value !== savedLocalOnly.value) {
+      await saveLocalOnly(profileConfig.profileID);
+    }
     await saveProfile(toRaw(profileConfig));
     Notification.success({
       content: Host.getMessage("config_feedback_saved"),
@@ -344,6 +386,8 @@ const loadProfile = async (profileID: string) => {
     color: profile.color.toUpperCase(),
   });
   savedSnapshot.value = snapshot();
+  // after filling the form, so a slow read never overwrites a quick edit
+  void loadLocalOnly(profileID);
   if (
     profileConfig.proxyType == "proxy" &&
     (profileConfig.proxyRules.ftp ||
@@ -433,6 +477,24 @@ watchEffect(async () => {
           <a-radio value="pac" data-testid="proxy-type-pac">{{ $t("config_proxy_type_pac") }}</a-radio>
           <a-radio value="auto" data-testid="proxy-type-auto">{{ $t("config_proxy_type_auto") }}</a-radio>
         </a-radio-group>
+      </a-form-item>
+
+      <a-form-item
+        v-if="syncStatus.auth.value"
+        :label="$t('profile_local_only')"
+        :extra="$t('profile_local_only_hint')"
+      >
+        <a-space direction="vertical" fill>
+          <a-switch v-model="localOnly" data-testid="profile-local-only" />
+          <a-alert
+            v-if="localOnly && syncedReferrers.length > 0"
+            type="warning"
+            data-testid="profile-local-only-referenced"
+            >{{
+              $t("profile_local_only_referenced", syncedReferrers.join(", "))
+            }}</a-alert
+          >
+        </a-space>
       </a-form-item>
 
       <template v-if="profileConfig.proxyType == 'proxy'">

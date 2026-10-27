@@ -35,7 +35,7 @@ export type Language = "auto" | LanguageCode;
 // base languages only: the direction belongs to the language, not the region
 const RIGHT_TO_LEFT = new Set<string>(["ar"] satisfies LanguageCode[]);
 
-const keyLanguage = "ui.language";
+export const keyLanguage = "ui.language";
 // the manifest's default_locale; bundled already (the dev stub uses it)
 const ENGLISH = lowerCaseKeys(englishMessages);
 

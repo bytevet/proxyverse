@@ -4,6 +4,7 @@ import {
   BaseAdapter,
   BlockingResponse,
   BrowserFlavor,
+  ExtensionInfo,
   MessageSender,
   ProxyConfig,
   ProxyErrorDetails,
@@ -135,6 +136,17 @@ export class WebBrowser extends BaseAdapter {
   }
   async reloadTab(tabID: number): Promise<void> {
     console.log(`Reload tab: ${tabID}`);
+  }
+
+  async launchWebAuthFlow(_url: string, _interactive: boolean): Promise<string> {
+    throw new Error("Web auth flows are not supported outside an extension");
+  }
+  getRedirectURL(_path: string): string {
+    throw new Error("Redirect URLs are not supported outside an extension");
+  }
+
+  async extensionInfo(): Promise<ExtensionInfo> {
+    return { version: "0.0.0", browser: "web", os: "unknown" };
   }
   async getTab(_tabID: number): Promise<Tab | undefined> {
     return this.getActiveTab();

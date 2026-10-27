@@ -11,6 +11,8 @@ A Manifest V3 browser extension (Chrome, Edge, Firefox) for proxy profile manage
 ```bash
 npm run build           # Type-check (vue-tsc) + build for Chrome/Edge
 npm run build:firefox   # Type-check + build for Firefox (transforms manifest)
+npm run build:preview   # Chrome build against the preview server (northernlight.byte.vet), fixed dev extension ID
+npm run build:preview:firefox  # The same for Firefox
 npm run dev             # Vite dev server
 npm test                # Run vitest in watch mode
 npm run coverage        # Single run with coverage report
@@ -20,6 +22,8 @@ npm run test:e2e            # Build into .e2e-build/, then run all e2e tests
 npm run test:e2e:chromium   # Chromium suite only (Playwright)
 npm run test:e2e:firefox    # Firefox smoke suite only (Selenium + geckodriver)
 npm run test:e2e:typecheck  # Type-check e2e/ (not covered by vue-tsc)
+npm run test:e2e:live       # Live sync smoke vs northernlight.byte.vet: headed, you sign in twice; never in CI
+npm run sync:api-types      # Regenerate src/services/sync/api.gen.ts from docs/sync-api.openapi.yaml
 E2E_SKIP_BUILD=1 npx playwright test -c e2e --project=chromium e2e/specs/pac.e2e.ts  # Reuse the last build, one spec
 ```
 
@@ -64,7 +68,7 @@ The core complexity lives here:
 
 ### Profile system (`src/services/profile.ts`)
 
-Profiles are stored in `chrome.storage.local` under key `"profiles"`. Types: `ProfileSimple` (proxy/pac), `ProfilePreset` (system/direct), `ProfileAutoSwitch` (rule-based routing). System profiles `DIRECT` and `SYSTEM` have fixed IDs `"direct"` and `"system"`. `onProfileUpdate(cb)` fires in every extension context with the new and old profiles.
+Profiles are stored in `chrome.storage.local` under key `"profiles"`. Write them only through `saveProfile`/`saveManyProfiles`/`deleteProfile`/`updateProfiles`: they hold a Web Lock (`withLock` in `utils.ts`) across extension contexts, so the config page, PAC refresh and sync don't overwrite each other. Deleting the active profile (here or by sync) switches the proxy to Direct (`refreshProxy`). Types: `ProfileSimple` (proxy/pac), `ProfilePreset` (system/direct), `ProfileAutoSwitch` (rule-based routing). System profiles `DIRECT` and `SYSTEM` have fixed IDs `"direct"` and `"system"`. `onProfileUpdate(cb)` fires in every extension context with the new and old profiles.
 
 UI pickers share one reactive profile list (`src/components/configs/useProfileOptions.ts`) and the `ProfileOptions` dropdown items.
 
@@ -73,6 +77,15 @@ UI pickers share one reactive profile list (`src/components/configs/useProfileOp
 `importConfig(text, storedProfiles)` detects the file format and returns `{profiles, warnings}`; warnings are i18n keys (`import_warn_*`) the Preference page lists in a modal. `exportConfig` writes our format and names the profiles it skipped as invalid.
 - **`proxyverse/`** -- Our format (`version: "2025-01"`), validated with `zod/mini`. Unknown keys are stripped (so runtime fields like `pacScript.lastFetched` never reach a file), and each profile is validated on its own: an invalid one, a reserved ID (`direct`/`system`) or a repeated ID is skipped with a warning.
 - **`switchyomega/`** -- SwitchyOmega / ZeroOmega backups (`schemaVersion` 2, `+<name>` profiles, maybe base64). Profile IDs are UUIDv5 of the name, so re-importing overwrites. An enabled attached rule list (`__ruleListOf_<switch>`) is merged into its switch profile; rule lists become static auto profiles. Conditions map to our rules only where the match is exact (`conditions.ts`): URL regexes to `regex` rules, host regexes to `domain` wildcards via `regex.ts` (only those with an exact wildcard equivalent). Anything else (time, weekday, host levels, other regexes) becomes a `disabled` rule holding the condition text, plus a warning. Wildcards never carry `+()[]{}^$|\`: Firefox's PAC `shExpMatch` treats them as regex syntax.
+
+### Cloud sync (`src/services/sync/`)
+
+Profiles and three preferences (`theme.darkmode`, `ui.language`, `ui.actionBehavior`) sync through byte.vet. Protocol: `docs/sync-protocol.md`; wire contract: `docs/sync-api.openapi.yaml`, vendored from the byte.vet webapp repo (which owns it), with types generated into `api.gen.ts` (a unit test fails when they drift).
+- **`buildEnv.ts`** -- `PROXYVERSE_ENV` at build time (`build/env.ts`): `production` (byte.vet, client `proxyverse-extension`), `northernlight` (preview server, client `proxyverse-extension-dev`), `e2e` (origin overridable at runtime via `sync.devOrigin`). Chrome dev/e2e builds carry `build/dev-extension-key.pub` as `manifest.key`, fixing the extension ID and so the OAuth redirect URI (`build/README.md`); store builds never do. `identity` is a required permission everywhere: browsers show no warning for it.
+- **`auth.ts`** -- OAuth 2.1 code + PKCE via `Host.launchWebAuthFlow`, run from the Preference page (sign-in can outlive an idle service worker). Refresh tokens are single use and reuse revokes the sign-in, so refreshes hold the `proxyverse-sync-auth` lock and store the new refresh token first.
+- **`engine.ts`** -- `SyncEngine.run()`: per-record last-writer-wins by HLC (`hlc.ts`). `state.local` (this device's version) vs `state.base` (last agreed with the server) decides what's dirty; there's no outbox, so pending changes survive service worker restarts. Remote changes are written storage first, then state. `records.ts` normalizes profiles with the export schema (no PAC script for URL profiles, upper-case color) and hashes canonical JSON. The engine takes a `SyncDevice` (storage) and an API factory, so unit tests run two devices against the mock store.
+- **`index.ts` / `background.ts`** -- the real engine and `sync:*` messages (Sync now, first-sync choice, snapshots); the background syncs at start, after sign-in, 2 s after a local change and on the `sync:poll` alarm (15 min).
+- State lives in `sync.auth`, `sync.state`, `sync.settings` (local storage, never synced). "This device only" profiles are `sync.settings.localOnly`, not a profile field. UI: `src/components/sync/` (Preference section) and the switch in `ProfileConfig.vue`.
 
 ## Critical Gotcha: `deepClone()` must use JSON round-trip
 
@@ -89,6 +102,7 @@ UI pickers share one reactive profile list (`src/components/configs/useProfileOp
 - Use `data-testid` selectors; Arco dropdowns, selects and toasts render in `<body>` (helpers in `e2e/pages/arco.ts`).
 - `sw.restart()` stops the service worker via CDP `Target.closeTarget`. PAC refresh alarms are fired with `sw.fireAlarm()`.
 - Use `freshHost()` for site hosts in tests that inspect the request log (late requests of an earlier test can land in the shared log), and `freshProxyHost()` for proxy hostnames (Chrome caches proxy credentials per proxy host for the browser's lifetime).
+- **Sync** runs against a fake byte.vet (`e2e/servers/syncStore.ts` logic, `syncApi.ts` HTTP), on loopback so it's never proxied: `servers.sync` (seed records, `failNext`, `issueTokens`, request log) and `servers.syncOrigin`. Helpers in `e2e/pages/sync.ts`: `useFakeByteVet` before a UI sign-in (Chromium's auth window works headless against it), `signInDirectly` to skip it. The same store is the fake server of the engine's unit tests.
 - Firefox smoke (`e2e/firefox/`): temporary add-ons don't get private-browsing access (required by `proxy.settings`), and WebDriver can't open `moz-extension://` URLs. The driver grants the permission and opens pages from Marionette's chrome context, which needs geckodriver ≥ 0.36 with `--allow-system-access`.
 
 ## Firefox build differences
@@ -97,6 +111,8 @@ The `vite.config.ts` `TRANSFORMER_CONFIG` rewrites `manifest.json` at build time
 - Replaces `background.service_worker` with `background.scripts` array
 - Removes `version_name`
 - Adds `browser_specific_settings.gecko` (minimum version 115, for `storage.session`)
+
+The manifest transform lives in `build/manifest.ts` (pure, unit-tested in `tests/build/`).
 
 ## Path alias
 
