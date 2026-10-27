@@ -360,14 +360,23 @@
   "preferences_section_import_export": {
     "message": "Import & Export"
   },
-
-  "preferences_section_import_export_desc": {
-    "message": "Export your proxy profiles to a file for backup or sharing, or import them to restore profiles when needed."
+  "preferences_export": {
+    "message": "Export"
+  },
+  "preferences_export_hint": {
+    "message": "Save your proxy profiles to a file, for backup or sharing."
+  },
+  "preferences_import": {
+    "message": "Import"
+  },
+  "preferences_import_hint": {
+    "message": "Restore profiles from a Proxyverse file."
+  },
+  "preferences_import_switchyomega_hint": {
+    "message": "Also reads ProxySwitchyOmega / ZeroOmega backups (.bak). Anything that can't be converted exactly is listed after the import."
   },
 
-  "preferences_section_import_switchyomega": {
-    "message": "Import Profiles also accepts a ProxySwitchyOmega / ZeroOmega backup (.bak). Anything that can't be converted exactly is listed after the import."
-  },
+
 
   "preferences_tag_beta": {
     "message": "Beta"
@@ -475,7 +484,7 @@
     "message": "Sync your profiles and preferences across browsers and devices with a byte.vet account."
   },
   "sync_privacy_note": {
-    "message": "Profiles sync with everything in them, including proxy usernames and passwords. byte.vet stores them encrypted, but can read them. Mark a profile \"This device only\" to keep it off the cloud."
+    "message": "Profiles sync with everything in them, including proxy usernames and passwords. They're sent over an encrypted connection, stored encrypted, and used only to keep your devices in sync. Mark a profile \"This device only\" to keep it off the cloud."
   },
   "sync_action_signin": {
     "message": "Sign in to sync"
@@ -501,6 +510,9 @@
   "sync_action_now": {
     "message": "Sync now"
   },
+  "sync_time_recent": {
+    "message": "a few seconds ago"
+  },
   "sync_status_never": {
     "message": "Not synced yet."
   },
@@ -514,22 +526,22 @@
     "message": "$1 item(s) were synced by a newer Proxyverse and can't be read by this version. Update Proxyverse to use them."
   },
   "sync_error_auth": {
-    "message": "Sync stopped at $1: sign in again."
+    "message": "Sync stopped $1: sign in again."
   },
   "sync_error_clock_skew": {
-    "message": "Sync at $1: some changes were refused because this device's clock is ahead. Check the system clock."
+    "message": "Synced $1, but some changes were refused because this device's clock is ahead. Check the system clock."
   },
   "sync_error_unreachable": {
-    "message": "Sync failed at $1: byte.vet can't be reached. Proxyverse will retry."
+    "message": "Sync failed $1: byte.vet can't be reached. Proxyverse will retry."
   },
   "sync_error_client_too_old": {
-    "message": "Sync stopped at $1: this version of Proxyverse is too old. Update it to keep syncing."
+    "message": "Sync stopped $1: this version of Proxyverse is too old. Update it to keep syncing."
   },
   "sync_error_quota": {
-    "message": "Sync failed at $1: the account is full. Delete some profiles."
+    "message": "Sync failed $1: the account is full. Delete some profiles."
   },
   "sync_error_other": {
-    "message": "Sync failed at $1 ($2)."
+    "message": "Sync failed $1 ($2)."
   },
   "sync_prefs": {
     "message": "Sync preferences"

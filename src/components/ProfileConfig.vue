@@ -21,14 +21,19 @@ import {
   PacScriptConfig,
   ProfileAutoSwitch,
   ProfileSimple,
+  ProfilesStorage,
   ProxyServer,
   SystemProfile,
   deleteProfile,
-  getProfile,
   listProfiles,
+  lookupProfile,
   saveProfile,
 } from "@/services/profile";
-import { getSyncSettings, setSyncSettings } from "@/services/sync/state";
+import {
+  getSyncSettings,
+  updateSyncSettings,
+  type SyncSettings,
+} from "@/services/sync/state";
 import { useSyncStatus } from "./sync/useSyncStatus";
 import { Host } from "@/adapters";
 import { fetchPacScript } from "@/services/proxy/pacFetcher";
@@ -118,10 +123,13 @@ const savedLocalOnly = ref(false);
 // names of synced auto switch profiles that route to this one
 const syncedReferrers = ref<string[]>([]);
 
-const loadLocalOnly = async (profileID: string) => {
-  const settings = await getSyncSettings();
+const loadLocalOnly = (
+  profileID: string,
+  profiles: ProfilesStorage,
+  settings: SyncSettings
+) => {
   localOnly.value = savedLocalOnly.value = settings.localOnly.includes(profileID);
-  syncedReferrers.value = Object.values(await listProfiles())
+  syncedReferrers.value = Object.values(profiles)
     .filter(
       (p) =>
         p.proxyType === "auto" &&
@@ -134,13 +142,12 @@ const loadLocalOnly = async (profileID: string) => {
 };
 
 const saveLocalOnly = async (profileID: string) => {
-  const settings = await getSyncSettings();
-  const others = settings.localOnly.filter((id) => id !== profileID);
-  await setSyncSettings({
-    ...settings,
-    localOnly: localOnly.value ? [...others, profileID] : others,
+  const on = localOnly.value;
+  await updateSyncSettings((settings) => {
+    const others = settings.localOnly.filter((id) => id !== profileID);
+    settings.localOnly = on ? [...others, profileID] : others;
   });
-  savedLocalOnly.value = localOnly.value;
+  savedLocalOnly.value = on;
 };
 
 const bypassList = computed({
@@ -374,7 +381,11 @@ const fetchPacNow = async () => {
 
 // load data
 const loadProfile = async (profileID: string) => {
-  const profile = await getProfile(profileID);
+  const [profiles, settings] = await Promise.all([
+    listProfiles(),
+    getSyncSettings(),
+  ]);
+  const profile = lookupProfile(profiles, profileID);
 
   if (!profile) {
     // TODO: data not found
@@ -386,8 +397,7 @@ const loadProfile = async (profileID: string) => {
     color: profile.color.toUpperCase(),
   });
   savedSnapshot.value = snapshot();
-  // after filling the form, so a slow read never overwrites a quick edit
-  void loadLocalOnly(profileID);
+  loadLocalOnly(profileID, profiles, settings);
   if (
     profileConfig.proxyType == "proxy" &&
     (profileConfig.proxyRules.ftp ||

@@ -10,6 +10,7 @@ import {
   type SyncState,
 } from "@/services/sync/state";
 import { SyncStore } from "../../../e2e/servers/syncStore";
+import { proxyProfile as proxy } from "../../helpers";
 
 // Two devices sync through the mock server's store, with the real API
 // client. Time is a shared counter, so edit order is explicit.
@@ -20,13 +21,6 @@ let lockID = 0;
 
 const T0 = Date.UTC(2026, 9, 27);
 
-const proxy = (profileID: string, host = "10.0.0.1"): ProxyProfile => ({
-  profileID,
-  color: "#AABBCC",
-  profileName: profileID,
-  proxyType: "proxy",
-  proxyRules: { default: { scheme: "http", host, port: 8080 }, bypassList: [] },
-});
 
 class FakeDevice implements SyncDevice {
   data: { profiles: ProfilesStorage; prefs: Partial<Record<SyncedPref, unknown>> } = {
@@ -66,7 +60,7 @@ class FakeDevice implements SyncDevice {
     });
   }
 
-  sync(trigger: "manual" | "local" | "alarm" = "manual") {
+  sync(trigger: "manual" | "local" | "alarm" | "start" = "manual") {
     return this.engine.run({ trigger });
   }
 
@@ -227,7 +221,7 @@ describe("first sync", () => {
     const b = new FakeDevice();
     b.data.prefs["ui.language"] = "auto";
     await b.sync();
-    expect(b.syncState?.phase).toBe("idle");
+    expect(b.syncState?.needsFirstChoice).toBeUndefined();
     expect(b.data.profiles.cloud).toEqual(proxy("cloud"));
   });
 
@@ -236,7 +230,7 @@ describe("first sync", () => {
     const b = new FakeDevice();
     b.edit(proxy("mine"));
     await b.sync();
-    expect(b.syncState?.phase).toBe("needs-first-choice");
+    expect(b.syncState?.needsFirstChoice).toBe(true);
     expect(pushes()).toBe(1); // only a's
 
     await b.engine.run({ trigger: "manual", firstChoice: "merge" });
@@ -290,6 +284,29 @@ describe("bookkeeping", () => {
     await b.sync("local"); // the storage event of its own write
     await b.sync();
     expect(pushes()).toBe(before);
+  });
+
+  test("a service worker wake syncs only when there's something to do", async () => {
+    const a = new FakeDevice();
+    await a.sync();
+    const requests = () => store.log.length;
+
+    // woken soon after a sync, nothing pending: no request at all
+    clock += 60_000;
+    const before = requests();
+    await a.sync("start");
+    expect(requests()).toBe(before);
+
+    // a change made while it slept is pushed
+    a.edit(proxy("p1"));
+    await a.sync("start");
+    expect(store.get("profile:p1")).toBeDefined();
+
+    // a poll's worth of time later, a wake pulls again
+    clock += 15 * 60_000;
+    const changesBefore = store.requests("/changes").length;
+    await a.sync("start");
+    expect(store.requests("/changes").length).toBeGreaterThan(changesBefore);
   });
 
   test("a pending change survives a failed run and a restart", async () => {

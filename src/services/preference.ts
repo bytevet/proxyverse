@@ -1,9 +1,9 @@
 import { readonly, ref } from "vue";
 import { Host } from "@/adapters";
 
-import { DarkMode, keyDarkMode } from "./theme";
+import { DarkMode, defaultDarkMode, keyDarkMode } from "./theme";
 
-export { DarkMode, keyDarkMode };
+export { DarkMode };
 
 function detectDeviceDarkMode() {
   if (
@@ -21,7 +21,7 @@ const setting = ref<DarkMode>(DarkMode.Default);
 
 /** The stored setting; `DarkMode.Default` (follow the system) if unset. */
 async function getDarkModeSetting(): Promise<DarkMode> {
-  return Host.getWithDefault<DarkMode>(keyDarkMode, DarkMode.Default);
+  return Host.getWithDefault<DarkMode>(keyDarkMode, defaultDarkMode);
 }
 
 /** Apply the stored setting to this page. */

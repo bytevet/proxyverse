@@ -4,10 +4,11 @@ import type { ActionBehavior } from "@/adapters/base";
 export type { ActionBehavior } from "@/adapters/base";
 
 export const keyActionBehavior = "ui.actionBehavior";
+export const defaultActionBehavior: ActionBehavior = "popup";
 
 /** What a click on the toolbar icon opens: the popup unless chosen otherwise. */
 export async function getActionBehavior(): Promise<ActionBehavior> {
-  return Host.getWithDefault<ActionBehavior>(keyActionBehavior, "popup");
+  return Host.getWithDefault<ActionBehavior>(keyActionBehavior, defaultActionBehavior);
 }
 
 export async function setActionBehavior(behavior: ActionBehavior) {
@@ -20,7 +21,9 @@ export function onActionBehaviorChanged(
 ): () => void {
   return Host.onLocalStorageChanged((changes) => {
     if (keyActionBehavior in changes) {
-      callback((changes[keyActionBehavior].newValue as ActionBehavior) ?? "popup");
+      callback(
+        (changes[keyActionBehavior].newValue as ActionBehavior) ?? defaultActionBehavior
+      );
     }
   });
 }

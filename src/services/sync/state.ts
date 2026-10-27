@@ -1,5 +1,5 @@
 import { Host } from "@/adapters";
-import { deepClone } from "@/services/utils";
+import { deepClone, withLock } from "@/services/utils";
 import type { SyncRecord } from "./api";
 
 /**
@@ -11,7 +11,7 @@ export const keySyncAuth = "sync.auth";
 export const keySyncState = "sync.state";
 export const keySyncSettings = "sync.settings";
 const SYNC_KEYS = [keySyncAuth, keySyncState, keySyncSettings] as const;
-export type SyncStorageKey = (typeof SYNC_KEYS)[number];
+type SyncStorageKey = (typeof SYNC_KEYS)[number];
 
 export type SyncAuth = {
   accessToken: string;
@@ -23,8 +23,6 @@ export type SyncAuth = {
   /** The refresh token was refused: signed out until the user signs in. */
   expired?: boolean;
 };
-
-export type SyncPhase = "idle" | "needs-first-choice" | "error";
 
 export type SyncState = {
   deviceID: string;
@@ -38,7 +36,11 @@ export type SyncState = {
   local: Record<string, { hlc: string; hash: string }>;
   /** Records with a schema or encoding this version can't read (§3.5). */
   held: Record<string, SyncRecord>;
-  phase: SyncPhase;
+  /**
+   * The first sync found data on both this device and the account, and
+   * waits for the user to choose how to combine them (spec §5.7).
+   */
+  needsFirstChoice?: boolean;
   lastSync?: { at: number; error?: { code: string; message?: string } };
   /** The first sync with the account is done (spec §5.7). */
   synced?: boolean;
@@ -72,16 +74,16 @@ export const initialSyncState = (): SyncState => ({
   base: {},
   local: {},
   held: {},
-  phase: "idle",
 });
+
+/** Signed in, with a sign-in the server hasn't refused. */
+export const isSignedIn = (auth: SyncAuth | undefined): auth is SyncAuth =>
+  !!auth && !auth.expired;
 
 // --- auth ---
 
-// The adapters can't remove a local key, and browsers ignore an undefined
-// value, so a cleared key holds null.
-
 export async function getSyncAuth(): Promise<SyncAuth | undefined> {
-  return (await Host.get<SyncAuth | null>(keySyncAuth)) ?? undefined;
+  return Host.get<SyncAuth>(keySyncAuth);
 }
 
 export async function setSyncAuth(auth: SyncAuth) {
@@ -89,13 +91,13 @@ export async function setSyncAuth(auth: SyncAuth) {
 }
 
 export async function clearSyncAuth() {
-  await Host.set(keySyncAuth, null);
+  await Host.remove(keySyncAuth);
 }
 
 // --- state ---
 
 export async function getSyncState(): Promise<SyncState | undefined> {
-  return (await Host.get<SyncState | null>(keySyncState)) ?? undefined;
+  return Host.get<SyncState>(keySyncState);
 }
 
 export async function setSyncState(state: SyncState) {
@@ -103,19 +105,34 @@ export async function setSyncState(state: SyncState) {
 }
 
 export async function clearSyncState() {
-  await Host.set(keySyncState, null);
+  await Host.remove(keySyncState);
 }
 
 // --- settings ---
 
+/** Stored settings with missing fields filled in with their defaults. */
+export const withSyncDefaults = (
+  stored: Partial<SyncSettings> | undefined
+): SyncSettings => ({ ...DEFAULT_SYNC_SETTINGS, ...stored });
+
 /** This device's settings; missing fields get their defaults. */
 export async function getSyncSettings(): Promise<SyncSettings> {
-  const stored = await Host.get<Partial<SyncSettings> | null>(keySyncSettings);
-  return { ...DEFAULT_SYNC_SETTINGS, ...stored };
+  return withSyncDefaults(await Host.get<Partial<SyncSettings>>(keySyncSettings));
 }
 
-export async function setSyncSettings(settings: SyncSettings) {
-  await Host.set(keySyncSettings, deepClone(settings));
+/**
+ * Change this device's settings. Read-modify-write under a lock shared by
+ * every extension context, so two pages changing different settings don't
+ * overwrite each other.
+ */
+export function updateSyncSettings(
+  mutate: (settings: SyncSettings) => void
+): Promise<void> {
+  return withLock("proxyverse-sync-settings", async () => {
+    const settings = await getSyncSettings();
+    mutate(settings);
+    await Host.set(keySyncSettings, deepClone(settings));
+  });
 }
 
 /**

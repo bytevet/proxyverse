@@ -1,4 +1,5 @@
 import type { components } from "./api.gen";
+import { syncFetch } from "./config";
 
 /**
  * Client of the byte.vet sync API (spec §4, `docs/sync-api.openapi.yaml`).
@@ -9,13 +10,12 @@ import type { components } from "./api.gen";
 type Schemas = components["schemas"];
 export type SyncRecord = Schemas["SyncRecord"];
 export type PushRecord = Schemas["PushRecord"];
-export type PushResult = Schemas["PushResult"];
-export type ChangesResult = Schemas["ChangesResult"];
-export type Device = Schemas["Device"];
-export type DeviceInput = Schemas["DeviceInput"];
 export type SnapshotMeta = Schemas["SnapshotMeta"];
-export type RejectReason = Schemas["RejectReason"];
-export type RestoreResult = { rev: number; written: number };
+type PushResult = Schemas["PushResult"];
+type ChangesResult = Schemas["ChangesResult"];
+type Device = Schemas["Device"];
+type DeviceInput = Schemas["DeviceInput"];
+type RestoreResult = { rev: number; written: number };
 
 /** A problem `code` (spec §4.5), or one of the client's own. */
 export type SyncErrorCode =
@@ -53,8 +53,7 @@ export class SyncApi {
 
   constructor(private readonly opts: SyncApiOptions) {
     this.base = `${opts.origin}/api/proxyverse/v1`;
-    // unbound `fetch` throws "Illegal invocation" in browsers
-    this.fetch = opts.fetch ?? ((input, init) => globalThis.fetch(input, init));
+    this.fetch = opts.fetch ?? syncFetch;
   }
 
   putDevice(input: DeviceInput): Promise<Device> {
@@ -62,18 +61,8 @@ export class SyncApi {
     return this.request("PUT", `/devices/${id}`, input);
   }
 
-  async listDevices(): Promise<Device[]> {
-    const devices = await this.request<unknown>("GET", "/devices");
-    if (!Array.isArray(devices)) {
-      throw new SyncApiError(200, "invalid_response", "no device list");
-    }
-    return devices as Device[];
-  }
-
-  changes(since: number, limit?: number): Promise<ChangesResult> {
-    const query = new URLSearchParams({ since: String(since) });
-    if (limit !== undefined) query.set("limit", String(limit));
-    return this.request("GET", `/changes?${query}`);
+  changes(since: number): Promise<ChangesResult> {
+    return this.request("GET", `/changes?since=${since}`);
   }
 
   push(records: PushRecord[]): Promise<PushResult> {
@@ -86,10 +75,6 @@ export class SyncApi {
 
   createSnapshot(reason?: "before-overwrite"): Promise<SnapshotMeta> {
     return this.request("POST", "/snapshots", reason ? { reason } : undefined);
-  }
-
-  getSnapshot(id: string): Promise<{ records: SyncRecord[] }> {
-    return this.request("GET", `/snapshots/${encodeURIComponent(id)}`);
   }
 
   restoreSnapshot(id: string): Promise<RestoreResult> {
@@ -135,8 +120,6 @@ export class SyncApi {
 
     try {
       return await this.fetch(`${this.base}${path}`, {
-        // bearer auth only: no byte.vet cookies (see NO_COOKIES in auth.ts)
-        credentials: "omit",
         method,
         headers,
         body: body === undefined ? undefined : JSON.stringify(body),

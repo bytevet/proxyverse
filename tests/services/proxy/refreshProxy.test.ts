@@ -2,28 +2,12 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 import { Host } from "@/adapters";
 import type { ProfilesStorage, ProxyProfile } from "@/services/profile";
 import { refreshProxyOnProfileUpdate } from "@/services/proxy";
-
-const proxy = (profileID: string): ProxyProfile => ({
-  profileID,
-  color: "#123456",
-  profileName: profileID,
-  proxyType: "proxy",
-  proxyRules: { default: { host: "10.0.0.1", port: 8080 }, bypassList: [] },
-});
+import { fakeLocalStorage, proxyProfile as proxy } from "../../helpers";
 
 // A fake browser where this extension controls the proxy and `active` is the
 // stored active-profile snapshot.
 function mockBrowser(active: ProxyProfile, profiles: ProfilesStorage) {
-  const store: Record<string, unknown> = {
-    "active-profile": active,
-    profiles,
-  };
-  vi.spyOn(Host, "get").mockImplementation(async (key: string) =>
-    structuredClone(store[key])
-  );
-  vi.spyOn(Host, "set").mockImplementation(async (key, val) => {
-    store[key] = val;
-  });
+  const store = fakeLocalStorage({ "active-profile": active, profiles });
   vi.spyOn(Host, "getProxySettings").mockResolvedValue({
     levelOfControl: "controlled_by_this_extension",
     value: { mode: "fixed_servers" },

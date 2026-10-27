@@ -361,14 +361,6 @@
     "message": "Importação e exportação"
   },
 
-  "preferences_section_import_export_desc": {
-    "message": "Exporte seus perfis de proxy para um arquivo para backup ou compartilhamento, ou importe-os para restaurar perfis quando necessário."
-  },
-
-  "preferences_section_import_switchyomega": {
-    "message": "\"Importar perfis\" também aceita um backup do ProxySwitchyOmega / ZeroOmega (.bak). O que não puder ser convertido exatamente será listado após a importação."
-  },
-
   "preferences_tag_beta": {
     "message": "Beta"
   },

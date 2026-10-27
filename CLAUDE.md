@@ -12,7 +12,7 @@ A Manifest V3 browser extension (Chrome, Edge, Firefox) for proxy profile manage
 npm run build           # Type-check (vue-tsc) + build for Chrome/Edge
 npm run build:firefox   # Type-check + build for Firefox (transforms manifest)
 npm run build:preview   # Chrome build against the preview server (northernlight.byte.vet), fixed dev extension ID
-npm run build:preview:firefox  # The same for Firefox
+npm run build:preview:firefox  # The same for Firefox, into dist-firefox/ (so it doesn't replace the Chrome dist/)
 npm run dev             # Vite dev server
 npm test                # Run vitest in watch mode
 npm run coverage        # Single run with coverage report

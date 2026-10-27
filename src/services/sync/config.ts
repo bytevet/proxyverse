@@ -8,6 +8,16 @@ const keyDevOrigin = "sync.devOrigin";
 // session storage: discovery is cheap, but needn't run on every token refresh
 const keyDiscovery = "sync.discovery";
 
+/**
+ * `fetch` for every request to byte.vet. It never sends byte.vet's cookies:
+ * requests authenticate with the code, refresh token or access token, and
+ * the browser would otherwise attach the session cookie of the sign-in that
+ * just happened, which byte.vet's auth server refuses on cross-site POSTs
+ * (403 MISSING_OR_NULL_ORIGIN).
+ */
+export const syncFetch: typeof fetch = (input, init) =>
+  globalThis.fetch(input, { ...init, credentials: "omit" });
+
 /** The byte.vet origin serving OAuth and the sync API, no trailing slash. */
 export async function syncOrigin(): Promise<string> {
   if (SYNC_BUILD.allowOriginOverride) {
@@ -24,7 +34,6 @@ export type Discovery = {
   token_endpoint: string;
   revocation_endpoint: string;
   userinfo_endpoint: string;
-  scopes_supported?: string[];
 };
 
 const ENDPOINTS = [
@@ -41,17 +50,13 @@ const ENDPOINTS = [
  */
 export async function discover(
   origin: string,
-  fetchImpl: typeof fetch = (input, init) => globalThis.fetch(input, init)
+  fetchImpl: typeof fetch = syncFetch
 ): Promise<Discovery> {
   const cache = (await Host.getSession<Record<string, Discovery>>(keyDiscovery)) ?? {};
   if (cache[origin]) return cache[origin];
 
   const url = `${origin}/.well-known/oauth-authorization-server`;
-  // no cookies to byte.vet, see NO_COOKIES in auth.ts
-  const res = await fetchImpl(url, {
-    credentials: "omit",
-    headers: { Accept: "application/json" },
-  });
+  const res = await fetchImpl(url, { headers: { Accept: "application/json" } });
   if (!res.ok) throw Error(`Discovery failed: HTTP ${res.status} from ${url}`);
   const metadata = validateDiscovery(origin, await res.json());
 
@@ -82,11 +87,6 @@ function validateDiscovery(origin: string, doc: unknown): Discovery {
     revocation_endpoint: d.revocation_endpoint as string,
     userinfo_endpoint: d.userinfo_endpoint as string,
   };
-  if (Array.isArray(d.scopes_supported)) {
-    metadata.scopes_supported = d.scopes_supported.filter(
-      (s): s is string => typeof s === "string"
-    );
-  }
   return metadata;
 }
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, shallowRef } from "vue";
+import { computed, onUnmounted, ref, shallowRef } from "vue";
 import { Host } from "@/adapters";
 import { Notification } from "@arco-design/web-vue";
 import {
@@ -16,8 +16,12 @@ import {
   requestSync,
   restoreSnapshot,
 } from "@/services/sync";
-import { setSyncSettings } from "@/services/sync/state";
+import {
+  isSignedIn,
+  updateSyncSettings,
+} from "@/services/sync/state";
 import { useSyncStatus } from "./useSyncStatus";
+import { relativeTime } from "./relativeTime";
 
 const emit = defineEmits<{
   /** Download the profiles, before replacing them with the cloud's. */
@@ -26,7 +30,7 @@ const emit = defineEmits<{
 
 const { auth, state, settings } = useSyncStatus();
 
-const signedIn = computed(() => !!auth.value && !auth.value.expired);
+const signedIn = computed(() => isSignedIn(auth.value));
 const account = computed(
   () => auth.value?.account?.email ?? Host.getMessage("sync_account_unknown")
 );
@@ -39,45 +43,26 @@ const notifyError = (e: unknown) =>
     content: Host.getMessage("config_feedback_error_occurred", errorText(e)),
   });
 
-const startSignIn = async () => {
-  busy.value = "signin";
+/** Run an action with its button busy, reporting a failure as a toast. */
+async function withBusy(kind: NonNullable<typeof busy.value>, action: () => Promise<void>) {
+  busy.value = kind;
   try {
-    await signIn();
-    // the background starts syncing when it sees the sign-in
+    await action();
   } catch (e) {
-    if (e instanceof SyncAuthError && e.code === "cancelled") return;
-    notifyError(e);
+    // closing the sign-in window isn't an error
+    if (!(e instanceof SyncAuthError && e.code === "cancelled")) notifyError(e);
   } finally {
     busy.value = undefined;
   }
-};
+}
 
-const syncNow = async () => {
-  busy.value = "sync";
-  try {
-    await requestSync();
-  } catch (e) {
-    notifyError(e);
-  } finally {
-    busy.value = undefined;
-  }
-};
+// the background starts syncing when it sees the sign-in
+const startSignIn = () => withBusy("signin", async () => void (await signIn()));
+const syncNow = () => withBusy("sync", requestSync);
+const choose = (choice: FirstChoice) => withBusy("choice", () => chooseFirstSync(choice));
 
-const choose = async (choice: FirstChoice) => {
-  busy.value = "choice";
-  try {
-    await chooseFirstSync(choice);
-  } catch (e) {
-    notifyError(e);
-  } finally {
-    busy.value = undefined;
-  }
-};
-
-const toggleSyncPrefs = async (on: boolean) => {
-  if (!settings.value) return;
-  await setSyncSettings({ ...settings.value, syncPrefs: on });
-};
+const toggleSyncPrefs = (on: boolean) =>
+  updateSyncSettings((s) => (s.syncPrefs = on));
 
 // --- status ---
 
@@ -91,16 +76,32 @@ const ERROR_KEYS: Record<string, string> = {
   quota_exceeded: "sync_error_quota",
 };
 
+// ticks so "5 minutes ago" stays true while the page is open
+const now = ref(Date.now());
+const ticker = setInterval(() => (now.value = Date.now()), 30_000);
+onUnmounted(() => clearInterval(ticker));
+
+/** The last sync's exact time, shown on hover. */
+const lastSyncAt = computed(() => {
+  const at = state.value?.lastSync?.at;
+  return at === undefined ? undefined : new Date(at).toLocaleString();
+});
+
 const status = computed(() => {
   const last = state.value?.lastSync;
-  if (!last) return { type: "info", text: Host.getMessage("sync_status_never") };
-  const when = new Date(last.at).toLocaleString();
+  if (!last) return { warning: false, text: Host.getMessage("sync_status_never") };
+  const when = relativeTime(
+    last.at,
+    now.value,
+    Host.currentLocale(),
+    Host.getMessage("sync_time_recent")
+  );
   if (!last.error) {
-    return { type: "success", text: Host.getMessage("sync_status_ok", when) };
+    return { warning: false, text: Host.getMessage("sync_status_ok", when) };
   }
   const key = ERROR_KEYS[last.error.code];
   return {
-    type: "warning",
+    warning: true,
     text: key
       ? Host.getMessage(key, when)
       : Host.getMessage("sync_error_other", [when, last.error.code]),
@@ -124,18 +125,12 @@ const openSnapshots = async () => {
   }
 };
 
-const restore = async (id: string) => {
-  busy.value = "restore";
-  try {
+const restore = (id: string) =>
+  withBusy("restore", async () => {
     await restoreSnapshot(id);
     snapshotsVisible.value = false;
     Notification.success({ content: Host.getMessage("sync_restore_done") });
-  } catch (e) {
-    notifyError(e);
-  } finally {
-    busy.value = undefined;
-  }
-};
+  });
 
 const snapshotReason = (r: SnapshotMeta["reason"]) =>
   Host.getMessage(`sync_snapshot_reason_${r.replace("-", "_")}`);
@@ -145,97 +140,96 @@ const snapshotReason = (r: SnapshotMeta["reason"]) =>
   <section data-testid="pref-sync">
     <a-divider orientation="left">{{ $t("preferences_section_sync") }}</a-divider>
 
-    <a-typography-paragraph type="secondary">{{
-      $t("sync_desc")
-    }}</a-typography-paragraph>
-
-    <template v-if="!signedIn">
-      <a-typography-paragraph v-if="auth?.expired" data-testid="pref-sync-expired">
-        <a-alert type="warning">{{ $t("sync_signin_expired", account) }}</a-alert>
-      </a-typography-paragraph>
-      <a-typography-paragraph type="secondary">{{
-        $t("sync_privacy_note")
-      }}</a-typography-paragraph>
-      <a-button
-        type="primary"
-        data-testid="pref-sync-signin"
-        :loading="busy === 'signin'"
-        @click="startSignIn"
-      >
-        <template #icon><icon-cloud /></template>
-        {{ $t("sync_action_signin") }}
-      </a-button>
-    </template>
+    <!-- rows of the Preference page's form, sharing its label column -->
+    <a-form-item v-if="!signedIn" :label="$t('sync_account')">
+      <a-space direction="vertical" fill>
+        <a-alert v-if="auth?.expired" type="warning" data-testid="pref-sync-expired">{{
+          $t("sync_signin_expired", account)
+        }}</a-alert>
+        <a-button
+          type="primary"
+          data-testid="pref-sync-signin"
+          :loading="busy === 'signin'"
+          @click="startSignIn"
+        >
+          <template #icon><icon-cloud /></template>
+          {{ $t("sync_action_signin") }}
+        </a-button>
+      </a-space>
+      <template #extra>
+        <div>{{ $t("sync_desc") }}</div>
+        <div>{{ $t("sync_privacy_note") }}</div>
+      </template>
+    </a-form-item>
 
     <template v-else>
-      <a-form :model="{}" auto-label-width>
-        <a-form-item :label="$t('sync_account')">
+      <a-form-item :label="$t('sync_account')">
+        <a-space wrap>
+          <span data-testid="pref-sync-account">{{ account }}</span>
+          <a-popconfirm :content="$t('sync_signout_confirm')" @ok="signOut">
+            <a-button type="text" size="small" data-testid="pref-sync-signout">{{
+              $t("sync_action_signout")
+            }}</a-button>
+          </a-popconfirm>
+        </a-space>
+      </a-form-item>
+
+      <a-form-item :label="$t('sync_status')">
+        <a-space direction="vertical" fill>
           <a-space wrap>
-            <span data-testid="pref-sync-account">{{ account }}</span>
-            <a-popconfirm :content="$t('sync_signout_confirm')" @ok="signOut">
-              <a-button size="small" data-testid="pref-sync-signout">{{
-                $t("sync_action_signout")
-              }}</a-button>
-            </a-popconfirm>
-          </a-space>
-        </a-form-item>
-
-        <a-form-item :label="$t('sync_status')">
-          <a-space direction="vertical" fill>
-            <a-space wrap>
-              <a-typography-text
-                data-testid="pref-sync-status"
-                :type="status.type === 'warning' ? 'warning' : 'secondary'"
-                >{{ status.text }}</a-typography-text
-              >
-              <a-button
-                size="small"
-                data-testid="pref-sync-now"
-                :loading="busy === 'sync'"
-                @click="syncNow"
-              >
-                <template #icon><icon-sync /></template>
-                {{ $t("sync_action_now") }}
-              </a-button>
-            </a-space>
             <a-typography-text
-              v-if="failedCount > 0"
-              type="warning"
-              data-testid="pref-sync-failed"
-              >{{ $t("sync_status_failed", failedCount.toString()) }}</a-typography-text
+              data-testid="pref-sync-status"
+              :title="lastSyncAt"
+              :type="status.warning ? 'warning' : 'secondary'"
+              >{{ status.text }}</a-typography-text
             >
-            <a-typography-text
-              v-if="heldCount > 0"
-              type="warning"
-              data-testid="pref-sync-held"
-              >{{ $t("sync_status_held", heldCount.toString()) }}</a-typography-text
+            <a-button
+              size="small"
+              data-testid="pref-sync-now"
+              :loading="busy === 'sync'"
+              @click="syncNow"
             >
+              <template #icon><icon-sync /></template>
+              {{ $t("sync_action_now") }}
+            </a-button>
           </a-space>
-        </a-form-item>
+          <a-typography-text
+            v-if="failedCount > 0"
+            type="warning"
+            data-testid="pref-sync-failed"
+            >{{ $t("sync_status_failed", failedCount.toString()) }}</a-typography-text
+          >
+          <a-typography-text
+            v-if="heldCount > 0"
+            type="warning"
+            data-testid="pref-sync-held"
+            >{{ $t("sync_status_held", heldCount.toString()) }}</a-typography-text
+          >
+        </a-space>
+      </a-form-item>
 
-        <a-form-item
-          :label="$t('sync_prefs')"
-          :extra="$t('sync_prefs_hint')"
-        >
-          <a-switch
-            data-testid="pref-sync-prefs"
-            :model-value="settings?.syncPrefs ?? true"
-            @change="(v) => toggleSyncPrefs(v as boolean)"
-          />
-        </a-form-item>
+      <a-form-item
+        :label="$t('sync_prefs')"
+        :extra="$t('sync_prefs_hint')"
+      >
+        <a-switch
+          data-testid="pref-sync-prefs"
+          :model-value="settings.syncPrefs"
+          @change="(v) => toggleSyncPrefs(v as boolean)"
+        />
+      </a-form-item>
 
-        <a-form-item :label="$t('sync_snapshots')" :extra="$t('sync_snapshots_hint')">
-          <a-button size="small" data-testid="pref-sync-snapshots" @click="openSnapshots">
-            <template #icon><icon-history /></template>
-            {{ $t("sync_action_snapshots") }}
-          </a-button>
-        </a-form-item>
-      </a-form>
+      <a-form-item :label="$t('sync_snapshots')" :extra="$t('sync_snapshots_hint')">
+        <a-button size="small" data-testid="pref-sync-snapshots" @click="openSnapshots">
+          <template #icon><icon-history /></template>
+          {{ $t("sync_action_snapshots") }}
+        </a-button>
+      </a-form-item>
     </template>
   </section>
 
   <a-modal
-    :visible="signedIn && state?.phase === 'needs-first-choice'"
+    :visible="signedIn && !!state?.needsFirstChoice"
     :title="$t('sync_first_title')"
     :footer="false"
     :closable="false"

@@ -1,9 +1,15 @@
 import { Host } from "@/adapters";
 import { onProfileUpdate } from "@/services/profile";
-import type { RunTrigger } from "./engine";
+import { POLL_INTERVAL_MINUTES, type RunTrigger } from "./engine";
 import { handleSyncMessages, syncEngine } from "./index";
 import { SYNCED_PREFS } from "./records";
-import { getSyncAuth, keySyncAuth, keySyncSettings, type SyncAuth } from "./state";
+import {
+  getSyncAuth,
+  isSignedIn,
+  keySyncAuth,
+  keySyncSettings,
+  type SyncAuth,
+} from "./state";
 
 /**
  * When the background syncs (spec §5.3): at start, right after sign-in, a
@@ -11,11 +17,8 @@ import { getSyncAuth, keySyncAuth, keySyncSettings, type SyncAuth } from "./stat
  */
 
 const POLL_ALARM = "sync:poll";
-const POLL_MINUTES = 15;
 // batch a burst of edits (e.g. typing in a form that saves) into one run
 const LOCAL_CHANGE_DELAY_MS = 2000;
-
-const usable = (auth: SyncAuth | null | undefined) => !!auth && !auth.expired;
 
 function run(trigger: RunTrigger) {
   syncEngine()
@@ -24,15 +27,15 @@ function run(trigger: RunTrigger) {
 }
 
 let pending: ReturnType<typeof setTimeout> | undefined;
-async function localChanged() {
-  if (!usable(await getSyncAuth())) return;
+// a run returns at once when signed out, so scheduling needs no check
+function localChanged() {
   clearTimeout(pending);
   pending = setTimeout(() => run("local"), LOCAL_CHANGE_DELAY_MS);
 }
 
 async function startPolling() {
   if (!(await Host.getAllAlarmNames()).includes(POLL_ALARM)) {
-    await Host.createPeriodicAlarm(POLL_ALARM, POLL_MINUTES);
+    await Host.createPeriodicAlarm(POLL_ALARM, POLL_INTERVAL_MINUTES);
   }
 }
 
@@ -45,16 +48,16 @@ export function initSync() {
 
   // profiles, the synced prefs, and this device's sync settings (a profile
   // marked local-only, prefs sync turned on) all change what syncs
-  onProfileUpdate(() => void localChanged());
+  onProfileUpdate(localChanged);
   Host.onLocalStorageChanged((changes) => {
     if (SYNCED_PREFS.some((k) => k in changes) || keySyncSettings in changes) {
-      void localChanged();
+      localChanged();
     }
 
     if (keySyncAuth in changes) {
       const { newValue, oldValue } = changes[keySyncAuth];
-      const now = newValue as SyncAuth | null | undefined;
-      if (usable(now) && !usable(oldValue as SyncAuth | null | undefined)) {
+      const now = newValue as SyncAuth | undefined;
+      if (isSignedIn(now) && !isSignedIn(oldValue as SyncAuth | undefined)) {
         startPolling().catch(console.error);
         run("signin");
       } else if (!now) {
@@ -65,7 +68,7 @@ export function initSync() {
 
   getSyncAuth()
     .then(async (auth) => {
-      if (!usable(auth)) return;
+      if (!isSignedIn(auth)) return;
       await startPolling();
       run("start");
     })

@@ -1,11 +1,12 @@
 import { Host } from "@/adapters";
 import { withLock } from "@/services/utils";
 import { SYNC_BUILD } from "./buildEnv";
-import { discover, syncOrigin, type Discovery } from "./config";
+import { discover, syncFetch, syncOrigin, type Discovery } from "./config";
 import {
   clearSyncAuth,
   clearSyncState,
   getSyncAuth,
+  isSignedIn,
   setSyncAuth,
   type SyncAuth,
 } from "./state";
@@ -57,14 +58,6 @@ async function client(): Promise<{ origin: string; endpoints: Discovery }> {
   return { origin, endpoints: await discover(origin) };
 }
 
-/**
- * Requests to byte.vet never send its cookies: they authenticate with the
- * code, refresh token or access token. The browser would otherwise attach
- * the session cookie of the sign-in that just happened, and byte.vet's auth
- * server refuses cookie-bearing cross-site POSTs (403 MISSING_OR_NULL_ORIGIN).
- */
-export const NO_COOKIES = { credentials: "omit" } as const satisfies RequestInit;
-
 const base64url = (bytes: Uint8Array) =>
   btoa(String.fromCharCode(...bytes))
     .replace(/\+/g, "-")
@@ -90,8 +83,7 @@ async function tokenRequest(
 ): Promise<TokenResponse> {
   let res: Response;
   try {
-    res = await fetch(endpoint, {
-      ...NO_COOKIES,
+    res = await syncFetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams(form).toString(),
@@ -137,8 +129,7 @@ async function fetchAccount(
   accessToken: string
 ): Promise<SyncAuth["account"]> {
   try {
-    const res = await fetch(endpoint, {
-      ...NO_COOKIES,
+    const res = await syncFetch(endpoint, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     if (!res.ok) return undefined;
@@ -218,7 +209,7 @@ export async function signIn(): Promise<SyncAuth> {
  */
 export async function getAccessToken(): Promise<string> {
   const auth = await getSyncAuth();
-  if (!auth || auth.expired) throw new SyncAuthError("signed_out");
+  if (!isSignedIn(auth)) throw new SyncAuthError("signed_out");
   if (auth.expiresAt - EXPIRY_MARGIN_MS > Date.now()) return auth.accessToken;
   return refreshAccessToken(auth.accessToken);
 }
@@ -236,7 +227,7 @@ export async function getAccessToken(): Promise<string> {
 export function refreshAccessToken(rejected?: string): Promise<string> {
   return withLock("proxyverse-sync-auth", async () => {
     const auth = await getSyncAuth();
-    if (!auth || auth.expired) throw new SyncAuthError("signed_out");
+    if (!isSignedIn(auth)) throw new SyncAuthError("signed_out");
     if (
       rejected !== undefined &&
       auth.accessToken !== rejected &&
@@ -284,9 +275,8 @@ export async function signOut() {
   if (auth && !auth.expired) {
     try {
       const { endpoints } = await client();
-      await fetch(endpoints.revocation_endpoint, {
-        ...NO_COOKIES,
-        method: "POST",
+      await syncFetch(endpoints.revocation_endpoint, {
+          method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({
           token: auth.refreshToken,

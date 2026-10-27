@@ -14,7 +14,6 @@ import {
   WebRequestResponseStartedDetails,
   ActionBehavior,
   ExtensionInfo,
-  IDENTITY_UNAVAILABLE,
   POPUP_PAGE,
 } from "./base";
 
@@ -31,6 +30,10 @@ export class Firefox extends BaseAdapter {
   async get<T>(key: string): Promise<T | undefined> {
     const ret = await browser.storage.local.get(key);
     return ret[key] as T | undefined;
+  }
+
+  async remove(key: string): Promise<void> {
+    await browser.storage.local.remove(key);
   }
 
   onLocalStorageChanged(
@@ -183,22 +186,10 @@ export class Firefox extends BaseAdapter {
     await browser.tabs.reload(tabID);
   }
 
-  async launchWebAuthFlow(url: string, interactive: boolean): Promise<string> {
-    // undefined until the optional permission is granted
-    const identity = browser.identity as typeof browser.identity | undefined;
-    if (!identity?.launchWebAuthFlow) throw new Error(IDENTITY_UNAVAILABLE);
-    const redirect = await identity.launchWebAuthFlow({ url, interactive });
-    if (!redirect) throw new Error("The web auth flow returned no redirect URL");
-    return redirect;
+  protected identity() {
+    // typed as always there, but absent where the browser lacks the API
+    return browser.identity as typeof browser.identity | undefined;
   }
-
-  getRedirectURL(path: string): string {
-    const identity = browser.identity as typeof browser.identity | undefined;
-    if (!identity?.getRedirectURL) throw new Error(IDENTITY_UNAVAILABLE);
-    return identity.getRedirectURL(path);
-  }
-
-
 
   async extensionInfo(): Promise<ExtensionInfo> {
     const { os } = await browser.runtime.getPlatformInfo();

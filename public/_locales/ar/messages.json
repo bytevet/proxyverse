@@ -361,14 +361,6 @@
     "message": "الاستيراد والتصدير"
   },
 
-  "preferences_section_import_export_desc": {
-    "message": "صدّر ملفات تعريف الوكيل إلى ملف للنسخ الاحتياطي أو المشاركة، أو استوردها لاستعادتها عند الحاجة."
-  },
-
-  "preferences_section_import_switchyomega": {
-    "message": "يقبل خيار «استيراد ملفات التعريف» أيضًا نسخة احتياطية من ProxySwitchyOmega أو ZeroOmega بامتداد (.bak). تظهر بعد الاستيراد قائمة بكل ما تعذّر تحويله بدقة."
-  },
-
   "preferences_tag_beta": {
     "message": "تجريبي"
   },

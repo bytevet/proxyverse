@@ -3,7 +3,11 @@ import {
   getSyncAuth,
   getSyncSettings,
   getSyncState,
+  keySyncAuth,
+  keySyncSettings,
+  keySyncState,
   onSyncStorageChanged,
+  withSyncDefaults,
   type SyncAuth,
   type SyncSettings,
   type SyncState,
@@ -16,22 +20,31 @@ import {
 export function useSyncStatus() {
   const auth = shallowRef<SyncAuth>();
   const state = shallowRef<SyncState>();
-  const settings = shallowRef<SyncSettings>();
+  const settings = shallowRef<SyncSettings>(withSyncDefaults(undefined));
 
-  const load = async () => {
+  let unsubscribe: (() => void) | undefined;
+  onMounted(async () => {
+    // a change carries the new value: no need to read it back
+    unsubscribe = onSyncStorageChanged((changes) => {
+      if (keySyncAuth in changes) {
+        auth.value = changes[keySyncAuth]?.newValue as SyncAuth | undefined;
+      }
+      if (keySyncState in changes) {
+        state.value = changes[keySyncState]?.newValue as SyncState | undefined;
+      }
+      if (keySyncSettings in changes) {
+        settings.value = withSyncDefaults(
+          changes[keySyncSettings]?.newValue as Partial<SyncSettings> | undefined
+        );
+      }
+    });
     [auth.value, state.value, settings.value] = await Promise.all([
       getSyncAuth(),
       getSyncState(),
       getSyncSettings(),
     ]);
-  };
-
-  let unsubscribe: (() => void) | undefined;
-  onMounted(() => {
-    unsubscribe = onSyncStorageChanged(() => void load());
-    void load();
   });
   onUnmounted(() => unsubscribe?.());
 
-  return { auth, state, settings, reload: load };
+  return { auth, state, settings };
 }

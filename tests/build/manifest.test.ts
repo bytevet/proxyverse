@@ -97,7 +97,6 @@ describe("build env", () => {
 
   test("defines JSON literals", () => {
     expect(syncDefines("production")).toEqual({
-      __SYNC_ENV__: '"production"',
       __SYNC_ORIGIN__: '"https://byte.vet"',
       __SYNC_CLIENT_ID__: '"proxyverse-extension"',
       __SYNC_ORIGIN_OVERRIDE__: "false",

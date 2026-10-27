@@ -43,6 +43,12 @@ export class WebBrowser extends BaseAdapter {
     s = localStorage.getItem(key);
     return s && JSON.parse(s);
   }
+  async remove(key: string): Promise<void> {
+    const oldValue = await this.get(key);
+    localStorage.removeItem(key);
+    const changes = { [key]: { newValue: undefined, oldValue } };
+    this.storageListeners.forEach((cb) => cb(changes));
+  }
 
   onLocalStorageChanged(
     callback: (changes: Record<string, { newValue?: unknown; oldValue?: unknown }>) => void
@@ -138,12 +144,6 @@ export class WebBrowser extends BaseAdapter {
     console.log(`Reload tab: ${tabID}`);
   }
 
-  async launchWebAuthFlow(_url: string, _interactive: boolean): Promise<string> {
-    throw new Error("Web auth flows are not supported outside an extension");
-  }
-  getRedirectURL(_path: string): string {
-    throw new Error("Redirect URLs are not supported outside an extension");
-  }
 
   async extensionInfo(): Promise<ExtensionInfo> {
     return { version: "0.0.0", browser: "web", os: "unknown" };

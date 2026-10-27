@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
 import { SyncApi, SyncApiError } from "@/services/sync/api";
+import { jsonResponse } from "../../helpers";
 
 const ORIGIN = "https://sync.example";
 const DEVICE = "7b1e0000-0000-4000-8000-000000000001";
@@ -8,7 +9,6 @@ type Call = {
   url: string;
   method: string;
   headers: Record<string, string>;
-  credentials?: RequestCredentials;
   body?: unknown;
 };
 
@@ -20,7 +20,6 @@ function fakeFetch(...responses: (Response | Error)[]) {
       url: String(input),
       method: init?.method ?? "GET",
       headers: init?.headers as Record<string, string>,
-      credentials: init?.credentials,
       body: init?.body === undefined ? undefined : JSON.parse(String(init.body)),
     });
     const next = responses.shift();
@@ -31,11 +30,7 @@ function fakeFetch(...responses: (Response | Error)[]) {
   return { fetch: fetch as unknown as typeof globalThis.fetch, calls };
 }
 
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
+const json = jsonResponse;
 
 const problem = (status: number, code: string, headers: Record<string, string> = {}) =>
   new Response(
@@ -75,7 +70,6 @@ describe("SyncApi requests", () => {
     expect(f.calls[0]).toEqual({
       url: `${ORIGIN}/api/proxyverse/v1/changes?since=0`,
       method: "GET",
-      credentials: "omit",
       headers: {
         Authorization: "Bearer t1",
         "X-Proxyverse-Device": DEVICE,
@@ -95,43 +89,33 @@ describe("SyncApi requests", () => {
       json([meta]),
       json(meta, 201),
       json(meta, 201),
-      json({ records: [record] }),
       json({ rev: 10, written: 1 })
     );
     const { api } = client(f);
     const { rev: _, deviceID: __, ...push } = record;
 
     await api.putDevice({ name: "Chrome" });
-    await api.changes(5, 100);
+    await api.changes(5);
     expect(await api.push([push])).toEqual({ accepted: [{ id: record.id, rev: 4 }], rejected: [] });
     expect(await api.listSnapshots()).toEqual([meta]);
     await api.createSnapshot();
     await api.createSnapshot("before-overwrite");
-    expect(await api.getSnapshot("s/1")).toEqual({ records: [record] });
-    expect(await api.restoreSnapshot("s1")).toEqual({ rev: 10, written: 1 });
+    expect(await api.restoreSnapshot("s/1")).toEqual({ rev: 10, written: 1 });
 
     const base = `${ORIGIN}/api/proxyverse/v1`;
     expect(f.calls.map((c) => [c.method, c.url, c.body])).toEqual([
       ["PUT", `${base}/devices/${DEVICE}`, { name: "Chrome" }],
-      ["GET", `${base}/changes?since=5&limit=100`, undefined],
+      ["GET", `${base}/changes?since=5`, undefined],
       ["POST", `${base}/records`, { records: [push] }],
       ["GET", `${base}/snapshots`, undefined],
       ["POST", `${base}/snapshots`, undefined],
       ["POST", `${base}/snapshots`, { reason: "before-overwrite" }],
-      ["GET", `${base}/snapshots/s%2F1`, undefined],
-      ["POST", `${base}/snapshots/s1/restore`, undefined],
+      ["POST", `${base}/snapshots/s%2F1/restore`, undefined],
     ]);
     expect(f.calls[0].headers["Content-Type"]).toBe("application/json");
     expect(f.calls[1].headers).not.toHaveProperty("Content-Type");
   });
 
-  test("lists devices from a bare array", async () => {
-    const device = { id: DEVICE, name: null, browser: null, extVersion: null, createdAt: 1, lastSeen: 2 };
-    const f = fakeFetch(json([device]), json({ devices: [device] }));
-    const { api } = client(f);
-    expect(await api.listDevices()).toEqual([device]);
-    await expect(api.listDevices()).rejects.toMatchObject({ code: "invalid_response" });
-  });
 });
 
 describe("SyncApi errors", () => {
@@ -210,13 +194,4 @@ describe("SyncApi token refresh", () => {
     refresh.mockRejectedValueOnce(Error("invalid_grant"));
     await expect(api.listSnapshots()).rejects.toThrow("invalid_grant");
   });
-});
-
-test("never sends byte.vet cookies", async () => {
-  // byte.vet refuses cookie-bearing cross-site POSTs (403 MISSING_OR_NULL_ORIGIN)
-  const f = fakeFetch(json({ records: [], cursor: 0, hasMore: false }), json({ accepted: [], rejected: [] }));
-  const { api } = client(f);
-  await api.changes(0);
-  await api.push([]);
-  expect(f.calls.map((c) => c.credentials)).toEqual(["omit", "omit"]);
 });

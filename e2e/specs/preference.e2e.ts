@@ -1,6 +1,6 @@
 import { test, expect } from "../fixtures";
 import { expectRoute } from "../fixtures/routing";
-import { chooseOption, toast } from "../pages/arco";
+import { chooseOption, popconfirmOK, toast } from "../pages/arco";
 import { Preference } from "../pages/preference";
 import {
   autoProfile,
@@ -92,9 +92,7 @@ test.describe("preference", () => {
     await expect(page.getByText("界面", { exact: true })).toBeVisible();
     // Arco's own texts follow
     await importButton.click();
-    await expect(
-      page.locator(".arco-popconfirm:visible .arco-btn-primary")
-    ).toHaveText("确定");
+    await expect(popconfirmOK(page)).toHaveText("确定");
     // so do the other open pages
     await expect(popup.page.getByTestId("popup-profile-direct")).toHaveText(
       "直接连接"

@@ -13,93 +13,23 @@
  * the e2e tsconfig and runs in vitest.
  */
 import { createHash, randomBytes, randomUUID } from "node:crypto";
+import type { components } from "../../src/services/sync/api.gen";
 
-// ── Wire types (webapp src/lib/proxyverse/types.ts) ─────────────────────
+// ── Wire types: the contract's, generated from docs/sync-api.openapi.yaml ──
 
 export const HLC_PATTERN = /^(\d{15}):(\d{4}):([A-Za-z0-9-]{1,64})$/;
 
-export interface SyncRecord {
-  id: string;
-  rev: number;
-  hlc: string;
-  deviceID: string;
-  deleted: boolean;
-  schema: string;
-  encoding: string;
-  /** `null` for tombstones; opaque when `encoding !== "json"`. */
-  data: unknown;
-}
-
-export interface PushRecord {
-  id: string;
-  baseRev?: number;
-  hlc: string;
-  deleted: boolean;
-  schema: string;
-  encoding: string;
-  data: unknown;
-}
-
-export type RejectReason =
-  | "stale"
-  | "invalid_record"
-  | "reserved_id"
-  | "too_large"
-  | "clock_skew"
-  | "unknown_schema"
-  | "quota_exceeded";
-
-export interface PushResult {
-  accepted: { id: string; rev: number }[];
-  rejected: { id: string; reason: RejectReason; current?: SyncRecord }[];
-}
-
-export interface ChangesResult {
-  records: SyncRecord[];
-  cursor: number;
-  hasMore: boolean;
-}
-
-export interface Device {
-  id: string;
-  name: string | null;
-  browser: string | null;
-  extVersion: string | null;
-  createdAt: number;
-  lastSeen: number;
-}
-
-export interface DeviceInput {
-  name?: string;
-  browser?: string;
-  extVersion?: string;
-}
-
-export type SnapshotReason =
-  | "daily"
-  | "manual"
-  | "before-restore"
-  | "before-overwrite";
-
-export interface SnapshotMeta {
-  id: string;
-  createdAt: number;
-  reason: SnapshotReason;
-  rev: number;
-  recordCount: number;
-  createdBy: string;
-}
-
-export type SyncErrorCode =
-  | "invalid_request"
-  | "invalid_token"
-  | "device_revoked"
-  | "not_found"
-  | "cursor_expired"
-  | "quota_exceeded"
-  | "client_too_old"
-  | "rate_limited"
-  | "unavailable";
+type Schemas = components["schemas"];
+export type SyncRecord = Schemas["SyncRecord"];
+export type PushRecord = Schemas["PushRecord"];
+export type RejectReason = Schemas["RejectReason"];
+export type PushResult = Schemas["PushResult"];
+export type ChangesResult = Schemas["ChangesResult"];
+export type Device = Schemas["Device"];
+export type DeviceInput = Schemas["DeviceInput"];
+export type SnapshotMeta = Schemas["SnapshotMeta"];
+export type SnapshotReason = SnapshotMeta["reason"];
+export type SyncErrorCode = Schemas["Problem"]["code"];
 
 export const SYNC_ERROR_STATUS: Record<SyncErrorCode, number> = {
   invalid_request: 400,
@@ -476,7 +406,6 @@ export class SyncStore {
   // oauth state
   private codes = new Map<string, AuthCode>();
   private tokens = new Map<string, TokenEntry>();
-  private denyNext: string | null = null;
 
   // test controls
   private fixedNow: number | null = null;
@@ -502,7 +431,6 @@ export class SyncStore {
     this.snapSeq = 0;
     this.codes.clear();
     this.tokens.clear();
-    this.denyNext = null;
     this.fixedNow = null;
     this.failures = [];
     this.log = [];
@@ -511,10 +439,6 @@ export class SyncStore {
   /** Override options until the next `reset()`. */
   configure(options: SyncStoreOptions) {
     this.opts = { ...this.opts, ...options };
-  }
-
-  get options(): Readonly<Required<SyncStoreOptions>> {
-    return this.opts;
   }
 
   get user() {
@@ -533,11 +457,6 @@ export class SyncStore {
   /** One-shot error for the next matching request (queued; first match wins). */
   failNext(failure: Failure) {
     this.failures.push(failure);
-  }
-
-  /** The next `authorize` redirects with `error` (default `access_denied`). */
-  denyNextAuthorize(error = "access_denied") {
-    this.denyNext = error;
   }
 
   /** Expire every access token issued so far (refresh tokens stay valid). */
@@ -584,11 +503,6 @@ export class SyncStore {
   /** The account's current rev. */
   currentRev() {
     return this.rev;
-  }
-
-  /** All devices, revoked ones included. */
-  allDevices(): (Device & { revokedAt: number | null })[] {
-    return [...this.devs.values()].map(clone);
   }
 
   /**
@@ -647,11 +561,6 @@ export class SyncStore {
       return redirectError("unsupported_response_type", "response_type must be code");
     if (!params.code_challenge || params.code_challenge_method !== "S256")
       return redirectError("invalid_request", "PKCE with S256 is required");
-    if (this.denyNext) {
-      const error = this.denyNext;
-      this.denyNext = null;
-      return redirectError(error, "the user denied access");
-    }
 
     const scopes = (params.scope ?? "")
       .split(/\s+/)
@@ -1107,6 +1016,12 @@ export class SyncStore {
   }
 
   private routeOAuth(method: string, sub: string, url: URL, req: SyncRequest): SyncResponse {
+    // Clients must not send byte.vet's cookies. byte.vet's auth server
+    // refuses cookie-bearing cross-site POSTs (its token endpoint did until
+    // it learned to ignore them); enforcing it here keeps the client honest.
+    if (method === "POST" && req.headers.cookie) {
+      return jsonResponse({ message: "Missing or null Origin", code: "MISSING_OR_NULL_ORIGIN" }, 403);
+    }
     const form = () => Object.fromEntries(new URLSearchParams(req.body ?? "")) as Record<string, string>;
     if (sub === "/authorize" && method === "GET") {
       const q = url.searchParams;
@@ -1119,7 +1034,16 @@ export class SyncStore {
         scope: q.get("scope"),
         response_type: q.get("response_type"),
       });
-      return { status: 302, headers: { location, "cache-control": "no-store" }, body: "" };
+      // signing in leaves a session cookie, as on byte.vet
+      return {
+        status: 302,
+        headers: {
+          location,
+          "cache-control": "no-store",
+          "set-cookie": "e2e.session_token=signed-in; Path=/; HttpOnly; SameSite=Lax",
+        },
+        body: "",
+      };
     }
     if (sub === "/token" && method === "POST") return jsonResponse(this.token(form()));
     if (sub === "/revoke" && method === "POST") {

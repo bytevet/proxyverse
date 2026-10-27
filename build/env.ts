@@ -5,7 +5,8 @@
 
 export type BuildEnv = "production" | "northernlight" | "e2e";
 
-export type SyncSettings = {
+/** The sync server and OAuth client a build talks to. */
+export type SyncTarget = {
   /** The byte.vet origin serving OAuth and the sync API, no trailing slash. */
   origin: string;
   clientID: string;
@@ -13,7 +14,7 @@ export type SyncSettings = {
   originOverride: boolean;
 };
 
-export const BUILD_ENVS: Record<BuildEnv, SyncSettings> = {
+export const BUILD_ENVS: Record<BuildEnv, SyncTarget> = {
   production: {
     origin: "https://byte.vet",
     clientID: "proxyverse-extension",
@@ -47,7 +48,6 @@ export function parseBuildEnv(value: string | undefined): BuildEnv {
 export function syncDefines(env: BuildEnv): Record<string, string> {
   const { origin, clientID, originOverride } = BUILD_ENVS[env];
   return {
-    __SYNC_ENV__: JSON.stringify(env),
     __SYNC_ORIGIN__: JSON.stringify(origin),
     __SYNC_CLIENT_ID__: JSON.stringify(clientID),
     __SYNC_ORIGIN_OVERRIDE__: JSON.stringify(originOverride),

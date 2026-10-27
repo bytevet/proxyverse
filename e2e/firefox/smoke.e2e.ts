@@ -11,6 +11,7 @@ import {
   standardProfiles,
 } from "../data/profiles";
 import { launchFirefox, type Firefox } from "./driver";
+import { signedInStorage } from "../pages/sync";
 
 // hosts reached without a proxy resolve to the direct server
 const DIRECT_HOSTS = ["a.test", "b.test", "direct.test", "auth.test", "fallback.test"];
@@ -163,7 +164,6 @@ test.describe("firefox smoke", () => {
   // last: it leaves the extension signed in to sync
   test("syncs profiles with the fake byte.vet", async () => {
     const { proxyA, proxyB } = standardProfiles(servers);
-    const tokens = servers.sync.issueTokens(undefined, "proxyverse-extension-dev");
     const local = (items: Record<string, unknown>) =>
       ff.driver.executeAsyncScript(
         `const [items, done] = arguments;
@@ -174,15 +174,7 @@ test.describe("firefox smoke", () => {
     await ff.openExtensionPage("/preference");
     await ff.setProfiles([proxyA]);
     // a completed sign-in: the Firefox auth window can't be driven here
-    await local({
-      "sync.devOrigin": servers.syncOrigin,
-      "sync.auth": {
-        accessToken: tokens.access_token,
-        refreshToken: tokens.refresh_token,
-        expiresAt: Date.now() + tokens.expires_in * 1000,
-        account: servers.sync.user,
-      },
-    });
+    await local(signedInStorage(servers));
     await expect
       .poll(() => servers.sync.get("profile:proxyA")?.data, { timeout: 15_000 })
       .toMatchObject({ profileID: "proxyA" });

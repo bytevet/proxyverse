@@ -7,7 +7,7 @@ import {
   getSyncSettings,
   initialSyncState,
   onSyncStorageChanged,
-  setSyncSettings,
+  updateSyncSettings,
   setSyncState,
 } from "@/services/sync/state";
 
@@ -22,7 +22,6 @@ describe("sync state", () => {
       base: {},
       local: {},
       held: {},
-      phase: "idle",
     });
     expect(initialSyncState().deviceID).not.toBe(a.deviceID);
   });
@@ -35,24 +34,25 @@ describe("sync state", () => {
   });
 
   test("writes plain copies", async () => {
+    vi.spyOn(Host, "get").mockResolvedValue(undefined);
     const set = vi.spyOn(Host, "set").mockResolvedValue();
-    const settings = reactive({ syncPrefs: false, localOnly: ["p1"] });
-    await setSyncSettings(settings);
+    const localOnly = reactive(["p1"]);
+    await updateSyncSettings((s) => (s.localOnly = localOnly));
     const [key, value] = set.mock.calls[0];
     expect(key).toBe("sync.settings");
-    expect(value).toEqual({ syncPrefs: false, localOnly: ["p1"] });
-    expect(value).not.toBe(settings);
+    expect(value).toEqual({ syncPrefs: true, localOnly: ["p1"] });
+    expect((value as { localOnly: unknown }).localOnly).not.toBe(localOnly);
 
     const state = initialSyncState();
     await setSyncState(state);
     expect(set).toHaveBeenLastCalledWith("sync.state", state);
   });
 
-  test("a cleared key reads as absent", async () => {
-    const set = vi.spyOn(Host, "set").mockResolvedValue();
+  test("clearing removes the key", async () => {
+    const remove = vi.spyOn(Host, "remove").mockResolvedValue();
     await clearSyncAuth();
-    expect(set).toHaveBeenCalledWith("sync.auth", null);
-    vi.spyOn(Host, "get").mockResolvedValue(null);
+    expect(remove).toHaveBeenCalledWith("sync.auth");
+    vi.spyOn(Host, "get").mockResolvedValue(undefined);
     expect(await getSyncAuth()).toBeUndefined();
   });
 

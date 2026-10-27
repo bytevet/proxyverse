@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { Host } from "@/adapters";
 import { SYNC_BUILD } from "@/services/sync/buildEnv";
-import { discover, syncOrigin } from "@/services/sync/config";
+import { discover, syncFetch, syncOrigin } from "@/services/sync/config";
+import { jsonResponse } from "../../helpers";
 
 const ORIGIN = "https://sync.example";
 const metadata = {
@@ -25,7 +26,7 @@ function fakeSession() {
 }
 
 const fetchReturning = (body: unknown, status = 200) =>
-  vi.fn(async () => new Response(JSON.stringify(body), { status })) as unknown as typeof fetch &
+  vi.fn(async () => jsonResponse(body, status)) as unknown as typeof fetch &
     ReturnType<typeof vi.fn>;
 
 describe("syncOrigin", () => {
@@ -55,7 +56,8 @@ describe("discover", () => {
   test("fetches the metadata and caches it per origin", async () => {
     const session = fakeSession();
     const fetch = fetchReturning(metadata);
-    const { response_types_supported: _, ...expected } = metadata;
+    // only the endpoints are kept
+    const { response_types_supported: _, scopes_supported: __, ...expected } = metadata;
 
     expect(await discover(ORIGIN, fetch)).toEqual(expected);
     expect(fetch).toHaveBeenCalledWith(
@@ -94,4 +96,19 @@ describe("discover", () => {
     fakeSession();
     await expect(discover(ORIGIN, fetchReturning({}, 404))).rejects.toThrow(/404/);
   });
+});
+
+test("requests to byte.vet never send its cookies", async () => {
+  // byte.vet refuses cookie-bearing cross-site POSTs (403 MISSING_OR_NULL_ORIGIN)
+  const fetch = vi.fn(async () => new Response("{}"));
+  vi.stubGlobal("fetch", fetch);
+  try {
+    await syncFetch("https://byte.vet/x", { method: "POST", credentials: "include" });
+    expect(fetch).toHaveBeenCalledWith("https://byte.vet/x", {
+      method: "POST",
+      credentials: "omit",
+    });
+  } finally {
+    vi.unstubAllGlobals();
+  }
 });

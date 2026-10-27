@@ -18,7 +18,7 @@
     "test:e2e:live": "playwright test -c e2e/live",
     "sync:api-types": "node scripts/sync-api-types.mjs",
     "build:preview": "PROXYVERSE_ENV=northernlight npm run build",
-    "build:preview:firefox": "PROXYVERSE_ENV=northernlight npm run build:firefox"
+    "build:preview:firefox": "PROXYVERSE_ENV=northernlight npm run build:firefox -- --outDir dist-firefox --emptyOutDir"
   },
   "directories": {
     "test": "tests"

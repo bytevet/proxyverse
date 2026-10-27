@@ -361,14 +361,6 @@
     "message": "匯入與匯出設定檔"
   },
 
-  "preferences_section_import_export_desc": {
-    "message": "將您的代理伺服器設定檔匯出至檔案，以便備份或分享，並可匯入以還原。"
-  },
-
-  "preferences_section_import_switchyomega": {
-    "message": "「匯入設定檔」也支援 ProxySwitchyOmega / ZeroOmega 的備份檔（.bak）。無法完整轉換的項目會在匯入後列出。"
-  },
-
   "preferences_tag_beta": {
     "message": "Beta"
   },

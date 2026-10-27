@@ -9,7 +9,7 @@ Proxyverse extension (Chrome, Edge, Firefox).
 |---|---|
 | What syncs | User profiles and preferences. The active profile does **not** sync. |
 | Per-device opt-out | A profile can be marked "this device only"; preferences have a per-device toggle. |
-| Secrets | Proxy credentials sync in the payload. Protected by TLS + server-side encryption at rest. byte.vet can read them. |
+| Secrets | Proxy credentials sync in the payload. Protected by TLS + server-side encryption at rest. byte.vet holds the keys (not end-to-end) and uses the data only for sync. |
 | Conflicts | Per-record last-writer-wins (LWW) ordered by a hybrid logical clock (HLC), with tombstones. |
 | Trigger | Push on local change (debounced) + pull on start, sign-in and a periodic alarm. No server push channel. |
 | Auth | byte.vet is the OAuth 2.1 authorization server. Authorization Code + PKCE through `identity.launchWebAuthFlow`. |
@@ -166,8 +166,10 @@ then reconnects would otherwise overwrite newer edits made elsewhere.
 
 Payloads travel in plaintext JSON over TLS 1.2+. byte.vet encrypts records
 and snapshots at rest with a per-account data key wrapped by a KMS key
-(envelope encryption), and must never log `data`. The server can read proxy
-credentials; the UI states this on the sign-in screen.
+(envelope encryption), and must never log `data`. Since byte.vet holds the
+keys, this is not end-to-end encryption: the data is decrypted only to serve
+sync requests. The sign-in screen says profiles sync with their credentials,
+stored encrypted and used only for sync.
 
 `encoding` is always `"json"` in v1. A future `"e2e-v1"` would put ciphertext in
 `data`; servers must store unknown encodings opaquely and skip validation, and
@@ -323,7 +325,7 @@ overlapping triggers can't interleave.
   "base":  { "<recordID>": { "rev": 1842, "hlc": "…", "hash": "…" } }, // last state agreed with server
   "local": { "<recordID>": { "hlc": "…", "hash": "…" } },              // current local version
   "held":  { "<recordID>": { /* Record with unknown schema/encoding */ } },
-  "phase": "idle",                        // or "needs-first-choice", "error"
+  "needsFirstChoice": true,               // the first sync waits for the user (§5.7)
   "synced": true,                         // the first sync (§5.7) is done
   "lastSync": { "at": 0, "error"?: { "code", "message"? } },
   "failed":  { "<recordID>": { "reason", "hash" } }, // refused for good; not re-pushed until edited
@@ -333,7 +335,7 @@ overlapping triggers can't interleave.
 ```
 
 Being signed in (`sync.auth` present and not `expired`) is what turns sync on;
-there is no separate on/off setting. A cleared key holds `null`.
+there is no separate on/off setting. Signing out removes the keys.
 
 A record is **dirty** when `local[id].hash != base[id].hash`. There is no
 separate outbox: after a service worker restart the dirty set is recomputed by

@@ -9,6 +9,7 @@ import {
   SyncAuthError,
 } from "@/services/sync/auth";
 import { keySyncAuth, keySyncState, type SyncAuth } from "@/services/sync/state";
+import { fakeLocalStorage, jsonResponse } from "../../helpers";
 
 const ORIGIN = "https://byte.vet";
 const REDIRECT = "https://abc.chromiumapp.org/oauth";
@@ -25,24 +26,16 @@ let session: Record<string, unknown>;
 let requests: { url: string; init?: RequestInit }[];
 let tokenReplies: (() => Response)[];
 
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
+const json = jsonResponse;
 
 const form = (init?: RequestInit) =>
   Object.fromEntries(new URLSearchParams(String(init?.body)));
 
 beforeEach(() => {
-  local = {};
+  local = fakeLocalStorage();
   session = {};
   requests = [];
   tokenReplies = [];
-  vi.spyOn(Host, "get").mockImplementation(async (k) => structuredClone(local[k]) as any);
-  vi.spyOn(Host, "set").mockImplementation(async (k, v) => {
-    local[k] = structuredClone(v);
-  });
   vi.spyOn(Host, "getSession").mockImplementation(async (k) => session[k] as any);
   vi.spyOn(Host, "setSession").mockImplementation(async (k, v) => {
     session[k] = v;
@@ -154,7 +147,7 @@ describe("signIn", () => {
     tokenReplies.push(tokens(1));
 
     await signIn();
-    expect(local[keySyncState]).toBeNull();
+    expect(local[keySyncState]).toBeUndefined();
   });
 
   test("keeps the sync state when the same account signs in again", async () => {
@@ -244,6 +237,6 @@ test("signOut revokes the refresh token and forgets the sign-in", async () => {
     token_type_hint: "refresh_token",
     client_id: "proxyverse-extension",
   });
-  expect(local[keySyncAuth]).toBeNull();
-  expect(local[keySyncState]).toBeNull();
+  expect(local[keySyncAuth]).toBeUndefined();
+  expect(local[keySyncState]).toBeUndefined();
 });

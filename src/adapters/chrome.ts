@@ -16,7 +16,6 @@ import {
   WebRequestResponseStartedDetails,
   ActionBehavior,
   ExtensionInfo,
-  IDENTITY_UNAVAILABLE,
   POPUP_PAGE,
   SIDEBAR_PAGE,
 } from "./base";
@@ -35,6 +34,10 @@ export class Chrome extends BaseAdapter {
   async get<T>(key: string): Promise<T | undefined> {
     const ret = await chrome.storage.local.get(key);
     return ret[key] as T | undefined;
+  }
+
+  async remove(key: string): Promise<void> {
+    await chrome.storage.local.remove(key);
   }
 
   onLocalStorageChanged(
@@ -155,22 +158,10 @@ export class Chrome extends BaseAdapter {
     await chrome.tabs.reload(tabID);
   }
 
-  async launchWebAuthFlow(url: string, interactive: boolean): Promise<string> {
-    // undefined until the optional permission is granted
-    const identity = chrome.identity as typeof chrome.identity | undefined;
-    if (!identity?.launchWebAuthFlow) throw new Error(IDENTITY_UNAVAILABLE);
-    const redirect = await identity.launchWebAuthFlow({ url, interactive });
-    if (!redirect) throw new Error("The web auth flow returned no redirect URL");
-    return redirect;
+  protected identity() {
+    // typed as always there, but absent where the browser lacks the API
+    return chrome.identity as typeof chrome.identity | undefined;
   }
-
-  getRedirectURL(path: string): string {
-    const identity = chrome.identity as typeof chrome.identity | undefined;
-    if (!identity?.getRedirectURL) throw new Error(IDENTITY_UNAVAILABLE);
-    return identity.getRedirectURL(path);
-  }
-
-
 
   async extensionInfo(): Promise<ExtensionInfo> {
     const { os } = await chrome.runtime.getPlatformInfo();

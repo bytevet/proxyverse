@@ -14,6 +14,7 @@ import {
   getSyncAuth,
   getSyncSettings,
   getSyncState,
+  isSignedIn,
   setSyncState,
 } from "./state";
 
@@ -26,22 +27,23 @@ const device: SyncDevice = {
   profiles: listProfiles,
   updateProfiles,
   async prefs() {
+    const values = await Promise.all(SYNCED_PREFS.map((key) => Host.get(key)));
     const prefs: Partial<Record<SyncedPref, unknown>> = {};
-    for (const key of SYNCED_PREFS) {
-      const value = await Host.get(key);
-      if (value !== undefined && value !== null) prefs[key] = value;
-    }
+    SYNCED_PREFS.forEach((key, i) => {
+      if (values[i] !== undefined) prefs[key] = values[i];
+    });
     return prefs;
   },
   setPref: (key, value) => Host.set(key, value),
   state: getSyncState,
   setState: setSyncState,
   settings: getSyncSettings,
-  async signedIn() {
-    const auth = await getSyncAuth();
-    return !!auth && !auth.expired;
-  },
+  signedIn: async () => isSignedIn(await getSyncAuth()),
 };
+
+// what this extension build runs on; it doesn't change while it runs
+let info: ReturnType<typeof Host.extensionInfo> | undefined;
+const extensionInfo = () => (info ??= Host.extensionInfo());
 
 async function api(deviceID: string): Promise<SyncApi> {
   // the token the client last used, so a refresh after a 401 replaces that
@@ -50,7 +52,7 @@ async function api(deviceID: string): Promise<SyncApi> {
   return new SyncApi({
     origin: await syncOrigin(),
     deviceID,
-    version: (await Host.extensionInfo()).version,
+    version: (await extensionInfo()).version,
     getAccessToken: async () => (used = await getAccessToken()),
     refreshAccessToken: async () => (used = await refreshAccessToken(used)),
   });
@@ -60,7 +62,7 @@ let engine: Promise<SyncEngine> | undefined;
 
 /** The engine of this context; only the background runs it. */
 export function syncEngine(): Promise<SyncEngine> {
-  engine ??= Host.extensionInfo().then(
+  engine ??= extensionInfo().then(
     (info) =>
       new SyncEngine({
         device,
@@ -81,7 +83,7 @@ export type SyncMessage =
   | { type: "sync:snapshots" }
   | { type: "sync:restore"; snapshotID: string };
 
-export type SyncReply<T = undefined> =
+type SyncReply<T = undefined> =
   | { ok: true; value: T }
   | { ok: false; error: string };
 

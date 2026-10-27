@@ -1,19 +1,7 @@
 import { afterEach, expect, test, vi } from "vitest";
 import { Host } from "@/adapters";
-import {
-  deleteProfile,
-  listProfiles,
-  saveProfile,
-  type ProxyProfile,
-} from "@/services/profile";
-
-const proxy = (profileID: string): ProxyProfile => ({
-  profileID,
-  color: "#123456",
-  profileName: profileID,
-  proxyType: "proxy",
-  proxyRules: { default: { host: "10.0.0.1", port: 8080 }, bypassList: [] },
-});
+import { deleteProfile, listProfiles, saveProfile } from "@/services/profile";
+import { proxyProfile as proxy } from "../helpers";
 
 afterEach(() => vi.restoreAllMocks());
 

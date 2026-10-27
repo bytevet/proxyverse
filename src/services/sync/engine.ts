@@ -1,5 +1,4 @@
 import type { ProfilesStorage } from "@/services/profile";
-import { DarkMode } from "@/services/theme";
 import { withLock } from "@/services/utils";
 import type { ExtensionInfo } from "@/adapters";
 import { SyncApiError, type SyncApi, type SyncRecord } from "./api";
@@ -7,14 +6,14 @@ import { SyncAuthError } from "./auth";
 import { compareHLC, observeHLC, tickHLC } from "./hlc";
 import {
   collectLocalRecords,
-  decodeRemotePref,
-  decodeRemoteProfile,
+  decodeRemote,
   hashPayload,
   mergeIncomingProfile,
   normalizeProfile,
   parseRecordID,
   PAYLOAD_ENCODING,
   PAYLOAD_SCHEMA,
+  SYNCED_PREF_DEFAULTS,
   type LocalRecord,
   type Payload,
   type ProfilePayload,
@@ -41,6 +40,8 @@ import {
 /** The hash of a deleted record. */
 const TOMBSTONE = "deleted";
 const PUSH_BATCH = 100;
+/** How often the background pulls changes from other devices. */
+export const POLL_INTERVAL_MINUTES = 15;
 const BACKOFF_MIN_MS = 30_000;
 const BACKOFF_MAX_MS = 30 * 60_000;
 
@@ -71,12 +72,7 @@ export interface SyncDevice {
 
 export type SyncApiLike = Pick<
   SyncApi,
-  | "putDevice"
-  | "changes"
-  | "push"
-  | "createSnapshot"
-  | "listSnapshots"
-  | "restoreSnapshot"
+  "putDevice" | "changes" | "push" | "createSnapshot"
 >;
 
 export type SyncEngineDeps = {
@@ -92,12 +88,17 @@ export type SyncEngineDeps = {
   lockName?: string;
 };
 
-// What a run works with; `state` is saved after every step that changes
-// storage, so a service worker killed mid-run loses little.
-type Run = {
-  api: SyncApiLike;
+// This device's side of a run: what detecting and applying work with.
+type Local = {
   state: SyncState;
   settings: SyncSettings;
+};
+
+// What a run works with. `state` is saved after each step that wrote
+// storage or reached the server, so a service worker killed mid-run loses
+// little; storage is always written before the state that records it.
+type Run = Local & {
+  api: SyncApiLike;
   /** A problem that didn't stop the run, reported as its error. */
   warning?: { code: string; message?: string };
 };
@@ -118,36 +119,49 @@ export class SyncEngine {
 
   private async runLocked(opts: RunOptions) {
     const { device } = this.deps;
-    if (!(await device.signedIn())) return;
+    const [signedIn, stored, settings] = await Promise.all([
+      device.signedIn(),
+      device.state(),
+      device.settings(),
+    ]);
+    if (!signedIn) return;
 
-    const state = (await device.state()) ?? initialSyncState();
+    const state = stored ?? initialSyncState();
     const userAsked = opts.trigger === "manual" || opts.trigger === "signin";
     if (!userAsked && state.backoff && this.now() < state.backoff.until) return;
-    if (state.phase === "needs-first-choice" && !opts.firstChoice) return;
+    if (state.needsFirstChoice && !opts.firstChoice) return;
+    const local: Local = { state, settings };
 
-    const run: Run = {
-      api: await this.deps.api(state.deviceID),
-      state,
-      settings: await device.settings(),
-    };
+    // Done without reaching the server when there's nothing to push and
+    // nothing to pull yet: a local change that only echoes the engine's own
+    // writes (or a PAC refresh), or a service worker wake (it wakes on most
+    // page loads) soon after the last sync. The poll alarm pulls the rest.
+    let detected: Map<string, LocalRecord> | undefined;
+    const pollDue =
+      opts.trigger !== "start" ||
+      !state.lastSync ||
+      this.now() - state.lastSync.at >= POLL_INTERVAL_MINUTES * 60_000;
+    if (state.synced && (opts.trigger === "local" || !pollDue)) {
+      const { records, changed } = await this.detect(local);
+      if (!this.anyDirty(state)) {
+        if (changed) await this.deps.device.setState(state);
+        return;
+      }
+      detected = records;
+    }
 
+    const run: Run = { ...local, api: await this.deps.api(state.deviceID) };
     try {
       await this.register(run);
       if (!state.synced) {
         await this.firstSync(run, opts.firstChoice);
       } else {
-        const local = await this.detect(run);
-        // nothing of ours to push: an echo of the engine's own writes
-        if (opts.trigger === "local" && !this.anyDirty(run.state)) {
-          await this.save(run);
-          return;
-        }
-        await this.push(run, local);
+        await this.push(run, detected ?? (await this.detect(run)).records);
         await this.pull(run);
       }
-      if (state.phase !== "needs-first-choice") state.phase = "idle";
-      state.lastSync = { at: this.now(), error: run.warning };
-      if (!run.warning) delete state.lastSync.error;
+      state.lastSync = run.warning
+        ? { at: this.now(), error: run.warning }
+        : { at: this.now() };
       delete state.backoff;
     } catch (e) {
       await this.fail(state, e);
@@ -171,7 +185,7 @@ export class SyncEngine {
 
   /**
    * The first sync with an account (spec §5.7). When both sides have data
-   * and the user hasn't chosen yet, it stops at `needs-first-choice`.
+   * and the user hasn't chosen yet, it stops with `needsFirstChoice`.
    */
   private async firstSync(run: Run, choice: FirstChoice | undefined) {
     const { api, state } = run;
@@ -182,7 +196,7 @@ export class SyncEngine {
       if (live.length === 0) choice = "merge";
       else if (await this.isPristine(run)) choice = "cloud";
       else {
-        state.phase = "needs-first-choice";
+        state.needsFirstChoice = true;
         return;
       }
     }
@@ -190,9 +204,9 @@ export class SyncEngine {
     switch (choice) {
       case "merge": {
         // local edits get fresh HLCs, so they win same-ID conflicts
-        const local = await this.detect(run);
+        const { records } = await this.detect(run);
         await this.apply(run, remote.records);
-        await this.push(run, local);
+        await this.push(run, records);
         break;
       }
       case "cloud": {
@@ -216,44 +230,49 @@ export class SyncEngine {
             hash: r.deleted ? TOMBSTONE : await this.remoteHash(r),
           };
         }
-        const local = await this.detect(run);
+        const { records } = await this.detect(run);
         // remove what this device doesn't have from the account
         for (const r of remote.records) {
-          if (r.deleted || local.has(r.id) || this.isDetached(run, r.id)) continue;
+          if (r.deleted || records.has(r.id) || this.isDetached(run, r.id)) continue;
           state.local[r.id] = { hlc: this.tick(state), hash: TOMBSTONE };
         }
-        await this.push(run, local);
+        await this.push(run, records);
         break;
       }
     }
 
     state.cursor = Math.max(state.cursor, remote.cursor);
     state.synced = true;
-    state.phase = "idle";
+    delete state.needsFirstChoice;
     await this.save(run);
     await this.pull(run);
   }
 
   /**
    * Compare storage with `state.local` and give each change a new HLC
-   * (spec §5.2). Returns this device's records.
+   * (spec §5.2). Returns this device's records, and whether `state` changed.
    */
-  private async detect(run: Run): Promise<Map<string, LocalRecord>> {
-    const { state } = run;
-    const { records, profiles, prefs } = await this.collectWithSource(run);
+  private async detect(
+    local: Local
+  ): Promise<{ records: Map<string, LocalRecord>; changed: boolean }> {
+    const { state } = local;
+    const { records, profiles, prefs } = await this.collectWithSource(local);
+    let changed = false;
 
     for (const [id, rec] of records) {
       if (state.local[id]?.hash !== rec.hash) {
         state.local[id] = { hlc: this.tick(state), hash: rec.hash };
+        changed = true;
       }
     }
 
     for (const id of Object.keys(state.local)) {
       if (records.has(id)) continue;
-      if (this.isDetached(run, id)) {
+      if (this.isDetached(local, id)) {
         // local-only now: the cloud copy stays as is (spec §5.6)
         delete state.local[id];
         delete state.base[id];
+        changed = true;
         continue;
       }
       const parsed = parseRecordID(id);
@@ -262,15 +281,15 @@ export class SyncEngine {
       if (parsed?.kind === "pref" && prefs[parsed.key] !== undefined) continue;
 
       if (state.local[id].hash === TOMBSTONE) continue;
-      if (!state.base[id]) {
+      if (state.base[id]) {
+        state.local[id] = { hlc: this.tick(state), hash: TOMBSTONE };
+      } else {
         delete state.local[id]; // never synced: nothing to delete remotely
-        continue;
       }
-      state.local[id] = { hlc: this.tick(state), hash: TOMBSTONE };
+      changed = true;
     }
 
-    await this.save(run);
-    return records;
+    return { records, changed };
   }
 
   /** Push dirty records (spec §5.3, step 1). */
@@ -321,9 +340,9 @@ export class SyncEngine {
           (state.failed ??= {})[id] = { reason, hash: state.local[id].hash };
         }
       }
-      await this.save(run);
       // a newer version is on the server: take it (spec §4.3)
       if (stale.length) await this.apply(run, stale);
+      await this.save(run);
     }
   }
 
@@ -373,13 +392,13 @@ export class SyncEngine {
     await this.apply(run, [...gone, ...remote.records]);
     state.cursor = remote.cursor;
     await this.save(run);
-    await this.push(run, await this.detect(run));
+    await this.push(run, (await this.detect(run)).records);
   }
 
   /**
-   * Apply remote records (spec §5.4): one profiles write for all of them,
-   * then the state. A local change that is newer wins and stays dirty;
-   * `force` makes remote win regardless ("use cloud data").
+   * Apply remote records (spec §5.4): one profiles write for all of them.
+   * The caller saves the state after. A local change that is newer wins and
+   * stays dirty; `force` makes remote win regardless ("use cloud data").
    */
   private async apply(
     run: Run,
@@ -390,8 +409,9 @@ export class SyncEngine {
     const puts = new Map<string, ProfilePayload>();
     const deletes = new Set<string>();
     const prefWrites = new Map<SyncedPref, unknown>();
-    // the local hash each applied profile had, to spot edits made meanwhile
-    const expected = new Map<string, { id: string; hash?: string; meta?: SyncState["local"][string] }>();
+    // this device's version of each applied profile, to spot edits made
+    // since this run looked
+    const expected = new Map<string, { id: string; mine?: SyncState["local"][string] }>();
 
     for (const r of records) {
       state.clock = observeHLC(state.clock, r.hlc) ?? state.clock;
@@ -406,10 +426,7 @@ export class SyncEngine {
           state.held[r.id] = r;
           continue;
         }
-        payload =
-          parsed.kind === "profile"
-            ? decodeRemoteProfile(r.id, r.data)
-            : decodeRemotePref(r.id, r.data);
+        payload = decodeRemote(r.id, r.data);
         if (!payload) {
           state.held[r.id] = r;
           continue;
@@ -432,7 +449,7 @@ export class SyncEngine {
       }
 
       if (parsed.kind === "profile") {
-        expected.set(parsed.profileID, { id: r.id, hash: mine?.hash, meta: mine });
+        expected.set(parsed.profileID, { id: r.id, mine });
         if (r.deleted) deletes.add(parsed.profileID);
         else puts.set(parsed.profileID, payload as ProfilePayload);
       } else if (!r.deleted && settings.syncPrefs) {
@@ -450,9 +467,9 @@ export class SyncEngine {
           const current = profiles[profileID];
           const payload = current ? normalizeProfile(current) : undefined;
           const now = payload ? await hashPayload(payload) : undefined;
-          const before = exp.hash === TOMBSTONE ? undefined : exp.hash;
+          const before = exp.mine?.hash === TOMBSTONE ? undefined : exp.mine?.hash;
           if (now !== before) {
-            if (exp.meta) state.local[exp.id] = exp.meta;
+            if (exp.mine) state.local[exp.id] = exp.mine;
             else delete state.local[exp.id];
             continue;
           }
@@ -465,7 +482,6 @@ export class SyncEngine {
     for (const [key, value] of prefWrites) {
       await this.deps.device.setPref(key, value);
     }
-    await this.save(run);
   }
 
   /** Delete local records by ID ("use cloud data"). */
@@ -498,10 +514,9 @@ export class SyncEngine {
     }
   }
 
-  private async collectWithSource({ settings }: Run) {
+  private async collectWithSource({ settings }: Local) {
     const { device } = this.deps;
-    const profiles = await device.profiles();
-    const prefs = await device.prefs();
+    const [profiles, prefs] = await Promise.all([device.profiles(), device.prefs()]);
     const records = await collectLocalRecords({
       profiles,
       prefs,
@@ -511,7 +526,7 @@ export class SyncEngine {
     return { records, profiles, prefs };
   }
 
-  private async collect(run: Run) {
+  private async collect(run: Local) {
     return (await this.collectWithSource(run)).records;
   }
 
@@ -520,15 +535,10 @@ export class SyncEngine {
    * and default preferences. It then takes the account's data silently.
    */
   private async isPristine(run: Run): Promise<boolean> {
-    const defaults: Record<SyncedPref, unknown> = {
-      "theme.darkmode": DarkMode.Default,
-      "ui.language": "auto",
-      "ui.actionBehavior": "popup",
-    };
     for (const [id, rec] of await this.collect(run)) {
       const parsed = parseRecordID(id);
       if (parsed?.kind !== "pref") return false;
-      if ((rec.payload as { value: unknown }).value !== defaults[parsed.key]) {
+      if ((rec.payload as { value: unknown }).value !== SYNCED_PREF_DEFAULTS[parsed.key]) {
         return false;
       }
     }
@@ -536,7 +546,7 @@ export class SyncEngine {
   }
 
   /** A record this device doesn't sync: a local-only profile, or a pref with prefs off. */
-  private isDetached({ settings }: Run, id: string): boolean {
+  private isDetached({ settings }: Local, id: string): boolean {
     const parsed = parseRecordID(id);
     if (parsed?.kind === "profile") {
       return settings.localOnly.includes(parsed.profileID);
@@ -555,11 +565,7 @@ export class SyncEngine {
   }
 
   private async remoteHash(r: SyncRecord): Promise<string> {
-    const parsed = parseRecordID(r.id);
-    const payload =
-      parsed?.kind === "profile"
-        ? decodeRemoteProfile(r.id, r.data)
-        : decodeRemotePref(r.id, r.data);
+    const payload = decodeRemote(r.id, r.data);
     // unreadable here: any local version differs from it
     return payload ? hashPayload(payload) : `unreadable:${r.hlc}`;
   }
@@ -576,7 +582,6 @@ export class SyncEngine {
   /** Record a failed run; back off from server trouble (spec §4.5). */
   private async fail(state: SyncState, e: unknown) {
     const at = this.now();
-    state.phase = state.phase === "needs-first-choice" ? state.phase : "error";
 
     if (e instanceof SyncAuthError) {
       state.lastSync = { at, error: { code: "auth", message: e.code } };
@@ -588,12 +593,13 @@ export class SyncEngine {
       return;
     }
 
+    if (e.code === "invalid_token") {
+      await this.deps.onAuthRejected();
+      state.lastSync = { at, error: { code: "auth", message: e.code } };
+      return;
+    }
     state.lastSync = { at, error: { code: e.code, message: e.detail } };
     switch (e.code) {
-      case "invalid_token":
-        await this.deps.onAuthRejected();
-        state.lastSync.error = { code: "auth", message: e.code };
-        return;
       case "device_revoked":
         await this.deps.onDeviceRevoked();
         return;

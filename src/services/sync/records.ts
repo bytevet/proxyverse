@@ -4,9 +4,9 @@ import {
   FORMAT_VERSION,
   ProxyProfile,
 } from "@/services/config/proxyverse/schema";
-import { DarkMode, keyDarkMode } from "@/services/theme";
-import { keyLanguage } from "@/services/i18n";
-import { keyActionBehavior } from "@/services/ui";
+import { DarkMode, defaultDarkMode, keyDarkMode } from "@/services/theme";
+import { defaultLanguage, keyLanguage } from "@/services/i18n";
+import { defaultActionBehavior, keyActionBehavior } from "@/services/ui";
 import { deepClone } from "@/services/utils";
 
 /**
@@ -26,6 +26,13 @@ export const SYNCED_PREFS = [
   keyActionBehavior,
 ] as const;
 export type SyncedPref = (typeof SYNCED_PREFS)[number];
+
+/** Each synced pref's value when unset, from the module that owns it. */
+export const SYNCED_PREF_DEFAULTS: Record<SyncedPref, unknown> = {
+  [keyDarkMode]: defaultDarkMode,
+  [keyLanguage]: defaultLanguage,
+  [keyActionBehavior]: defaultActionBehavior,
+};
 
 export type ProfilePayload = ProxyProfile;
 export type PrefPayload = { value: number | string };
@@ -60,7 +67,10 @@ const isSyncedPref = (key: string): key is SyncedPref =>
 
 // --- preferences ---
 
-const DARK_MODES: unknown[] = [DarkMode.Default, DarkMode.Dark, DarkMode.Light];
+// a numeric enum's values also hold its member names
+const DARK_MODES: unknown[] = Object.values(DarkMode).filter(
+  (v) => typeof v === "number"
+);
 // lenient, as on the server: a new locale needs no schema bump
 const LANGUAGE_CODE = /^[a-z]{2,3}(_[A-Z]{2})?$/;
 
@@ -79,18 +89,12 @@ export function isValidPrefValue(key: SyncedPref, value: unknown): boolean {
   }
 }
 
-/** A remote pref payload, or undefined if the record isn't a valid pref. */
-export function decodeRemotePref(
-  id: string,
-  data: unknown
-): PrefPayload | undefined {
-  const parsed = parseRecordID(id);
-  if (parsed?.kind !== "pref") return undefined;
+function decodePref(key: SyncedPref, data: unknown): PrefPayload | undefined {
   if (typeof data !== "object" || data === null || !("value" in data)) {
     return undefined;
   }
   const { value } = data;
-  return isValidPrefValue(parsed.key, value)
+  return isValidPrefValue(key, value)
     ? { value: value as PrefPayload["value"] }
     : undefined;
 }
@@ -119,19 +123,22 @@ export function normalizeProfile(
 }
 
 /**
- * A remote profile payload, normalized, or undefined if it's invalid, names
- * a system profile or doesn't match its record ID.
+ * A remote record's payload, normalized: undefined if this version can't
+ * read it (an invalid payload, an unknown pref, a system profile, or a
+ * profile not matching its record ID).
  */
-export function decodeRemoteProfile(
-  id: string,
-  data: unknown
-): ProfilePayload | undefined {
+export function decodeRemote(id: string, data: unknown): Payload | undefined {
   const parsed = parseRecordID(id);
-  if (parsed?.kind !== "profile") return undefined;
-  if (inner.getSystemProfile(parsed.profileID)) return undefined;
+  if (parsed?.kind === "pref") return decodePref(parsed.key, data);
+  if (parsed?.kind === "profile") return decodeProfile(parsed.profileID, data);
+  return undefined;
+}
+
+function decodeProfile(profileID: string, data: unknown): ProfilePayload | undefined {
+  if (inner.getSystemProfile(profileID)) return undefined;
 
   const profile = ProxyProfile.safeParse(data);
-  if (!profile.success || profile.data.profileID !== parsed.profileID) {
+  if (!profile.success || profile.data.profileID !== profileID) {
     return undefined;
   }
   // normalized, so its hash matches the one this device computes once the
@@ -227,7 +234,7 @@ export async function collectLocalRecords({
   localOnly,
   syncPrefs,
 }: LocalSource): Promise<Map<string, LocalRecord>> {
-  const records = new Map<string, LocalRecord>();
+  const payloads: [string, Payload][] = [];
   const skipped = new Set(localOnly);
 
   for (const [key, profile] of Object.entries(profiles)) {
@@ -235,23 +242,21 @@ export async function collectLocalRecords({
     const payload = normalizeProfile(profile);
     // another device rejects a payload naming a different profile
     if (!payload || payload.profileID !== key) continue;
-    records.set(profileRecordID(key), {
-      payload,
-      hash: await hashPayload(payload),
-    });
+    payloads.push([profileRecordID(key), payload]);
   }
 
   if (syncPrefs) {
     for (const key of SYNCED_PREFS) {
       const value = prefs[key];
       if (value === undefined || !isValidPrefValue(key, value)) continue;
-      const payload: PrefPayload = { value: value as PrefPayload["value"] };
-      records.set(prefRecordID(key), {
-        payload,
-        hash: await hashPayload(payload),
-      });
+      payloads.push([prefRecordID(key), { value: value as PrefPayload["value"] }]);
     }
   }
+
+  const hashes = await Promise.all(payloads.map(([, p]) => hashPayload(p)));
+  const records = new Map<string, LocalRecord>(
+    payloads.map(([id, payload], i) => [id, { payload, hash: hashes[i] }])
+  );
 
   return records;
 }

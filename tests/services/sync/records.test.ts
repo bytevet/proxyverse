@@ -5,8 +5,8 @@ import {
   PAYLOAD_SCHEMA,
   canonicalJSON,
   collectLocalRecords,
-  decodeRemotePref,
-  decodeRemoteProfile,
+  decodeRemote,
+  type ProfilePayload,
   hashPayload,
   isValidPrefValue,
   mergeIncomingProfile,
@@ -94,16 +94,16 @@ describe("pref payloads", () => {
   });
 
   test("decodes valid remote prefs only", () => {
-    expect(decodeRemotePref("pref:ui.language", { value: "zh_CN" })).toEqual({
+    expect(decodeRemote("pref:ui.language", { value: "zh_CN" })).toEqual({
       value: "zh_CN",
     });
     expect(
-      decodeRemotePref("pref:ui.language", { value: "zh_CN", x: 1 })
+      decodeRemote("pref:ui.language", { value: "zh_CN", x: 1 })
     ).toEqual({ value: "zh_CN" });
-    expect(decodeRemotePref("pref:ui.language", { value: 1 })).toBeUndefined();
-    expect(decodeRemotePref("pref:ui.language", null)).toBeUndefined();
-    expect(decodeRemotePref("pref:other", { value: 1 })).toBeUndefined();
-    expect(decodeRemotePref("profile:p1", { value: 1 })).toBeUndefined();
+    expect(decodeRemote("pref:ui.language", { value: 1 })).toBeUndefined();
+    expect(decodeRemote("pref:ui.language", null)).toBeUndefined();
+    expect(decodeRemote("pref:other", { value: 1 })).toBeUndefined();
+    expect(decodeRemote("profile:p1", { value: 1 })).toBeUndefined();
   });
 });
 
@@ -174,25 +174,25 @@ describe("hashing", () => {
   });
 });
 
-describe("decodeRemoteProfile", () => {
+describe("decodeRemote (profiles)", () => {
   test("validates and normalizes a remote payload", () => {
     expect(
-      decodeRemoteProfile("profile:pac1", { ...pacURL, color: "#aabbcc" })
+      decodeRemote("profile:pac1", { ...pacURL, color: "#aabbcc" })
     ).toEqual(normalizeProfile({ ...pacURL, color: "#AABBCC" }));
   });
 
   test("requires the profile ID of the record", () => {
-    expect(decodeRemoteProfile("profile:other", proxy)).toBeUndefined();
-    expect(decodeRemoteProfile("pref:ui.language", proxy)).toBeUndefined();
+    expect(decodeRemote("profile:other", proxy)).toBeUndefined();
+    expect(decodeRemote("pref:ui.language", proxy)).toBeUndefined();
   });
 
   test("rejects invalid payloads and system profiles", () => {
     expect(
-      decodeRemoteProfile("profile:p1", { ...proxy, proxyType: "nope" })
+      decodeRemote("profile:p1", { ...proxy, proxyType: "nope" })
     ).toBeUndefined();
-    expect(decodeRemoteProfile("profile:p1", null)).toBeUndefined();
+    expect(decodeRemote("profile:p1", null)).toBeUndefined();
     expect(
-      decodeRemoteProfile("profile:direct", SystemProfile.DIRECT)
+      decodeRemote("profile:direct", SystemProfile.DIRECT)
     ).toBeUndefined();
   });
 });
@@ -276,7 +276,7 @@ describe("collectLocalRecords", () => {
   });
 
   test("a stored remote profile hashes like the remote payload", async () => {
-    const remote = decodeRemoteProfile("profile:pac1", pacURL)!;
+    const remote = decodeRemote("profile:pac1", pacURL) as ProfilePayload;
     const stored = mergeIncomingProfile(remote, pacURL);
     const records = await collectLocalRecords({
       profiles: { pac1: stored },

@@ -53,10 +53,10 @@ export function buildManifest(
   manifest.version = version.split("-", 1)[0];
   manifest.version_name = version;
   // the hashed file name avoids cache issues
-  background.service_worker = serviceWorker;
+  if (mode === "firefox") background.scripts = [serviceWorker];
+  else background.service_worker = serviceWorker;
 
   if (mode === "firefox") {
-    background.scripts = [background.service_worker];
     delete background.service_worker;
 
     delete manifest.version_name;

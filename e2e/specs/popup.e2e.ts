@@ -83,9 +83,9 @@ test.describe("popup", () => {
     await sw.setProfiles([proxyA]);
     const popup = await openPopup();
 
-    const home = await popup.openNewTab("popup-config");
-    await expect(home).toHaveURL(/#\/profiles\/new$/); // home redirects there
-    await home.close();
+    const preference = await popup.openNewTab("popup-config");
+    await expect(preference).toHaveURL(/#\/preference$/);
+    await preference.close();
 
     await popup.select("proxyA");
     const editor = await popup.openNewTab("popup-config");

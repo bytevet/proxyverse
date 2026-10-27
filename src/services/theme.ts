@@ -8,3 +8,6 @@ export enum DarkMode {
   Dark = 1,
   Light = 2,
 }
+
+/** Unset means following the system theme. */
+export const defaultDarkMode = DarkMode.Default;

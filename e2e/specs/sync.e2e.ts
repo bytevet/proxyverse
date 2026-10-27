@@ -3,6 +3,7 @@ import { test, expect } from "../fixtures";
 import { expectRoute } from "../fixtures/routing";
 import { proxyProfile, server, standardProfiles } from "../data/profiles";
 import {
+  CLIENT_ID,
   expectSynced,
   remoteProfile,
   signInDirectly,
@@ -39,7 +40,7 @@ test.describe("sync", () => {
     const token = servers.sync.requests("/oauth2/token", "POST")[0];
     expect(token.body).toMatchObject({
       grant_type: "authorization_code",
-      client_id: "proxyverse-extension-dev",
+      client_id: CLIENT_ID,
     });
   });
 
@@ -119,8 +120,8 @@ test.describe("sync", () => {
 
     // marking a synced profile local-only in the editor detaches it
     const editor = await openEditor("proxyB");
-    await editor.page.getByTestId("profile-local-only").click();
-    await editor.page.getByTestId("profile-save").click();
+    await editor.byId("profile-local-only").click();
+    await editor.saveOK();
     await expect
       .poll(async () => ((await sw.getLocal("sync.settings")) as SyncSettings | undefined)?.localOnly)
       .toEqual(["proxyA", "proxyB"]);

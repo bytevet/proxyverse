@@ -3,6 +3,8 @@ import path from "node:path";
 import { mkdtempSync, rmSync } from "node:fs";
 import { chromium, expect, test, type BrowserContext, type Page } from "@playwright/test";
 import type { ProfilesStorage, ProxyProfile } from "@/services/profile";
+import { ServiceWorker } from "../fixtures/sw";
+import { SyncSection } from "../pages/sync";
 
 // Two browsers with separate profiles act as two devices syncing through
 // northernlight.byte.vet. Each opens the Preference page and clicks "Sign
@@ -14,7 +16,13 @@ const EXTENSION_ID = "ohbdfegnjlfoohcaiedlpbmcacohacmg";
 const ORIGIN = `chrome-extension://${EXTENSION_ID}`;
 const SIGN_IN_TIMEOUT = 5 * 60_000;
 
-type Device = { name: string; context: BrowserContext; dir: string; page: Page };
+type Device = {
+  name: string;
+  context: BrowserContext;
+  dir: string;
+  page: Page;
+  sw: ServiceWorker;
+};
 
 async function launch(name: string): Promise<Device> {
   const dir = mkdtempSync(path.join(os.tmpdir(), `proxyverse-live-${name}-`));
@@ -25,22 +33,12 @@ async function launch(name: string): Promise<Device> {
   });
   const page = await context.newPage();
   await page.goto(`${ORIGIN}/index.html#/preference`);
-  return { name, context, dir, page };
+  return { name, context, dir, page, sw: new ServiceWorker(context, EXTENSION_ID) };
 }
 
-/** Run `fn` in an extension page of `device` (it has chrome.* APIs). */
-const inExtension = <R, A>(device: Device, fn: (arg: A) => Promise<R>, arg: A) =>
-  device.page.evaluate(fn as any, arg) as Promise<R>;
-
-const profilesOf = (device: Device) =>
-  inExtension(
-    device,
-    async () => ((await chrome.storage.local.get("profiles")).profiles ?? {}) as ProfilesStorage,
-    undefined
-  );
-
+const profilesOf = (device: Device) => device.sw.getProfiles();
 const setProfiles = (device: Device, profiles: ProfilesStorage) =>
-  inExtension(device, (p) => chrome.storage.local.set({ profiles: p }), profiles);
+  device.sw.setProfiles(profiles);
 
 async function signIn(device: Device) {
   const { page } = device;
@@ -107,11 +105,7 @@ test("two devices sync through northernlight", async () => {
   } finally {
     for (const d of [a, b]) {
       // sign out: revokes the tokens of this run
-      await d.page.getByTestId("pref-sync-signout").click().catch(() => undefined);
-      await d.page
-        .locator(".arco-popconfirm:visible .arco-btn-primary")
-        .click()
-        .catch(() => undefined);
+      await new SyncSection(d.page).confirm("pref-sync-signout").catch(() => undefined);
       await d.page.waitForTimeout(1000);
       await d.context.close();
       rmSync(d.dir, { recursive: true, force: true });
