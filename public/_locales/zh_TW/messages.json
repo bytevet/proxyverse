@@ -357,9 +357,34 @@
     "message": "此瀏覽器版本無法從工具列圖示開啟側邊欄。"
   },
 
+  "preferences_failure_badge": {
+    "message": "在圖示上顯示載入失敗的資源數"
+  },
+
+  "preferences_failure_badge_hint": {
+    "message": "工具列圖示會交替顯示圖示本身和目前分頁中載入失敗的資源數，直到你開啟彈出視窗。使用系統代理時不會顯示。"
+  },
+
   "preferences_section_import_export": {
     "message": "匯入與匯出設定檔"
   },
+  "preferences_export": {
+    "message": "匯出"
+  },
+  "preferences_export_hint": {
+    "message": "將代理設定檔儲存至檔案，以便備份或分享。"
+  },
+  "preferences_import": {
+    "message": "匯入"
+  },
+  "preferences_import_hint": {
+    "message": "從 Proxyverse 檔案還原設定檔。"
+  },
+  "preferences_import_switchyomega_hint": {
+    "message": "也支援讀取 ProxySwitchyOmega / ZeroOmega 備份（.bak）。匯入後會列出無法完整轉換的內容。"
+  },
+
+
 
   "preferences_tag_beta": {
     "message": "Beta"
@@ -458,6 +483,157 @@
 
   "firefox_incognito_access_error_html": {
     "message": "<div class=\"arco-typography\"> 由於 Firefox 的限制，Proxyverse 無法在私人瀏覽視窗中執行，因此無法正常運作。</div>\n<div class=\"arco-typography\"> 請在私人視窗中啟用擴充套件。 </div>\n<div class=\"arco-typography\"><a class=\"arco-link arco-link-status-normal\" href=\"https://mzl.la/3pbGH96\">瞭解更多資訊</a></div>"
+  },
+
+  "preferences_section_sync": {
+    "message": "同步"
+  },
+  "sync_desc": {
+    "message": "使用 byte.vet 帳號在不同瀏覽器和裝置間同步設定檔與偏好設定。"
+  },
+  "sync_privacy_note": {
+    "message": "設定檔中的所有內容都會同步，包括代理使用者名稱和密碼。這些資料透過加密連線傳輸並加密儲存，僅用於在你的裝置間同步。將設定檔標記為「僅限此裝置」，即可不將其上傳至雲端。"
+  },
+  "sync_action_signin": {
+    "message": "登入以同步"
+  },
+  "sync_signin_expired": {
+    "message": "$1 的登入已過期。請重新登入以繼續同步。"
+  },
+  "sync_account": {
+    "message": "帳號"
+  },
+  "sync_account_unknown": {
+    "message": "已登入"
+  },
+  "sync_action_signout": {
+    "message": "登出"
+  },
+  "sync_signout_confirm": {
+    "message": "要停止此瀏覽器的同步嗎？設定檔會保留在此瀏覽器中。"
+  },
+  "sync_status": {
+    "message": "狀態"
+  },
+  "sync_action_now": {
+    "message": "立即同步"
+  },
+  "sync_time_recent": {
+    "message": "幾秒前"
+  },
+  "sync_status_never": {
+    "message": "尚未同步。"
+  },
+  "sync_status_ok": {
+    "message": "上次同步於 $1。"
+  },
+  "sync_status_failed": {
+    "message": "$1 個項目因伺服器拒絕而無法同步。請修改後重試。"
+  },
+  "sync_status_held": {
+    "message": "$1 個項目由較新版本的 Proxyverse 同步，目前版本無法讀取。請更新 Proxyverse 以使用這些項目。"
+  },
+  "sync_error_auth": {
+    "message": "同步已於 $1 停止：請重新登入。"
+  },
+  "sync_error_clock_skew": {
+    "message": "已於 $1 同步，但由於此裝置的時鐘超前，部分變更遭到拒絕。請檢查系統時鐘。"
+  },
+  "sync_error_unreachable": {
+    "message": "$1 同步失敗：無法連線至 byte.vet。Proxyverse 將重試。"
+  },
+  "sync_error_client_too_old": {
+    "message": "同步已於 $1 停止：此版本的 Proxyverse 過舊。請更新以繼續同步。"
+  },
+  "sync_error_quota": {
+    "message": "$1 同步失敗：帳號儲存空間已滿。請刪除一些設定檔。"
+  },
+  "sync_error_other": {
+    "message": "$1 同步失敗（$2）。"
+  },
+  "sync_prefs": {
+    "message": "同步偏好設定"
+  },
+  "sync_prefs_hint": {
+    "message": "佈景主題、語言和工具列按鈕行為。關閉後，此瀏覽器會保留自己的設定。"
+  },
+  "sync_snapshots": {
+    "message": "快照"
+  },
+  "sync_snapshots_hint": {
+    "message": "byte.vet 會保留已同步資料的副本，以便復原不當變更。"
+  },
+  "sync_action_snapshots": {
+    "message": "還原…"
+  },
+  "sync_snapshots_desc": {
+    "message": "還原快照會取代所有裝置上的同步資料。還原前會先為目前資料建立快照。"
+  },
+  "sync_snapshot_meta": {
+    "message": "$1，$2 個項目"
+  },
+  "sync_snapshot_reason_daily": {
+    "message": "每日"
+  },
+  "sync_snapshot_reason_manual": {
+    "message": "手動"
+  },
+  "sync_snapshot_reason_before_restore": {
+    "message": "還原前"
+  },
+  "sync_snapshot_reason_before_overwrite": {
+    "message": "上傳前"
+  },
+  "sync_action_restore": {
+    "message": "還原"
+  },
+  "sync_restore_confirm": {
+    "message": "要以此快照取代所有裝置上的同步資料嗎？"
+  },
+  "sync_restore_done": {
+    "message": "已還原。其他裝置將在下次同步時取得這些資料。"
+  },
+  "sync_first_title": {
+    "message": "你的帳號中已有資料"
+  },
+  "sync_first_desc": {
+    "message": "此瀏覽器和你的 byte.vet 帳號中都有設定檔。你想如何合併？"
+  },
+  "sync_first_merge": {
+    "message": "合併兩者"
+  },
+  "sync_first_merge_hint": {
+    "message": "保留全部設定檔。若兩邊有相同設定檔，以此瀏覽器中的為準。"
+  },
+  "sync_first_cloud": {
+    "message": "使用帳號資料"
+  },
+  "sync_first_cloud_hint": {
+    "message": "以帳號中的設定檔取代此瀏覽器中的設定檔。"
+  },
+  "sync_first_cloud_confirm": {
+    "message": "僅存在於此瀏覽器中的設定檔將被刪除。是否繼續？"
+  },
+  "sync_first_backup": {
+    "message": "先下載備份"
+  },
+  "sync_first_upload": {
+    "message": "上傳此瀏覽器的資料"
+  },
+  "sync_first_upload_hint": {
+    "message": "在所有裝置上，以此瀏覽器中的設定檔取代帳號中的設定檔。取代前會先建立快照。"
+  },
+  "sync_first_upload_confirm": {
+    "message": "僅存在於帳號中的設定檔將在所有裝置上被刪除。是否繼續？"
+  },
+  "profile_local_only": {
+    "message": "僅限此裝置"
+  },
+  "profile_local_only_hint": {
+    "message": "永不同步此設定檔。其他裝置會保留既有的副本。"
+  },
+  "profile_local_only_referenced": {
+    "message": "以下已同步的設定檔會將流量轉送至此設定檔：$1。在其他裝置上，這些規則將指向不存在的設定檔。"
   },
 
   "_": {
