@@ -357,9 +357,34 @@
     "message": "Esta versão do navegador não permite abrir uma barra lateral pelo ícone da barra de ferramentas."
   },
 
+  "preferences_failure_badge": {
+    "message": "Recursos com falha no ícone"
+  },
+
+  "preferences_failure_badge_hint": {
+    "message": "O ícone da barra de ferramentas alterna com o número de recursos que não foram carregados na aba, até você abrir o popup. Isso nunca ocorre enquanto o perfil de proxy do sistema está ativo."
+  },
+
   "preferences_section_import_export": {
     "message": "Importação e exportação"
   },
+  "preferences_export": {
+    "message": "Exportar"
+  },
+  "preferences_export_hint": {
+    "message": "Salve seus perfis de proxy em um arquivo para fazer backup ou compartilhar."
+  },
+  "preferences_import": {
+    "message": "Importar"
+  },
+  "preferences_import_hint": {
+    "message": "Restaure perfis de um arquivo do Proxyverse."
+  },
+  "preferences_import_switchyomega_hint": {
+    "message": "Também lê backups do ProxySwitchyOmega / ZeroOmega (.bak). Tudo o que não puder ser convertido com exatidão será listado após a importação."
+  },
+
+
 
   "preferences_tag_beta": {
     "message": "Beta"
@@ -458,6 +483,157 @@
 
   "firefox_incognito_access_error_html": {
     "message": "<div class=\"arco-typography\"> Devido às limitações do Firefox, o Proxyverse não funciona corretamente, pois não está ativado nas janelas de navegação privada. </div>\n<div class=\"arco-typography\"> Ative a extensão em janelas privadas. </div>\n<div class=\"arco-typography\"><a class=\"arco-link arco-link-status-normal\" href=\"https://mzl.la/3pbGH96\">Saiba mais</a></div>"
+  },
+
+  "preferences_section_sync": {
+    "message": "Sincronização"
+  },
+  "sync_desc": {
+    "message": "Sincronize seus perfis e preferências entre navegadores e dispositivos com uma conta byte.vet."
+  },
+  "sync_privacy_note": {
+    "message": "Os perfis são sincronizados com todo o seu conteúdo, incluindo nomes de usuário e senhas dos proxies. Esses dados são enviados por uma conexão criptografada, armazenados com criptografia e usados apenas para manter seus dispositivos sincronizados. Marque um perfil como \"Somente neste dispositivo\" para mantê-lo fora da nuvem."
+  },
+  "sync_action_signin": {
+    "message": "Entrar para sincronizar"
+  },
+  "sync_signin_expired": {
+    "message": "A sessão de $1 expirou. Entre novamente para continuar sincronizando."
+  },
+  "sync_account": {
+    "message": "Conta"
+  },
+  "sync_account_unknown": {
+    "message": "Conectado"
+  },
+  "sync_action_signout": {
+    "message": "Sair"
+  },
+  "sync_signout_confirm": {
+    "message": "Parar a sincronização neste navegador? Seus perfis continuarão aqui."
+  },
+  "sync_status": {
+    "message": "Status"
+  },
+  "sync_action_now": {
+    "message": "Sincronizar agora"
+  },
+  "sync_time_recent": {
+    "message": "há poucos segundos"
+  },
+  "sync_status_never": {
+    "message": "Ainda não sincronizado."
+  },
+  "sync_status_ok": {
+    "message": "Última sincronização: $1."
+  },
+  "sync_status_failed": {
+    "message": "Não foi possível sincronizar $1 item(ns): o servidor os recusou. Edite-os para tentar novamente."
+  },
+  "sync_status_held": {
+    "message": "$1 item(ns) foram sincronizados por uma versão mais recente do Proxyverse e não podem ser lidos por esta versão. Atualize o Proxyverse para usá-los."
+  },
+  "sync_error_auth": {
+    "message": "Sincronização interrompida $1: entre novamente."
+  },
+  "sync_error_clock_skew": {
+    "message": "Sincronizado $1, mas algumas alterações foram recusadas porque o relógio deste dispositivo está adiantado. Verifique o relógio do sistema."
+  },
+  "sync_error_unreachable": {
+    "message": "Falha na sincronização $1: não foi possível acessar byte.vet. O Proxyverse tentará novamente."
+  },
+  "sync_error_client_too_old": {
+    "message": "Sincronização interrompida $1: esta versão do Proxyverse é antiga demais. Atualize-a para continuar sincronizando."
+  },
+  "sync_error_quota": {
+    "message": "Falha na sincronização $1: a conta está cheia. Exclua alguns perfis."
+  },
+  "sync_error_other": {
+    "message": "Falha na sincronização $1 ($2)."
+  },
+  "sync_prefs": {
+    "message": "Sincronizar preferências"
+  },
+  "sync_prefs_hint": {
+    "message": "Tema, idioma e comportamento do botão da barra de ferramentas. Desative para manter as configurações próprias deste navegador."
+  },
+  "sync_snapshots": {
+    "message": "Snapshots"
+  },
+  "sync_snapshots_hint": {
+    "message": "O byte.vet mantém cópias dos seus dados sincronizados para que uma alteração indesejada possa ser desfeita."
+  },
+  "sync_action_snapshots": {
+    "message": "Restaurar…"
+  },
+  "sync_snapshots_desc": {
+    "message": "Restaurar um snapshot substitui os dados sincronizados em todos os dispositivos. Um snapshot dos dados atuais é criado antes da restauração."
+  },
+  "sync_snapshot_meta": {
+    "message": "$1, $2 item(ns)"
+  },
+  "sync_snapshot_reason_daily": {
+    "message": "Diário"
+  },
+  "sync_snapshot_reason_manual": {
+    "message": "Manual"
+  },
+  "sync_snapshot_reason_before_restore": {
+    "message": "Antes de uma restauração"
+  },
+  "sync_snapshot_reason_before_overwrite": {
+    "message": "Antes de um envio"
+  },
+  "sync_action_restore": {
+    "message": "Restaurar"
+  },
+  "sync_restore_confirm": {
+    "message": "Substituir os dados sincronizados em todos os dispositivos por este snapshot?"
+  },
+  "sync_restore_done": {
+    "message": "Restaurado. Os outros dispositivos receberão os dados na próxima sincronização."
+  },
+  "sync_first_title": {
+    "message": "Sua conta já tem dados"
+  },
+  "sync_first_desc": {
+    "message": "Tanto este navegador quanto sua conta byte.vet têm perfis. Como deseja combiná-los?"
+  },
+  "sync_first_merge": {
+    "message": "Mesclar ambos"
+  },
+  "sync_first_merge_hint": {
+    "message": "Mantenha tudo. Se o mesmo perfil existir nos dois, a versão deste navegador prevalecerá."
+  },
+  "sync_first_cloud": {
+    "message": "Usar os dados da conta"
+  },
+  "sync_first_cloud_hint": {
+    "message": "Substitua os perfis deste navegador pelos da conta."
+  },
+  "sync_first_cloud_confirm": {
+    "message": "Os perfis que existem somente neste navegador serão excluídos. Continuar?"
+  },
+  "sync_first_backup": {
+    "message": "Baixar um backup primeiro"
+  },
+  "sync_first_upload": {
+    "message": "Enviar os dados deste navegador"
+  },
+  "sync_first_upload_hint": {
+    "message": "Substitua os perfis da conta pelos deste navegador em todos os dispositivos. Um snapshot é criado antes da substituição."
+  },
+  "sync_first_upload_confirm": {
+    "message": "Os perfis que existem somente na conta serão excluídos de todos os dispositivos. Continuar?"
+  },
+  "profile_local_only": {
+    "message": "Somente neste dispositivo"
+  },
+  "profile_local_only_hint": {
+    "message": "Nunca sincronize este perfil. Os outros dispositivos manterão a cópia que já têm."
+  },
+  "profile_local_only_referenced": {
+    "message": "Estes perfis sincronizados direcionam o tráfego para este perfil: $1. Nos outros dispositivos, essas regras apontarão para um perfil inexistente."
   },
 
   "_": {
