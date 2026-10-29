@@ -17,6 +17,7 @@ import {
   getCurrentProxySetting,
   onActiveProfileChanged,
   refreshProxyOnProfileUpdate,
+  warmUpProxyAuth,
 } from "./services/proxy";
 import { WebRequestStatsService } from "./services/stats";
 import {
@@ -144,6 +145,13 @@ class ProxyAuthProvider {
 Host.onWebRequestAuthRequired(ProxyAuthProvider.onAuthRequired);
 Host.onWebRequestCompleted(ProxyAuthProvider.onCompleted);
 Host.onWebRequestErrorOccurred(ProxyAuthProvider.onCompleted);
+
+// Requests the extension can't see (e.g. the new tab page's) would make the
+// browser prompt for the proxy password: have it cached first, as soon as
+// the browser starts and whenever the proxy changes.
+Host.onBrowserStartup(() => warmUpProxyAuth().catch(console.error));
+Host.onProxyChanged(() => warmUpProxyAuth(true).catch(console.error));
+warmUpProxyAuth().catch(console.error);
 
 // web request stats
 class StatsProvider {

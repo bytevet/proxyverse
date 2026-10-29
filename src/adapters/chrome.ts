@@ -249,6 +249,10 @@ export class Chrome extends BaseAdapter {
     chrome.alarms.onAlarm.addListener((alarm) => callback(alarm.name));
   }
 
+  onBrowserStartup(callback: () => void): void {
+    chrome.runtime.onStartup.addListener(callback);
+  }
+
   protected nativeLocale(): string {
     return chrome.i18n.getUILanguage();
   }

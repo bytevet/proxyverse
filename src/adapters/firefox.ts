@@ -276,6 +276,10 @@ export class Firefox extends BaseAdapter {
     browser.alarms.onAlarm.addListener((alarm) => callback(alarm.name));
   }
 
+  onBrowserStartup(callback: () => void): void {
+    browser.runtime.onStartup.addListener(callback);
+  }
+
   protected nativeLocale(): string {
     return browser.i18n.getUILanguage();
   }

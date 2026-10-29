@@ -257,6 +257,10 @@ export abstract class BaseAdapter {
   abstract getAllAlarmNames(): Promise<string[]>;
   abstract onAlarm(callback: (name: string) => void): void;
 
+  // the browser started with a profile that has this extension. Listening
+  // also gets the background started then.
+  abstract onBrowserStartup(callback: () => void): void;
+
   // i18n: the chosen language if any, else the browser's. Arrow functions,
   // as `getMessage` is also called unbound, as `$t`.
   readonly currentLocale = (): string =>

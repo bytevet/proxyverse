@@ -173,6 +173,42 @@ export async function getAuthInfos(
   return await authProvider.getAuthInfos(host, port);
 }
 
+const keyAuthWarmedUp = "proxy-auth-warmed-up";
+// never resolves (RFC 2606), so the request goes no further than the proxy
+const authWarmUpURL = "http://proxyverse-auth.invalid/";
+
+/**
+ * Get the browser to cache the credentials of the active proxy. Browsers
+ * don't ask extensions for credentials on requests they can't see (e.g. the
+ * new tab page's), and prompt the user instead; once a request of ours got
+ * them, they're sent without asking. Runs once per browser session, and
+ * again when `force`d (e.g. the proxy setting changed).
+ */
+export async function warmUpProxyAuth(force = false) {
+  if (!force && (await Host.getSession(keyAuthWarmedUp))) return;
+  await Host.setSession(keyAuthWarmedUp, true);
+
+  const { activeProfile } = await getCurrentProxySetting();
+  if (!activeProfile) return;
+  const profiles = await listProfiles();
+  profiles[activeProfile.profileID] = activeProfile;
+  const hasAuth = [...profileTreeIDs(activeProfile.profileID, profiles)].some(
+    (id) => {
+      const p = profiles[id];
+      if (p?.proxyType !== "proxy") return false;
+      const { default: d, http, https, ftp } = p.proxyRules;
+      return [d, http, https, ftp].some((server) => server?.auth);
+    }
+  );
+  if (!hasAuth) return;
+
+  // the answer doesn't matter, only that the proxy challenged the request
+  await fetch(authWarmUpURL, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(10_000),
+  }).catch(() => {});
+}
+
 export type ResolvedProfile = {
   profile: ProxyProfile | undefined;
   uncertain: boolean;

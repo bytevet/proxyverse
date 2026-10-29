@@ -230,6 +230,10 @@ export class WebBrowser extends BaseAdapter {
     // no-op for local dev
   }
 
+  onBrowserStartup(_: () => void): void {
+    // no-op for local dev
+  }
+
   protected nativeLocale(): string {
     return "en-US";
   }
