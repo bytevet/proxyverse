@@ -357,9 +357,34 @@
     "message": "当前浏览器版本不支持通过工具栏图标打开侧边栏。"
   },
 
+  "preferences_failure_badge": {
+    "message": "在图标上显示加载失败的资源数"
+  },
+
+  "preferences_failure_badge_hint": {
+    "message": "工具栏图标会交替显示图标本身和当前标签页中加载失败的资源数，直到你打开弹出窗口。使用系统代理时不会显示。"
+  },
+
   "preferences_section_import_export": {
     "message": "导入 / 导出"
   },
+  "preferences_export": {
+    "message": "导出"
+  },
+  "preferences_export_hint": {
+    "message": "将代理配置保存到文件，以便备份或分享。"
+  },
+  "preferences_import": {
+    "message": "导入"
+  },
+  "preferences_import_hint": {
+    "message": "从 Proxyverse 文件恢复配置。"
+  },
+  "preferences_import_switchyomega_hint": {
+    "message": "也支持读取 ProxySwitchyOmega / ZeroOmega 备份（.bak）。导入后会列出无法完全转换的内容。"
+  },
+
+
 
   "preferences_tag_beta": {
     "message": "Beta"
@@ -458,6 +483,157 @@
 
   "firefox_incognito_access_error_html": {
     "message": "<div class=\"arco-typography\"> 由于 Firefox 的限制，Proxyverse 无法在隐私浏览窗口运行，因而无法正常工作。</div>\n<div class=\"arco-typography\"> 请在隐私窗口中开启扩展。 </div>\n<div class=\"arco-typography\"><a class=\"arco-link arco-link-status-normal\" href=\"https://mzl.la/3pbGH96\">获取更多帮助</a></div>"
+  },
+
+  "preferences_section_sync": {
+    "message": "同步"
+  },
+  "sync_desc": {
+    "message": "使用 byte.vet 账号在不同浏览器和设备间同步配置与偏好设置。"
+  },
+  "sync_privacy_note": {
+    "message": "配置中的所有内容都会同步，包括代理用户名和密码。这些数据通过加密连接传输并加密存储，仅用于在你的设备间同步。将配置标记为“仅此设备”，即可不将其上传到云端。"
+  },
+  "sync_action_signin": {
+    "message": "登录以同步"
+  },
+  "sync_signin_expired": {
+    "message": "$1 的登录已过期。请重新登录以继续同步。"
+  },
+  "sync_account": {
+    "message": "账号"
+  },
+  "sync_account_unknown": {
+    "message": "已登录"
+  },
+  "sync_action_signout": {
+    "message": "退出登录"
+  },
+  "sync_signout_confirm": {
+    "message": "要停止此浏览器的同步吗？配置会保留在此浏览器中。"
+  },
+  "sync_status": {
+    "message": "状态"
+  },
+  "sync_action_now": {
+    "message": "立即同步"
+  },
+  "sync_time_recent": {
+    "message": "几秒前"
+  },
+  "sync_status_never": {
+    "message": "尚未同步。"
+  },
+  "sync_status_ok": {
+    "message": "上次同步于 $1。"
+  },
+  "sync_status_failed": {
+    "message": "$1 个项目因服务器拒绝而无法同步。请修改后重试。"
+  },
+  "sync_status_held": {
+    "message": "$1 个项目由更新版本的 Proxyverse 同步，当前版本无法读取。请更新 Proxyverse 以使用这些项目。"
+  },
+  "sync_error_auth": {
+    "message": "同步已于 $1 停止：请重新登录。"
+  },
+  "sync_error_clock_skew": {
+    "message": "已于 $1 同步，但由于此设备的时钟超前，部分更改被拒绝。请检查系统时钟。"
+  },
+  "sync_error_unreachable": {
+    "message": "$1 同步失败：无法连接到 byte.vet。Proxyverse 将重试。"
+  },
+  "sync_error_client_too_old": {
+    "message": "同步已于 $1 停止：此版本的 Proxyverse 过旧。请更新以继续同步。"
+  },
+  "sync_error_quota": {
+    "message": "$1 同步失败：账号存储空间已满。请删除一些配置。"
+  },
+  "sync_error_other": {
+    "message": "$1 同步失败（$2）。"
+  },
+  "sync_prefs": {
+    "message": "同步偏好设置"
+  },
+  "sync_prefs_hint": {
+    "message": "主题、语言和工具栏按钮行为。关闭后，此浏览器会保留自己的设置。"
+  },
+  "sync_snapshots": {
+    "message": "快照"
+  },
+  "sync_snapshots_hint": {
+    "message": "byte.vet 会保留已同步数据的副本，以便撤销不当更改。"
+  },
+  "sync_action_snapshots": {
+    "message": "恢复…"
+  },
+  "sync_snapshots_desc": {
+    "message": "恢复快照会替换所有设备上的同步数据。恢复前会先为当前数据创建快照。"
+  },
+  "sync_snapshot_meta": {
+    "message": "$1，$2 个项目"
+  },
+  "sync_snapshot_reason_daily": {
+    "message": "每日"
+  },
+  "sync_snapshot_reason_manual": {
+    "message": "手动"
+  },
+  "sync_snapshot_reason_before_restore": {
+    "message": "恢复前"
+  },
+  "sync_snapshot_reason_before_overwrite": {
+    "message": "上传前"
+  },
+  "sync_action_restore": {
+    "message": "恢复"
+  },
+  "sync_restore_confirm": {
+    "message": "要用此快照替换所有设备上的同步数据吗？"
+  },
+  "sync_restore_done": {
+    "message": "已恢复。其他设备将在下次同步时获取这些数据。"
+  },
+  "sync_first_title": {
+    "message": "你的账号中已有数据"
+  },
+  "sync_first_desc": {
+    "message": "此浏览器和你的 byte.vet 账号中都有配置。你希望如何合并？"
+  },
+  "sync_first_merge": {
+    "message": "合并两者"
+  },
+  "sync_first_merge_hint": {
+    "message": "保留全部配置。若两边存在相同配置，以此浏览器中的为准。"
+  },
+  "sync_first_cloud": {
+    "message": "使用账号数据"
+  },
+  "sync_first_cloud_hint": {
+    "message": "用账号中的配置替换此浏览器中的配置。"
+  },
+  "sync_first_cloud_confirm": {
+    "message": "仅存在于此浏览器中的配置将被删除。是否继续？"
+  },
+  "sync_first_backup": {
+    "message": "先下载备份"
+  },
+  "sync_first_upload": {
+    "message": "上传此浏览器的数据"
+  },
+  "sync_first_upload_hint": {
+    "message": "在所有设备上，用此浏览器中的配置替换账号中的配置。替换前会先创建快照。"
+  },
+  "sync_first_upload_confirm": {
+    "message": "仅存在于账号中的配置将在所有设备上被删除。是否继续？"
+  },
+  "profile_local_only": {
+    "message": "仅此设备"
+  },
+  "profile_local_only_hint": {
+    "message": "永不同步此配置。其他设备会保留已有的副本。"
+  },
+  "profile_local_only_referenced": {
+    "message": "以下已同步的配置会将流量转发到此配置：$1。在其他设备上，这些规则将指向不存在的配置。"
   },
 
   "_": {
