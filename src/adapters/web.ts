@@ -151,6 +151,9 @@ export class WebBrowser extends BaseAdapter {
   async getTab(_tabID: number): Promise<Tab | undefined> {
     return this.getActiveTab();
   }
+  async listTabIDs(): Promise<number[]> {
+    return [1];
+  }
   async getActiveTab(): Promise<Tab | undefined> {
     return {
       id: 1,

@@ -14,8 +14,11 @@ import {
 import {
   type ActionBehavior,
   getActionBehavior,
+  getFailureBadge,
   onActionBehaviorChanged,
+  onFailureBadgeChanged,
   setActionBehavior,
+  setFailureBadge,
 } from "@/services/ui";
 import { useFileDialog } from "@vueuse/core";
 import IconBrowserPanel from "@/components/icons/IconBrowserPanel.vue";
@@ -43,19 +46,27 @@ const languageOptions = [
   },
   ...LANGUAGES.map((l) => ({ value: l.code, label: l.name })),
 ];
-let unsubscribeActionBehavior: (() => void) | undefined;
+const failureBadge = ref(true);
+const unsubscribe: (() => void)[] = [];
 onMounted(async () => {
   language.value = await getLanguage();
   actionBehavior.value = await getActionBehavior();
-  unsubscribeActionBehavior = onActionBehaviorChanged(
-    (b) => (actionBehavior.value = b)
+  failureBadge.value = await getFailureBadge();
+  unsubscribe.push(
+    onActionBehaviorChanged((b) => (actionBehavior.value = b)),
+    onFailureBadgeChanged((v) => (failureBadge.value = v))
   );
 });
-onUnmounted(() => unsubscribeActionBehavior?.());
+onUnmounted(() => unsubscribe.forEach((u) => u()));
 
 const changeActionBehavior = async (behavior: ActionBehavior) => {
   actionBehavior.value = behavior;
   await setActionBehavior(behavior);
+};
+
+const changeFailureBadge = async (enabled: boolean) => {
+  failureBadge.value = enabled;
+  await setFailureBadge(enabled);
 };
 
 // loaded on use, keeping the importers out of the popup's bundle
@@ -228,6 +239,17 @@ const exportProfiles = async () => {
               <icon-browser-panel panel="sidebar" /> {{ $t("preferences_action_behavior_sidebar") }}
             </a-radio>
           </a-radio-group>
+        </a-form-item>
+
+        <a-form-item
+          :label="$t('preferences_failure_badge')"
+          :extra="$t('preferences_failure_badge_hint')"
+        >
+          <a-switch
+            data-testid="pref-failure-badge"
+            :model-value="failureBadge"
+            @change="(v) => changeFailureBadge(v as boolean)"
+          />
         </a-form-item>
       </section>
 

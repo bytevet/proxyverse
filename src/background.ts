@@ -25,31 +25,49 @@ import {
   reconcilePacAlarms,
   refreshActivePacIfStale,
 } from "./services/proxy/pacFetcher";
-import { onProfileUpdate } from "./services/profile";
+import { onProfileUpdate, type ProxyProfile } from "./services/profile";
 import {
   ActionBehavior,
   getActionBehavior,
+  getFailureBadge,
   onActionBehaviorChanged,
+  onFailureBadgeChanged,
 } from "./services/ui";
 import { initSync } from "./services/sync/background";
 
 // indicator
 const activeProfile = async () =>
   (await getCurrentProxySetting()).activeProfile;
-const tabIndicator = new TabIndicator(activeProfile);
-
 // tells the route of requests, for the current rules
 let routeResolver: ReturnType<typeof createRouteResolver> | undefined;
 
+// the profile the rules pick for the page of a tab
+const predictTab = async (tabID: number, active: ProxyProfile) => {
+  const url = (await Host.getTab(tabID))?.url;
+  if (active.proxyType === "system" || !url || !/^https?:/.test(url)) {
+    return active;
+  }
+  routeResolver ??= createRouteResolver(active);
+  const { profile, uncertain } = await (await routeResolver)(url);
+  return profile && !uncertain ? profile : active;
+};
+const tabIndicator = new TabIndicator(
+  activeProfile,
+  getFailureBadge,
+  predictTab
+);
+
 // the badge follows the proxy setting, and edits of the active profile
 // (e.g. a new color leaves the proxy setting unchanged)
-const refreshIndicator = () => {
+const refreshIndicator = (repaintTabs = true) => {
   routeResolver = undefined;
-  tabIndicator.refresh().catch(console.error);
+  tabIndicator.refresh({ repaintTabs }).catch(console.error);
 };
-Host.onProxyChanged(refreshIndicator);
-onActiveProfileChanged(refreshIndicator);
-refreshIndicator();
+Host.onProxyChanged(() => refreshIndicator());
+onActiveProfileChanged(() => refreshIndicator());
+onFailureBadgeChanged(() => refreshIndicator());
+// the tabs keep their badges while the worker sleeps
+refreshIndicator(false);
 
 // What the toolbar icon opens: the popup or the sidebar. Applied at every
 // start, since the browser forgets a popup set at runtime when it restarts.

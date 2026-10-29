@@ -290,7 +290,8 @@ components:
       type: string
       description: |
         `profile:<profileID>` or `pref:<key>` (`theme.darkmode`,
-        `ui.language`, `ui.actionBehavior`). At most 200 UTF-8 bytes.
+        `ui.language`, `ui.actionBehavior`, `ui.failureBadge`). At most 200
+        UTF-8 bytes.
         `profile:direct` and `profile:system` are reserved.
       pattern: "^(profile:.+|pref:.+)$"
     HLC:

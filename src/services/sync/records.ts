@@ -6,7 +6,12 @@ import {
 } from "@/services/config/proxyverse/schema";
 import { DarkMode, defaultDarkMode, keyDarkMode } from "@/services/theme";
 import { defaultLanguage, keyLanguage } from "@/services/i18n";
-import { defaultActionBehavior, keyActionBehavior } from "@/services/ui";
+import {
+  defaultActionBehavior,
+  defaultFailureBadge,
+  keyActionBehavior,
+  keyFailureBadge,
+} from "@/services/ui";
 import { deepClone } from "@/services/utils";
 
 /**
@@ -24,6 +29,7 @@ export const SYNCED_PREFS = [
   keyDarkMode,
   keyLanguage,
   keyActionBehavior,
+  keyFailureBadge,
 ] as const;
 export type SyncedPref = (typeof SYNCED_PREFS)[number];
 
@@ -32,10 +38,11 @@ export const SYNCED_PREF_DEFAULTS: Record<SyncedPref, unknown> = {
   [keyDarkMode]: defaultDarkMode,
   [keyLanguage]: defaultLanguage,
   [keyActionBehavior]: defaultActionBehavior,
+  [keyFailureBadge]: defaultFailureBadge,
 };
 
 export type ProfilePayload = ProxyProfile;
-export type PrefPayload = { value: number | string };
+export type PrefPayload = { value: number | string | boolean };
 export type Payload = ProfilePayload | PrefPayload;
 
 const PROFILE_PREFIX = "profile:";
@@ -86,6 +93,8 @@ export function isValidPrefValue(key: SyncedPref, value: unknown): boolean {
       );
     case keyActionBehavior:
       return value === "popup" || value === "sidebar";
+    case keyFailureBadge:
+      return typeof value === "boolean";
   }
 }
 

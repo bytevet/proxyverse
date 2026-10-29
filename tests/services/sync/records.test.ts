@@ -89,6 +89,8 @@ describe("pref payloads", () => {
     ["ui.language", "EN", false],
     ["ui.actionBehavior", "sidebar", true],
     ["ui.actionBehavior", "tab", false],
+    ["ui.failureBadge", false, true],
+    ["ui.failureBadge", "off", false],
   ] as const)("%s = %j valid: %s", (key, value, valid) => {
     expect(isValidPrefValue(key, value)).toBe(valid);
   });
@@ -244,6 +246,7 @@ describe("collectLocalRecords", () => {
     "theme.darkmode": 1,
     "ui.language": "not a language",
     "ui.actionBehavior": "sidebar",
+    "ui.failureBadge": false,
   };
 
   test("collects synced profiles and valid prefs, with their hashes", async () => {
@@ -256,6 +259,7 @@ describe("collectLocalRecords", () => {
     expect([...records.keys()].sort()).toEqual([
       "pref:theme.darkmode",
       "pref:ui.actionBehavior",
+      "pref:ui.failureBadge",
       "profile:p1",
       "profile:pac1",
     ]);

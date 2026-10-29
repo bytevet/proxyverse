@@ -126,10 +126,12 @@ instead, Chrome would show a vague "wants to access your content" prompt. API ca
 | `pref:theme.darkmode` | `theme.darkmode` | `{ "value": <DarkMode> }` |
 | `pref:ui.language` | `ui.language` | `{ "value": "auto" \| <LanguageCode> }` |
 | `pref:ui.actionBehavior` | `ui.actionBehavior` | `{ "value": "popup" \| "sidebar" }` |
+| `pref:ui.failureBadge` | `ui.failureBadge` | `{ "value": <boolean> }` |
 
 Preference payloads: `theme.darkmode` `{value: 0|1|2}`, `ui.language`
 `{value: "auto" | /^[a-z]{2,3}(_[A-Z]{2})?$/}` (lenient, so a new locale needs
-no schema bump), `ui.actionBehavior` `{value: "popup"|"sidebar"}`. Any other
+no schema bump), `ui.actionBehavior` `{value: "popup"|"sidebar"}`,
+`ui.failureBadge` `{value: true|false}`. Any other
 `pref:` key is `invalid_record`. Tombstones must have `data: null`.
 
 Never synced: `active-profile`, `tabstats:*`, `sync.*`, and the reserved

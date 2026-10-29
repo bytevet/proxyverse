@@ -357,6 +357,14 @@
     "message": "This browser version can't open a sidebar from the toolbar icon."
   },
 
+  "preferences_failure_badge": {
+    "message": "Failed resources on the icon"
+  },
+
+  "preferences_failure_badge_hint": {
+    "message": "The toolbar icon alternates with the number of resources that failed to load in the tab, until you open the popup. Never while the System profile is active."
+  },
+
   "preferences_section_import_export": {
     "message": "Import & Export"
   },

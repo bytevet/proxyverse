@@ -130,4 +130,49 @@ test.describe("failure badge", () => {
     );
     expect(await badgeTexts(sw, otherID, { ms: 2_500 })).toEqual(["Di"]);
   });
+
+  test("System shows no badge, and no failures", async ({
+    sw,
+    servers,
+    page,
+    activate,
+  }) => {
+    const tabID = await openPage(servers, page, sw, 1);
+    const clean = await page.context().newPage();
+    const cleanID = await openPage(servers, clean, sw, 0, "/clean.html");
+    await expect.poll(async () => (await sw.getBadge(cleanID)).text).toBe("Di");
+
+    // the tabs' own badges go too, not just the global one
+    await activate("system");
+    await expect.poll(async () => (await sw.getBadge(cleanID)).text).toBe("");
+    expect(await badgeTexts(sw, tabID)).toEqual([""]);
+
+    // back on a profile, the unseen failures show again
+    await activate("direct");
+    expect(await badgeTexts(sw, tabID, { until: ["Di", "1"] })).toEqual(
+      expect.arrayContaining(["Di", "1"])
+    );
+  });
+
+  test("can be turned off in Preference", async ({
+    sw,
+    servers,
+    page,
+    openConfig,
+  }) => {
+    const tabID = await openPage(servers, page, sw, 1);
+    await expect
+      .poll(() => badgeTexts(sw, tabID, { ms: 2_500, until: ["1"] }))
+      .toContain("1");
+
+    const pref = await openConfig("/preference");
+    const toggle = pref.getByTestId("pref-failure-badge");
+    await expect(toggle).toHaveAttribute("aria-checked", "true");
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-checked", "false");
+    await pref.close();
+
+    await expect.poll(async () => (await sw.getBadge(tabID)).text).toBe("Di");
+    expect(await badgeTexts(sw, tabID)).toEqual(["Di"]);
+  });
 });

@@ -27,3 +27,28 @@ export function onActionBehaviorChanged(
     }
   });
 }
+
+export const keyFailureBadge = "ui.failureBadge";
+export const defaultFailureBadge = true;
+
+/** Whether the badge alternates with the count of failed resources. */
+export async function getFailureBadge(): Promise<boolean> {
+  return Host.getWithDefault<boolean>(keyFailureBadge, defaultFailureBadge);
+}
+
+export async function setFailureBadge(enabled: boolean) {
+  await Host.set<boolean>(keyFailureBadge, enabled);
+}
+
+/** Subscribe to changes of the setting, made in any extension context. */
+export function onFailureBadgeChanged(
+  callback: (enabled: boolean) => void
+): () => void {
+  return Host.onLocalStorageChanged((changes) => {
+    if (keyFailureBadge in changes) {
+      callback(
+        (changes[keyFailureBadge].newValue as boolean) ?? defaultFailureBadge
+      );
+    }
+  });
+}

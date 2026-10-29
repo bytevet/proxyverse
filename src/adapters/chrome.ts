@@ -110,6 +110,11 @@ export class Chrome extends BaseAdapter {
     return await chrome.tabs.get(tabID).catch(() => undefined);
   }
 
+  async listTabIDs(): Promise<number[]> {
+    const tabs = await chrome.tabs.query({});
+    return tabs.flatMap((t) => (t.id === undefined ? [] : [t.id]));
+  }
+
   async getActiveTab(): Promise<Tab | undefined> {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     return tabs[0];

@@ -200,6 +200,7 @@ export abstract class BaseAdapter {
   // tabs
   abstract getActiveTab(): Promise<Tab | undefined>;
   abstract getTab(tabID: number): Promise<Tab | undefined>;
+  abstract listTabIDs(): Promise<number[]>;
   abstract onTabRemoved(callback: (tabID: number) => void): void;
   /**
    * Fires when the active tab of the current window changes, or navigates.

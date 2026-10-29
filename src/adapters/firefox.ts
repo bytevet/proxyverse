@@ -127,6 +127,11 @@ export class Firefox extends BaseAdapter {
     return await browser.tabs.get(tabID).catch(() => undefined);
   }
 
+  async listTabIDs(): Promise<number[]> {
+    const tabs = await browser.tabs.query({});
+    return tabs.flatMap((t) => (t.id === undefined ? [] : [t.id]));
+  }
+
   async getActiveTab(): Promise<Tab | undefined> {
     const tabs = await browser.tabs.query({
       active: true,

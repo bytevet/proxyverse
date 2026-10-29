@@ -249,6 +249,7 @@ const PREF_VALIDATORS: Record<string, (v: unknown) => boolean> = {
   "ui.language": (v) =>
     v === "auto" || (typeof v === "string" && /^[a-z]{2,3}(_[A-Z]{2})?$/.test(v)),
   "ui.actionBehavior": (v) => v === "popup" || v === "sidebar",
+  "ui.failureBadge": (v) => typeof v === "boolean",
 };
 
 type Validated =
