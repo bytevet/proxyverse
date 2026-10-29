@@ -22,6 +22,16 @@ describe("newProxyString", () => {
     expect(newProxyString(cfg).value).toBe("HTTPS proxy.example.com:443");
   });
 
+  test("ignores spaces around the host", () => {
+    // Firefox can't parse "HTTPS proxy.example.com :443"
+    const cfg: ProxyServer = {
+      host: " proxy.example.com ",
+      port: 443,
+      scheme: "https",
+    };
+    expect(newProxyString(cfg).value).toBe("HTTPS proxy.example.com:443");
+  });
+
   test("generates SOCKS for socks4 scheme", () => {
     const cfg: ProxyServer = {
       host: "127.0.0.1",

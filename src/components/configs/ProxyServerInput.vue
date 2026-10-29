@@ -69,7 +69,7 @@ watch(
   () => {
     if (model.value) {
       Object.assign(model.value, {
-        host: proxyHost.value,
+        host: proxyHost.value.trim(),
         port: proxyPort.value,
       });
     }

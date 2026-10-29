@@ -56,6 +56,30 @@ test.describe("proxy profile editor", () => {
     await expectRoute(page, servers.url("site.test"), "proxyA");
   });
 
+  test("saves the host without surrounding spaces", async ({
+    sw,
+    servers,
+    page,
+    openEditor,
+    activate,
+  }) => {
+    // Firefox can't use a proxy host with a trailing space
+    const proxyHost = freshProxyHost();
+    const editor = await openEditor();
+    await editor.setServer("proxyRules.default", {
+      scheme: "http",
+      host: ` ${proxyHost} `,
+      port: servers.ports.proxyA,
+    });
+    const id = await saveNew(editor);
+
+    expect((await sw.getProfiles())[id]).toMatchObject({
+      proxyRules: { default: { host: proxyHost } },
+    });
+    await activate(id);
+    await expectRoute(page, servers.url("site.test"), "proxyA");
+  });
+
   test("creates a socks5 profile that routes traffic", async ({
     servers,
     page,

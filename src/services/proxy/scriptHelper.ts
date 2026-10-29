@@ -45,7 +45,8 @@ export const newProxyString = (cfg: ProxyServer) => {
     return PACScriptHelper.newSimpleLiteral("DIRECT");
   }
 
-  let host = cfg.host;
+  // a stray space breaks the proxy in Firefox (Chrome ignores it)
+  let host = cfg.host.trim();
   if (cfg.port !== undefined) {
     host += `:${cfg.port}`;
   }

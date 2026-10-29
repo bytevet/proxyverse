@@ -45,7 +45,7 @@ const DEFAULT_PORTS: Record<string, number> = {
 
 /** "host:port" of a proxy server, with the browser's default port if unset. */
 function serverKey(host: string, port?: number, scheme = "http") {
-  return `${host.toLowerCase()}:${port ?? DEFAULT_PORTS[scheme] ?? 80}`;
+  return `${host.trim().toLowerCase()}:${port ?? DEFAULT_PORTS[scheme] ?? 80}`;
 }
 
 /** The proxy servers a proxy profile uses. */
