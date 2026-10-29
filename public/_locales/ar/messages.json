@@ -357,9 +357,34 @@
     "message": "لا يمكن لهذا الإصدار من المتصفح فتح شريط جانبي من أيقونة شريط الأدوات."
   },
 
+  "preferences_failure_badge": {
+    "message": "الموارد التي تعذّر تحميلها على الأيقونة"
+  },
+
+  "preferences_failure_badge_hint": {
+    "message": "تتناوب أيقونة شريط الأدوات مع عدد الموارد التي تعذّر تحميلها في علامة التبويب حتى تفتح النافذة المنبثقة. لا يحدث ذلك مطلقًا أثناء تفعيل ملف تعريف النظام."
+  },
+
   "preferences_section_import_export": {
     "message": "الاستيراد والتصدير"
   },
+  "preferences_export": {
+    "message": "تصدير"
+  },
+  "preferences_export_hint": {
+    "message": "احفظ ملفات تعريف الوكيل في ملف للنسخ الاحتياطي أو المشاركة."
+  },
+  "preferences_import": {
+    "message": "استيراد"
+  },
+  "preferences_import_hint": {
+    "message": "استعد ملفات التعريف من ملف Proxyverse."
+  },
+  "preferences_import_switchyomega_hint": {
+    "message": "يقرأ أيضًا النسخ الاحتياطية لـ ProxySwitchyOmega / ZeroOmega (.bak). تُعرض بعد الاستيراد قائمة بالعناصر التي يتعذّر تحويلها بدقة."
+  },
+
+
 
   "preferences_tag_beta": {
     "message": "تجريبي"
@@ -458,6 +483,157 @@
 
   "firefox_incognito_access_error_html": {
     "message": "<div class=\"arco-typography\"> بسبب قيود Firefox، لا يعمل Proxyverse بشكل صحيح لأنه غير مفعّل في نوافذ التصفح الخاص. </div>\n<div class=\"arco-typography\"> يُرجى تفعيل الإضافة في النوافذ الخاصة. </div>\n<div class=\"arco-typography\"><a class=\"arco-link arco-link-status-normal\" href=\"https://mzl.la/3pbGH96\">معرفة المزيد</a></div>"
+  },
+
+  "preferences_section_sync": {
+    "message": "مزامنة"
+  },
+  "sync_desc": {
+    "message": "زامن ملفات تعريفك وتفضيلاتك عبر المتصفحات والأجهزة باستخدام حساب byte.vet."
+  },
+  "sync_privacy_note": {
+    "message": "تتم مزامنة ملفات التعريف بكل محتوياتها، بما في ذلك أسماء مستخدمي الوكيل وكلمات المرور. تُرسل عبر اتصال مشفّر، وتُخزَّن مشفّرة، ولا تُستخدم إلا لمزامنة أجهزتك. حدّد خيار \"هذا الجهاز فقط\" لملف التعريف لإبقائه خارج السحابة."
+  },
+  "sync_action_signin": {
+    "message": "سجّل الدخول للمزامنة"
+  },
+  "sync_signin_expired": {
+    "message": "انتهت صلاحية تسجيل الدخول للحساب $1. سجّل الدخول مجددًا لمتابعة المزامنة."
+  },
+  "sync_account": {
+    "message": "الحساب"
+  },
+  "sync_account_unknown": {
+    "message": "تم تسجيل الدخول"
+  },
+  "sync_action_signout": {
+    "message": "تسجيل الخروج"
+  },
+  "sync_signout_confirm": {
+    "message": "هل تريد إيقاف المزامنة في هذا المتصفح؟ ستبقى ملفات تعريفك هنا."
+  },
+  "sync_status": {
+    "message": "الحالة"
+  },
+  "sync_action_now": {
+    "message": "مزامنة الآن"
+  },
+  "sync_time_recent": {
+    "message": "قبل بضع ثوانٍ"
+  },
+  "sync_status_never": {
+    "message": "لم تتم المزامنة بعد."
+  },
+  "sync_status_ok": {
+    "message": "آخر مزامنة: $1."
+  },
+  "sync_status_failed": {
+    "message": "تعذّرت مزامنة $1 من العناصر لأن الخادم رفضها. عدّلها لإعادة المحاولة."
+  },
+  "sync_status_held": {
+    "message": "تمت مزامنة $1 من العناصر بواسطة إصدار أحدث من Proxyverse، ولا يمكن لهذا الإصدار قراءتها. حدّث Proxyverse لاستخدامها."
+  },
+  "sync_error_auth": {
+    "message": "توقفت المزامنة $1: سجّل الدخول مجددًا."
+  },
+  "sync_error_clock_skew": {
+    "message": "تمت المزامنة $1، لكن رُفضت بعض التغييرات لأن ساعة هذا الجهاز متقدمة. تحقّق من ساعة النظام."
+  },
+  "sync_error_unreachable": {
+    "message": "فشلت المزامنة $1: تعذّر الوصول إلى byte.vet. سيعيد Proxyverse المحاولة."
+  },
+  "sync_error_client_too_old": {
+    "message": "توقفت المزامنة $1: هذا الإصدار من Proxyverse قديم جدًا. حدّثه لمتابعة المزامنة."
+  },
+  "sync_error_quota": {
+    "message": "فشلت المزامنة $1: الحساب ممتلئ. احذف بعض ملفات التعريف."
+  },
+  "sync_error_other": {
+    "message": "فشلت المزامنة $1 ($2)."
+  },
+  "sync_prefs": {
+    "message": "مزامنة التفضيلات"
+  },
+  "sync_prefs_hint": {
+    "message": "السمة واللغة وسلوك زر شريط الأدوات. أوقف هذا الخيار للاحتفاظ بتفضيلات هذا المتصفح."
+  },
+  "sync_snapshots": {
+    "message": "اللقطات"
+  },
+  "sync_snapshots_hint": {
+    "message": "يحتفظ byte.vet بنسخ من بياناتك المتزامنة لتتمكن من التراجع عن أي تغيير غير مرغوب فيه."
+  },
+  "sync_action_snapshots": {
+    "message": "استعادة…"
+  },
+  "sync_snapshots_desc": {
+    "message": "تؤدي استعادة لقطة إلى استبدال البيانات المتزامنة على جميع الأجهزة. تُؤخذ أولًا لقطة من البيانات الحالية."
+  },
+  "sync_snapshot_meta": {
+    "message": "$1، $2 من العناصر"
+  },
+  "sync_snapshot_reason_daily": {
+    "message": "يومية"
+  },
+  "sync_snapshot_reason_manual": {
+    "message": "يدوية"
+  },
+  "sync_snapshot_reason_before_restore": {
+    "message": "قبل الاستعادة"
+  },
+  "sync_snapshot_reason_before_overwrite": {
+    "message": "قبل الرفع"
+  },
+  "sync_action_restore": {
+    "message": "استعادة"
+  },
+  "sync_restore_confirm": {
+    "message": "هل تريد استبدال البيانات المتزامنة على جميع الأجهزة بهذه اللقطة؟"
+  },
+  "sync_restore_done": {
+    "message": "تمت الاستعادة. ستحصل الأجهزة الأخرى على البيانات عند المزامنة التالية."
+  },
+  "sync_first_title": {
+    "message": "يحتوي حسابك على بيانات بالفعل"
+  },
+  "sync_first_desc": {
+    "message": "يحتوي كلٌّ من هذا المتصفح وحسابك في byte.vet على ملفات تعريف. كيف تريد دمجها؟"
+  },
+  "sync_first_merge": {
+    "message": "دمج الاثنين"
+  },
+  "sync_first_merge_hint": {
+    "message": "الاحتفاظ بكل شيء. إذا وُجد ملف التعريف نفسه في كليهما، تُعتمد نسخة هذا المتصفح."
+  },
+  "sync_first_cloud": {
+    "message": "استخدام بيانات الحساب"
+  },
+  "sync_first_cloud_hint": {
+    "message": "استبدال ملفات تعريف هذا المتصفح بملفات تعريف الحساب."
+  },
+  "sync_first_cloud_confirm": {
+    "message": "ستُحذف ملفات التعريف الموجودة في هذا المتصفح فقط. هل تريد المتابعة؟"
+  },
+  "sync_first_backup": {
+    "message": "تنزيل نسخة احتياطية أولًا"
+  },
+  "sync_first_upload": {
+    "message": "رفع بيانات هذا المتصفح"
+  },
+  "sync_first_upload_hint": {
+    "message": "استبدال ملفات تعريف الحساب بملفات تعريف هذا المتصفح على جميع الأجهزة. تُؤخذ لقطة أولًا."
+  },
+  "sync_first_upload_confirm": {
+    "message": "ستُحذف ملفات التعريف الموجودة في الحساب فقط من جميع الأجهزة. هل تريد المتابعة؟"
+  },
+  "profile_local_only": {
+    "message": "هذا الجهاز فقط"
+  },
+  "profile_local_only_hint": {
+    "message": "عدم مزامنة ملف التعريف هذا مطلقًا. ستحتفظ الأجهزة الأخرى بالنسخة الموجودة لديها."
+  },
+  "profile_local_only_referenced": {
+    "message": "توجّه ملفات التعريف المتزامنة الاتصالات إلى ملف التعريف هذا: $1. على الأجهزة الأخرى، ستشير هذه القواعد إلى ملف تعريف غير موجود."
   },
 
   "_": {
