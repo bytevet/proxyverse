@@ -13,6 +13,7 @@ import {
   WebRequestErrorOccurredDetails,
   WebRequestResponseStartedDetails,
   ActionBehavior,
+  ExtensionInfo,
   POPUP_PAGE,
 } from "./base";
 
@@ -29,6 +30,10 @@ export class Firefox extends BaseAdapter {
   async get<T>(key: string): Promise<T | undefined> {
     const ret = await browser.storage.local.get(key);
     return ret[key] as T | undefined;
+  }
+
+  async remove(key: string): Promise<void> {
+    await browser.storage.local.remove(key);
   }
 
   onLocalStorageChanged(
@@ -122,6 +127,11 @@ export class Firefox extends BaseAdapter {
     return await browser.tabs.get(tabID).catch(() => undefined);
   }
 
+  async listTabIDs(): Promise<number[]> {
+    const tabs = await browser.tabs.query({});
+    return tabs.flatMap((t) => (t.id === undefined ? [] : [t.id]));
+  }
+
   async getActiveTab(): Promise<Tab | undefined> {
     const tabs = await browser.tabs.query({
       active: true,
@@ -179,6 +189,20 @@ export class Firefox extends BaseAdapter {
 
   async reloadTab(tabID: number): Promise<void> {
     await browser.tabs.reload(tabID);
+  }
+
+  protected identity() {
+    // typed as always there, but absent where the browser lacks the API
+    return browser.identity as typeof browser.identity | undefined;
+  }
+
+  async extensionInfo(): Promise<ExtensionInfo> {
+    const { os } = await browser.runtime.getPlatformInfo();
+    return {
+      version: browser.runtime.getManifest().version,
+      browser: "firefox",
+      os,
+    };
   }
 
   onMessage(
@@ -255,6 +279,10 @@ export class Firefox extends BaseAdapter {
   }
   onAlarm(callback: (name: string) => void): void {
     browser.alarms.onAlarm.addListener((alarm) => callback(alarm.name));
+  }
+
+  onBrowserStartup(callback: () => void): void {
+    browser.runtime.onStartup.addListener(callback);
   }
 
   protected nativeLocale(): string {

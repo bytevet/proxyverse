@@ -91,6 +91,27 @@ export function setMessageOverride(override: MessageOverride | undefined) {
   messageOverride = override;
 }
 
+/** The part of the browsers' `identity` API sign-in uses. */
+type IdentityAPI = {
+  launchWebAuthFlow(details: {
+    url: string;
+    interactive: boolean;
+  }): Promise<string | undefined>;
+  getRedirectURL(path: string): string;
+};
+
+export const IDENTITY_UNAVAILABLE =
+  "The identity API is unavailable in this browser";
+
+/** What this extension build runs on; sync names devices after it. */
+export type ExtensionInfo = {
+  /** The manifest version, e.g. "2.3.0". */
+  version: string;
+  browser: "chrome" | "edge" | "firefox" | "web";
+  /** runtime.getPlatformInfo's os, e.g. "mac", "win", "linux". */
+  os: string;
+};
+
 export type ActionBehavior = "popup" | "sidebar";
 
 // the pages the toolbar icon opens
@@ -119,6 +140,7 @@ export abstract class BaseAdapter {
   // local storage
   abstract set<T>(key: string, val: T): Promise<void>;
   abstract get<T>(key: string): Promise<T | undefined>;
+  abstract remove(key: string): Promise<void>;
   async getWithDefault<T>(key: string, defaultVal: T): Promise<T> {
     const ret = await this.get<T>(key);
     if (ret === undefined) {
@@ -178,6 +200,7 @@ export abstract class BaseAdapter {
   // tabs
   abstract getActiveTab(): Promise<Tab | undefined>;
   abstract getTab(tabID: number): Promise<Tab | undefined>;
+  abstract listTabIDs(): Promise<number[]>;
   abstract onTabRemoved(callback: (tabID: number) => void): void;
   /**
    * Fires when the active tab of the current window changes, or navigates.
@@ -191,6 +214,30 @@ export abstract class BaseAdapter {
   /** Background only: set up what a toolbar click opens, if not a popup. */
   handleToolbarClicks(): void {}
   abstract reloadTab(tabID: number): Promise<void>;
+
+  // identity: sign-in through a browser-hosted web auth flow (cloud sync).
+  // Chrome and Firefox share the API; it's absent where a browser lacks it
+  // (e.g. Firefox for Android, some Chromium forks).
+  protected identity(): IdentityAPI | undefined {
+    return undefined;
+  }
+
+  /** Resolves with the final redirect URL of the flow. */
+  async launchWebAuthFlow(url: string, interactive: boolean): Promise<string> {
+    const identity = this.identity();
+    if (!identity) throw new Error(IDENTITY_UNAVAILABLE);
+    const redirect = await identity.launchWebAuthFlow({ url, interactive });
+    if (!redirect) throw new Error("The web auth flow returned no redirect URL");
+    return redirect;
+  }
+
+  /** The extension's redirect URL for `path`, e.g. "/oauth". */
+  getRedirectURL(path: string): string {
+    const identity = this.identity();
+    if (!identity) throw new Error(IDENTITY_UNAVAILABLE);
+    return identity.getRedirectURL(path);
+  }
+  abstract extensionInfo(): Promise<ExtensionInfo>;
 
   // messages
   abstract onMessage(
@@ -210,6 +257,10 @@ export abstract class BaseAdapter {
   abstract clearAlarm(name: string): Promise<void>;
   abstract getAllAlarmNames(): Promise<string[]>;
   abstract onAlarm(callback: (name: string) => void): void;
+
+  // the browser started with a profile that has this extension. Listening
+  // also gets the background started then.
+  abstract onBrowserStartup(callback: () => void): void;
 
   // i18n: the chosen language if any, else the browser's. Arrow functions,
   // as `getMessage` is also called unbound, as `$t`.

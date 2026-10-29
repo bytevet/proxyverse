@@ -2,18 +2,20 @@
 import { h, onMounted } from "vue";
 import { Modal } from "@arco-design/web-vue";
 import { useLocale, addI18nMessages } from "@arco-design/web-vue/es/locale";
+import arEG from "@arco-design/web-vue/es/locale/lang/ar-eg";
 import enUS from "@arco-design/web-vue/es/locale/lang/en-us";
 import zhCN from "@arco-design/web-vue/es/locale/lang/zh-cn";
 import zhTW from "@arco-design/web-vue/es/locale/lang/zh-tw";
 import ptPT from "@arco-design/web-vue/es/locale/lang/pt-pt";
 import { followDarkMode } from "./services/preference";
-import { followLanguage } from "./services/i18n";
+import { followLanguage, isRightToLeft } from "./services/i18n";
 import type { ArcoLang } from "@arco-design/web-vue/es/locale/interface";
 import { Host } from "./adapters";
 import { useRoute } from "vue-router";
 
 const route = useRoute();
 const i18nConfig: Record<string, ArcoLang> = {
+  "ar-EG": arEG,
   "en-US": enUS,
   "zh-CN": zhCN,
   "zh-TW": zhTW,
@@ -41,6 +43,8 @@ try {
   console.warn(e);
 }
 
+const rtl = isRightToLeft();
+
 followDarkMode();
 followLanguage();
 onMounted(async () => {
@@ -57,5 +61,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <router-view />
+  <a-config-provider :rtl="rtl">
+    <router-view />
+  </a-config-provider>
 </template>

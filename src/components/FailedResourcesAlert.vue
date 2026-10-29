@@ -32,7 +32,7 @@ const failures = computed(() => countFailures(props.stats.resources));
         "
       >
         {{ $t("stats_details") }}
-        <icon-right />
+        <icon-right class="flip-rtl" />
       </a-link>
     </template>
   </a-alert>

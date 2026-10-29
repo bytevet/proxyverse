@@ -22,6 +22,7 @@ export {
 
 // one per `public/_locales` directory, named in its own language
 export const LANGUAGES = [
+  { code: "ar", name: "العربية" },
   { code: "en", name: "English" },
   { code: "pt_BR", name: "Português (Brasil)" },
   { code: "zh_CN", name: "简体中文" },
@@ -31,7 +32,12 @@ export const LANGUAGES = [
 type LanguageCode = (typeof LANGUAGES)[number]["code"];
 export type Language = "auto" | LanguageCode;
 
-const keyLanguage = "ui.language";
+// base languages only: the direction belongs to the language, not the region
+const RIGHT_TO_LEFT = new Set<string>(["ar"] satisfies LanguageCode[]);
+
+export const keyLanguage = "ui.language";
+/** Unset means following the browser's language. */
+export const defaultLanguage: Language = "auto";
 // the manifest's default_locale; bundled already (the dev stub uses it)
 const ENGLISH = lowerCaseKeys(englishMessages);
 
@@ -41,7 +47,7 @@ const isLanguageCode = (v: unknown): v is LanguageCode =>
 /** The chosen language, or "auto" to follow the browser. */
 export async function getLanguage(): Promise<Language> {
   const v = await Host.get<string>(keyLanguage);
-  return isLanguageCode(v) ? v : "auto";
+  return isLanguageCode(v) ? v : defaultLanguage;
 }
 
 export async function setLanguage(language: Language) {
@@ -65,19 +71,32 @@ async function loadCatalog(code: LanguageCode): Promise<Catalog> {
   return lowerCaseKeys(await res.json());
 }
 
+/**
+ * The direction of the messages shown for a UI locale, e.g. "ar-EG". Only
+ * languages we have a catalog for are right to left: a Hebrew browser shows
+ * our English.
+ */
+export const textDirection = (locale: string): "ltr" | "rtl" =>
+  RIGHT_TO_LEFT.has(locale.split(/[-_]/, 1)[0].toLowerCase()) ? "rtl" : "ltr";
+
+/** Whether this page is right to left; set by `applyStoredLanguage()`. */
+export const isRightToLeft = () => document.documentElement.dir === "rtl";
+
 /** Apply the stored language to this page; call before mounting the app. */
 export async function applyStoredLanguage() {
   const language = await getLanguage();
-  if (language === "auto") return;
-
-  try {
-    const chosen = await loadCatalog(language);
-    const locale = language.replace("_", "-");
-    setMessageOverride({ locale, getMessage: catalogLookup(chosen, ENGLISH) });
-    document.documentElement.lang = locale;
-  } catch (e) {
-    console.error("Failed to load the chosen language", e);
+  if (language !== "auto") {
+    try {
+      const chosen = await loadCatalog(language);
+      const locale = language.replace("_", "-");
+      setMessageOverride({ locale, getMessage: catalogLookup(chosen, ENGLISH) });
+      document.documentElement.lang = locale;
+    } catch (e) {
+      console.error("Failed to load the chosen language", e);
+    }
   }
+  // the chosen language if it loaded, else the browser's
+  document.documentElement.dir = textDirection(Host.currentLocale());
 }
 
 /**

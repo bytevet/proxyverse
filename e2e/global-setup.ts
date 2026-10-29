@@ -2,7 +2,10 @@ import { execSync } from "node:child_process";
 import path from "node:path";
 
 const root = path.resolve(import.meta.dirname, "..");
-const run = (cmd: string) => execSync(cmd, { cwd: root, stdio: "inherit" });
+// e2e builds: sync origin overridable at runtime
+const env = { ...process.env, PROXYVERSE_ENV: "e2e" };
+const run = (cmd: string) =>
+  execSync(cmd, { cwd: root, stdio: "inherit", env });
 
 /**
  * Build the extension before the suite runs: for both browsers, or only the

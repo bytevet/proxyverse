@@ -11,6 +11,9 @@ const authServer = (
   auth?: ProxyServer["auth"],
 ): ProxyServer => ({ scheme: "http", host, port: servers.ports.auth, auth });
 
+/** Host of the request caching the proxy credentials, see `warmUpProxyAuth`. */
+const WARM_UP_HOST = "proxyverse-auth.invalid";
+
 /** Auth results seen by the auth proxy for `host`, in order. */
 const authAttempts = (servers: Servers, host: string) =>
   servers.log
@@ -27,6 +30,48 @@ test.describe("proxy auth", () => {
   }) => {
     const site = freshHost();
     const proxyHost = freshProxyHost();
+    await sw.setProfiles([
+      proxyProfile(
+        { profileID: "authed" },
+        { default: authServer(servers, proxyHost, AUTH) },
+      ),
+    ]);
+    await activate("authed");
+
+    await expectRoute(page, servers.url(site), "auth");
+    expect(authAttempts(servers, site)).toContain("ok");
+  });
+
+  test("has the browser cache the credentials once a proxy is set", async ({
+    sw,
+    servers,
+    activate,
+  }) => {
+    // Chrome prompts for requests the extension can't see (e.g. the new tab
+    // page's), unless it already has the credentials of the proxy
+    const proxyHost = freshProxyHost();
+    await sw.setProfiles([
+      proxyProfile(
+        { profileID: "authed" },
+        { default: authServer(servers, proxyHost, AUTH) },
+      ),
+    ]);
+    await activate("authed");
+
+    await expect
+      .poll(() => authAttempts(servers, WARM_UP_HOST))
+      .toEqual(["none", "ok"]);
+  });
+
+  test("matches the proxy host regardless of case", async ({
+    sw,
+    servers,
+    page,
+    activate,
+  }) => {
+    const site = freshHost();
+    // Chrome reports the challenger host lower-cased
+    const proxyHost = freshProxyHost().toUpperCase();
     await sw.setProfiles([
       proxyProfile(
         { profileID: "authed" },
@@ -60,13 +105,13 @@ test.describe("proxy auth", () => {
     ]);
     await activate("authed");
 
+    // no credentials, then the wrong ones, then the right ones, seen on the
+    // first request through the proxy: the one caching the credentials
+    await expect
+      .poll(() => authAttempts(servers, WARM_UP_HOST))
+      .toEqual(["none", "bad", "ok"]);
     await expectRoute(page, servers.url(site), "auth");
-    // no credentials, then the wrong ones, then the right ones. Requests
-    // running at the same time (e.g. the favicon) may interleave in the log.
-    const attempts = authAttempts(servers, site);
-    expect(attempts[0]).toBe("none");
-    expect(attempts).toContain("bad");
-    expect(attempts.indexOf("bad")).toBeLessThan(attempts.indexOf("ok"));
+    expect(authAttempts(servers, site)).toContain("ok");
   });
 
   test("without credentials the 407 surfaces", async ({

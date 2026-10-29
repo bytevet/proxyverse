@@ -1,0 +1,642 @@
+{
+  "app_desc": {
+    "message": "أداة تساعدك على إدارة ملفات تعريف الوكيل والتبديل بينها"
+  },
+
+  "nav_preference": {
+    "message": "التفضيلات"
+  },
+  "nav_config": {
+    "message": "الإعدادات"
+  },
+  "nav_custom_profiles": {
+    "message": "ملفات التعريف المخصصة"
+  },
+  "nav_system_profiles": {
+    "message": "الإعدادات المسبقة"
+  },
+
+  "theme_light_mode": {
+    "message": "الوضع الفاتح"
+  },
+  "theme_dark_mode": {
+    "message": "الوضع الداكن"
+  },
+  "theme_auto_mode": {
+    "message": "اتباع النظام"
+  },
+
+  "mode_auto_switch": {
+    "message": "التبديل التلقائي"
+  },
+  "mode_auto_switch_abbr": {
+    "message": "تلقائي"
+  },
+
+  "mode_auto_switch_via": {
+    "message": "يتصل هذا الموقع عبر"
+  },
+  "mode_auto_switch_uncertain": {
+    "message": "هذا هو الاحتمال الأرجح. قد يختلف الوكيل الفعلي، إذ لا يمكن التحقق من القواعد المستندة إلى عناوين IP عند استخدام أسماء المضيفين."
+  },
+  "mode_auto_switch_scope_host": {
+    "message": "هذا الموقع"
+  },
+  "mode_auto_switch_rule_saved": {
+    "message": "تم حفظ القاعدة لـ $1"
+  },
+  "action_reload_tab": {
+    "message": "إعادة تحميل علامة التبويب"
+  },
+
+  "stats_failed_resources": {
+    "message": "عدد الموارد التي تعذّر تحميلها: $1"
+  },
+  "stats_details": {
+    "message": "التفاصيل"
+  },
+
+  "resources_title": {
+    "message": "الموارد"
+  },
+  "resources_filter_all": {
+    "message": "الكل"
+  },
+  "resources_filter_failed": {
+    "message": "فشل التحميل"
+  },
+  "resources_empty": {
+    "message": "لم يتم تسجيل أي موارد. أعد تحميل الصفحة لتسجيلها."
+  },
+  "resource_type_main": {
+    "message": "رئيسي"
+  },
+  "resource_type_iframe": {
+    "message": "iframe"
+  },
+  "resource_type_stylesheet": {
+    "message": "css"
+  },
+  "resource_type_script": {
+    "message": "نص برمجي"
+  },
+  "resource_type_image": {
+    "message": "صورة"
+  },
+  "resource_type_font": {
+    "message": "خط"
+  },
+  "resource_type_xhr": {
+    "message": "xhr"
+  },
+  "resource_type_media": {
+    "message": "وسائط"
+  },
+  "resource_type_websocket": {
+    "message": "ws"
+  },
+  "resource_type_other": {
+    "message": "أخرى"
+  },
+
+  "mode_direct": {
+    "message": "اتصال مباشر"
+  },
+  "mode_system": {
+    "message": "استخدام وكيل النظام"
+  },
+  "mode_profile_create": {
+    "message": "إنشاء ملف تعريف جديد"
+  },
+
+  "config_proxy_type": {
+    "message": "نوع الوكيل"
+  },
+  "config_proxy_type_proxy": {
+    "message": "وكيل"
+  },
+  "config_proxy_type_pac": {
+    "message": "نص PAC البرمجي"
+  },
+  "config_section_pac_url": {
+    "message": "رابط نص PAC البرمجي"
+  },
+  "config_section_pac_url_placeholder": {
+    "message": "https://example.com/proxy.pac"
+  },
+  "config_section_pac_url_hint": {
+    "message": "اختياري. عند تحديده، يتم تحديث محتوى النص البرمجي دوريًا في الخلفية."
+  },
+  "config_action_pac_fetch": {
+    "message": "جلب الآن"
+  },
+  "config_feedback_pac_fetched": {
+    "message": "تم جلب نص PAC البرمجي بنجاح."
+  },
+  "config_feedback_pac_fetch_failed": {
+    "message": "تعذّر جلب نص PAC البرمجي: $1"
+  },
+  "config_pac_last_fetched": {
+    "message": "آخر عملية جلب: $1"
+  },
+  "config_pac_last_error": {
+    "message": "خطأ آخر عملية جلب: $1"
+  },
+  "config_pac_manual_edit_warning": {
+    "message": "تم تحديد رابط للمصدر. ستُستبدل التعديلات اليدوية عند التحديث التالي."
+  },
+  "config_section_pac_refresh_interval": {
+    "message": "الفاصل الزمني للتحديث"
+  },
+  "config_section_pac_refresh_interval_hint": {
+    "message": "وتيرة إعادة جلب نص PAC البرمجي في الخلفية."
+  },
+  "config_pac_refresh_interval_minutes": {
+    "message": "الفاصل الزمني بالدقائق: $1"
+  },
+  "config_pac_refresh_interval_one_hour": {
+    "message": "كل ساعة"
+  },
+  "config_pac_refresh_interval_hours": {
+    "message": "الفاصل الزمني بالساعات: $1"
+  },
+  "config_pac_refresh_interval_one_day": {
+    "message": "كل يوم"
+  },
+  "config_pac_refresh_interval_disabled": {
+    "message": "معطّل (يدوي فقط)"
+  },
+  "config_proxy_type_auto": {
+    "message": "التبديل التلقائي"
+  },
+  "config_proxy_type_default": {
+    "message": "مثل الافتراضي"
+  },
+  "config_section_proxy_server": {
+    "message": "خادم الوكيل"
+  },
+  "config_section_proxy_server_default": {
+    "message": "الخادم الافتراضي"
+  },
+  "config_section_proxy_server_http": {
+    "message": "HTTP"
+  },
+  "config_section_proxy_server_https": {
+    "message": "HTTPS"
+  },
+  "config_section_proxy_server_ftp": {
+    "message": "FTP"
+  },
+  "config_section_proxy_auth_tips": {
+    "message": "أدخل اسم المستخدم وكلمة المرور إذا كان الوكيل يتطلب المصادقة"
+  },
+  "config_section_proxy_auth_unsupported": {
+    "message": "نوع الوكيل الحالي لا يدعم المصادقة"
+  },
+  "config_section_proxy_auth_title": {
+    "message": "مصادقة الوكيل"
+  },
+  "config_section_proxy_auth_username": {
+    "message": "اسم المستخدم"
+  },
+  "config_section_proxy_auth_password": {
+    "message": "كلمة المرور"
+  },
+
+  "config_section_bypass_list": {
+    "message": "قائمة التجاوز"
+  },
+  "config_section_advance": {
+    "message": "إعدادات متقدمة"
+  },
+  "config_reference_bypass_list": {
+    "message": "معرفة المزيد عن قائمة التجاوز"
+  },
+
+  "config_section_auto_switch_rules": {
+    "message": "قواعد التبديل التلقائي"
+  },
+  "config_section_auto_switch_type": {
+    "message": "نوع الشرط"
+  },
+  "config_section_auto_switch_type_domain": {
+    "message": "النطاق"
+  },
+  "config_section_auto_switch_type_url": {
+    "message": "الرابط"
+  },
+  "config_section_auto_switch_type_url_malformed": {
+    "message": "رابط غير صالح"
+  },
+  "config_section_auto_switch_type_url_malformed_chrome": {
+    "message": "لأسباب أمنية، لا يدعم Chrome مطابقة المسار في روابط HTTPS. للمزيد: https://issues.chromium.org/40083832"
+  },
+  "config_section_auto_switch_type_cidr": {
+    "message": "CIDR"
+  },
+  "config_section_auto_switch_type_cidr_malformed": {
+    "message": "صيغة CIDR غير صالحة. استخدم صيغة مثل `192.168.1.1/24` أو `2001:db8::/32`"
+  },
+  "config_section_auto_switch_type_regex": {
+    "message": "تعبير نمطي للرابط"
+  },
+  "config_section_auto_switch_type_regex_malformed": {
+    "message": "تعبير نمطي غير صالح"
+  },
+  "config_section_auto_switch_help_domain": {
+    "message": "يطابق اسم المضيف باستخدام أحرف البدل: يطابق * أي أحرف (بما فيها النقاط)، ويطابق ? حرفًا واحدًا. يطابق \"example.com\" هذا المضيف فقط؛ أضف \"*.example.com\" لمطابقة نطاقاته الفرعية. لا تشمل المطابقة المنافذ والمسارات."
+  },
+  "config_section_auto_switch_help_url": {
+    "message": "يطابق الرابط بالكامل باستخدام حرفَي البدل (* و?)، مثل \"http://example.com/api/*\".\nتخفي المتصفحات المسار والاستعلام في روابط https:// عن قواعد الوكيل (Chrome منذ الإصدار 52، وFirefox منذ الإصدار 51)، لذا لا يمكن لنمط https:// المطابقة إلا حتى اسم المضيف، مثل \"https://example.com/*\"."
+  },
+  "config_section_auto_switch_help_regex": {
+    "message": "تعبير نمطي بلغة JavaScript يُختبر على الرابط بالكامل. يميّز بين الأحرف الكبيرة والصغيرة، ويطابق أي موضع في الرابط ما لم تُحدّد بدايته ونهايته باستخدام ^ و$$، مثل \"^https?://(www\\.)?example\\.com/\".\nتخفي المتصفحات المسار والاستعلام في روابط https:// عن قواعد الوكيل (Chrome منذ الإصدار 52، وFirefox منذ الإصدار 51): يظهر رابط https:// بالشكل \"https://example.com/\" فقط، لذلك لا يمكن مطابقة مساره."
+  },
+  "config_section_auto_switch_help_cidr": {
+    "message": "يطابق الطلبات الموجّهة إلى عنوان IP ضمن النطاق، مثل \"192.168.0.0/16\" أو \"2001:db8::/32\". يطابق الطلب الموجّه إلى اسم مضيف إذا كان عنوان IP الناتج عن تحليل الاسم ضمن النطاق، مما يتطلب استعلام DNS."
+  },
+  "config_section_auto_switch_help_disabled": {
+    "message": "تُحفظ القاعدة مع تخطيها حتى تختار نوع شرط مجددًا."
+  },
+  "config_section_auto_switch_type_disabled": {
+    "message": "تخطي مؤقت"
+  },
+  "config_section_auto_switch_condition": {
+    "message": "الشرط"
+  },
+  "config_section_auto_switch_profile": {
+    "message": "التوجيه إلى"
+  },
+  "config_section_auto_switch_actions": {
+    "message": "الإجراءات"
+  },
+  "config_section_auto_switch_add_rule": {
+    "message": "إضافة قاعدة"
+  },
+  "config_section_auto_switch_delete_rule": {
+    "message": "حذف القاعدة الحالية"
+  },
+  "config_section_auto_switch_duplicate_rule": {
+    "message": "تكرار القاعدة الحالية"
+  },
+  "config_section_auto_switch_default_profile": {
+    "message": "ملف التعريف الافتراضي"
+  },
+  "config_section_auto_switch_pac_preview": {
+    "message": "معاينة نص PAC البرمجي"
+  },
+
+  "config_action_edit": {
+    "message": "تعديل"
+  },
+  "config_action_delete": {
+    "message": "حذف ملف التعريف"
+  },
+  "config_action_delete_double_confirm": {
+    "message": "هل تريد بالتأكيد حذف ملف التعريف الحالي؟"
+  },
+  "config_action_save": {
+    "message": "حفظ"
+  },
+  "config_action_cancel": {
+    "message": "تجاهل التغييرات"
+  },
+  "config_action_clear": {
+    "message": "مسح"
+  },
+
+  "config_feedback_saved": {
+    "message": "تم حفظ ملف التعريف"
+  },
+  "config_feedback_copied": {
+    "message": "تم النسخ"
+  },
+  "config_feedback_deleted": {
+    "message": "تم حذف ملف التعريف"
+  },
+  "config_feedback_unknown_profile": {
+    "message": "ملف تعريف غير معروف"
+  },
+  "config_feedback_error_occurred": {
+    "message": "حدث خطأ: $1"
+  },
+
+  "preferences_section_interface": {
+    "message": "الواجهة"
+  },
+
+  "preferences_language": {
+    "message": "اللغة"
+  },
+
+  "preferences_language_auto": {
+    "message": "اتباع المتصفح ($1)"
+  },
+
+  "preferences_theme": {
+    "message": "المظهر"
+  },
+
+  "preferences_action_behavior": {
+    "message": "تفتح أيقونة شريط الأدوات"
+  },
+
+  "preferences_action_behavior_popup": {
+    "message": "نافذة منبثقة"
+  },
+
+  "preferences_action_behavior_sidebar": {
+    "message": "شريط جانبي"
+  },
+
+  "preferences_action_behavior_hint": {
+    "message": "يبقى الشريط الجانبي مفتوحًا بجوار صفحاتك ويتبع علامة التبويب النشطة."
+  },
+
+  "preferences_action_behavior_sidebar_unsupported": {
+    "message": "لا يمكن لهذا الإصدار من المتصفح فتح شريط جانبي من أيقونة شريط الأدوات."
+  },
+
+  "preferences_failure_badge": {
+    "message": "الموارد التي تعذّر تحميلها على الأيقونة"
+  },
+
+  "preferences_failure_badge_hint": {
+    "message": "تتناوب أيقونة شريط الأدوات مع عدد الموارد التي تعذّر تحميلها في علامة التبويب حتى تفتح النافذة المنبثقة. لا يحدث ذلك مطلقًا أثناء تفعيل ملف تعريف النظام."
+  },
+
+  "preferences_section_import_export": {
+    "message": "الاستيراد والتصدير"
+  },
+  "preferences_export": {
+    "message": "تصدير"
+  },
+  "preferences_export_hint": {
+    "message": "احفظ ملفات تعريف الوكيل في ملف للنسخ الاحتياطي أو المشاركة."
+  },
+  "preferences_import": {
+    "message": "استيراد"
+  },
+  "preferences_import_hint": {
+    "message": "استعد ملفات التعريف من ملف Proxyverse."
+  },
+  "preferences_import_switchyomega_hint": {
+    "message": "يقرأ أيضًا النسخ الاحتياطية لـ ProxySwitchyOmega / ZeroOmega (.bak). تُعرض بعد الاستيراد قائمة بالعناصر التي يتعذّر تحويلها بدقة."
+  },
+
+
+
+  "preferences_tag_beta": {
+    "message": "تجريبي"
+  },
+
+  "preferences_action_profile_export": {
+    "message": "تصدير ملفات التعريف"
+  },
+
+  "preferences_action_profile_import": {
+    "message": "استيراد ملفات التعريف"
+  },
+
+  "preferences_feedback_no_profile_to_be_exported": {
+    "message": "لا توجد ملفات تعريف صالحة للتصدير"
+  },
+
+  "preferences_tips_profile_overwrite": {
+    "message": "قد تُستبدل بعض ملفات التعريف بعد الاستيراد. هل تريد بالتأكيد المتابعة؟"
+  },
+
+  "preferences_feedback_n_profiles_being_imported": {
+    "message": "عدد ملفات التعريف التي تم استيرادها: $1"
+  },
+
+  "preferences_feedback_profiles_not_exported": {
+    "message": "لم يتم تصدير ملفات التعريف غير الصالحة: $1"
+  },
+
+  "preferences_import_warnings_title": {
+    "message": "تم الاستيراد مع تحذيرات"
+  },
+
+  "preferences_import_warnings_desc": {
+    "message": "تعذّر استيراد بعض الإعدادات بدقة. يُرجى مراجعة ملفات التعريف هذه."
+  },
+
+  "preferences_import_warnings_more": {
+    "message": "… وعدد التحذيرات الإضافية: $1"
+  },
+
+  "import_warn_invalid_profile": {
+    "message": "تم التخطي، ملف تعريف غير صالح: $1"
+  },
+
+  "import_warn_reserved_id": {
+    "message": "تم التخطي: معرّف ملف التعريف \"$1\" محجوز"
+  },
+
+  "import_warn_duplicate_id": {
+    "message": "تم التخطي: معرّف ملف التعريف \"$1\" مكرر"
+  },
+
+  "import_warn_unknown_reference": {
+    "message": "يشير إلى ملف تعريف غير موجود: $1"
+  },
+
+  "import_warn_unknown_profile_type": {
+    "message": "تم التخطي: نوع ملف التعريف \"$1\" غير مدعوم"
+  },
+
+  "import_warn_unsupported_condition": {
+    "message": "تعذّر تحويل القاعدة \"$1\" وتم استيرادها معطّلة"
+  },
+
+  "import_warn_ip_condition": {
+    "message": "تطابق قاعدة IP \"$1\" أيضًا أسماء المضيفين التي تُحلّل إلى عناوين IP ضمن هذا النطاق"
+  },
+
+  "import_warn_bypass_dropped": {
+    "message": "قاعدة التجاوز \"$1\" غير مدعومة وتم استبعادها"
+  },
+
+  "import_warn_pac_auth_dropped": {
+    "message": "بيانات اعتماد وكيل PAC غير مدعومة وتم استبعادها"
+  },
+
+  "import_warn_pac_file_url": {
+    "message": "لا يمكن تحديث ملف PAC المحلي \"$1\"؛ تم استيراد آخر نص برمجي جرى تحميله منه"
+  },
+
+  "import_warn_rule_list_static": {
+    "message": "تم استيراد القواعد من \"$1\" كقواعد ثابتة ولن تُحدّث تلقائيًا"
+  },
+
+  "form_is_required": {
+    "message": "الحقل $1 مطلوب"
+  },
+  "form_invalid_url": {
+    "message": "يجب أن يكون $1 رابطًا صالحًا يبدأ بـ http:// أو https://"
+  },
+
+  "feedback_error": {
+    "message": "حدث خطأ"
+  },
+
+  "firefox_incognito_access_error_html": {
+    "message": "<div class=\"arco-typography\"> بسبب قيود Firefox، لا يعمل Proxyverse بشكل صحيح لأنه غير مفعّل في نوافذ التصفح الخاص. </div>\n<div class=\"arco-typography\"> يُرجى تفعيل الإضافة في النوافذ الخاصة. </div>\n<div class=\"arco-typography\"><a class=\"arco-link arco-link-status-normal\" href=\"https://mzl.la/3pbGH96\">معرفة المزيد</a></div>"
+  },
+
+  "preferences_section_sync": {
+    "message": "مزامنة"
+  },
+  "sync_desc": {
+    "message": "زامن ملفات تعريفك وتفضيلاتك عبر المتصفحات والأجهزة باستخدام حساب byte.vet."
+  },
+  "sync_privacy_note": {
+    "message": "تتم مزامنة ملفات التعريف بكل محتوياتها، بما في ذلك أسماء مستخدمي الوكيل وكلمات المرور. تُرسل عبر اتصال مشفّر، وتُخزَّن مشفّرة، ولا تُستخدم إلا لمزامنة أجهزتك. حدّد خيار \"هذا الجهاز فقط\" لملف التعريف لإبقائه خارج السحابة."
+  },
+  "sync_action_signin": {
+    "message": "سجّل الدخول للمزامنة"
+  },
+  "sync_signin_expired": {
+    "message": "انتهت صلاحية تسجيل الدخول للحساب $1. سجّل الدخول مجددًا لمتابعة المزامنة."
+  },
+  "sync_account": {
+    "message": "الحساب"
+  },
+  "sync_account_unknown": {
+    "message": "تم تسجيل الدخول"
+  },
+  "sync_action_signout": {
+    "message": "تسجيل الخروج"
+  },
+  "sync_signout_confirm": {
+    "message": "هل تريد إيقاف المزامنة في هذا المتصفح؟ ستبقى ملفات تعريفك هنا."
+  },
+  "sync_status": {
+    "message": "الحالة"
+  },
+  "sync_action_now": {
+    "message": "مزامنة الآن"
+  },
+  "sync_time_recent": {
+    "message": "قبل بضع ثوانٍ"
+  },
+  "sync_status_never": {
+    "message": "لم تتم المزامنة بعد."
+  },
+  "sync_status_ok": {
+    "message": "آخر مزامنة: $1."
+  },
+  "sync_status_failed": {
+    "message": "تعذّرت مزامنة $1 من العناصر لأن الخادم رفضها. عدّلها لإعادة المحاولة."
+  },
+  "sync_status_held": {
+    "message": "تمت مزامنة $1 من العناصر بواسطة إصدار أحدث من Proxyverse، ولا يمكن لهذا الإصدار قراءتها. حدّث Proxyverse لاستخدامها."
+  },
+  "sync_error_auth": {
+    "message": "توقفت المزامنة $1: سجّل الدخول مجددًا."
+  },
+  "sync_error_clock_skew": {
+    "message": "تمت المزامنة $1، لكن رُفضت بعض التغييرات لأن ساعة هذا الجهاز متقدمة. تحقّق من ساعة النظام."
+  },
+  "sync_error_unreachable": {
+    "message": "فشلت المزامنة $1: تعذّر الوصول إلى byte.vet. سيعيد Proxyverse المحاولة."
+  },
+  "sync_error_client_too_old": {
+    "message": "توقفت المزامنة $1: هذا الإصدار من Proxyverse قديم جدًا. حدّثه لمتابعة المزامنة."
+  },
+  "sync_error_quota": {
+    "message": "فشلت المزامنة $1: الحساب ممتلئ. احذف بعض ملفات التعريف."
+  },
+  "sync_error_other": {
+    "message": "فشلت المزامنة $1 ($2)."
+  },
+  "sync_prefs": {
+    "message": "مزامنة التفضيلات"
+  },
+  "sync_prefs_hint": {
+    "message": "السمة واللغة وسلوك زر شريط الأدوات. أوقف هذا الخيار للاحتفاظ بتفضيلات هذا المتصفح."
+  },
+  "sync_snapshots": {
+    "message": "اللقطات"
+  },
+  "sync_snapshots_hint": {
+    "message": "يحتفظ byte.vet بنسخ من بياناتك المتزامنة لتتمكن من التراجع عن أي تغيير غير مرغوب فيه."
+  },
+  "sync_action_snapshots": {
+    "message": "استعادة…"
+  },
+  "sync_snapshots_desc": {
+    "message": "تؤدي استعادة لقطة إلى استبدال البيانات المتزامنة على جميع الأجهزة. تُؤخذ أولًا لقطة من البيانات الحالية."
+  },
+  "sync_snapshot_meta": {
+    "message": "$1، $2 من العناصر"
+  },
+  "sync_snapshot_reason_daily": {
+    "message": "يومية"
+  },
+  "sync_snapshot_reason_manual": {
+    "message": "يدوية"
+  },
+  "sync_snapshot_reason_before_restore": {
+    "message": "قبل الاستعادة"
+  },
+  "sync_snapshot_reason_before_overwrite": {
+    "message": "قبل الرفع"
+  },
+  "sync_action_restore": {
+    "message": "استعادة"
+  },
+  "sync_restore_confirm": {
+    "message": "هل تريد استبدال البيانات المتزامنة على جميع الأجهزة بهذه اللقطة؟"
+  },
+  "sync_restore_done": {
+    "message": "تمت الاستعادة. ستحصل الأجهزة الأخرى على البيانات عند المزامنة التالية."
+  },
+  "sync_first_title": {
+    "message": "يحتوي حسابك على بيانات بالفعل"
+  },
+  "sync_first_desc": {
+    "message": "يحتوي كلٌّ من هذا المتصفح وحسابك في byte.vet على ملفات تعريف. كيف تريد دمجها؟"
+  },
+  "sync_first_merge": {
+    "message": "دمج الاثنين"
+  },
+  "sync_first_merge_hint": {
+    "message": "الاحتفاظ بكل شيء. إذا وُجد ملف التعريف نفسه في كليهما، تُعتمد نسخة هذا المتصفح."
+  },
+  "sync_first_cloud": {
+    "message": "استخدام بيانات الحساب"
+  },
+  "sync_first_cloud_hint": {
+    "message": "استبدال ملفات تعريف هذا المتصفح بملفات تعريف الحساب."
+  },
+  "sync_first_cloud_confirm": {
+    "message": "ستُحذف ملفات التعريف الموجودة في هذا المتصفح فقط. هل تريد المتابعة؟"
+  },
+  "sync_first_backup": {
+    "message": "تنزيل نسخة احتياطية أولًا"
+  },
+  "sync_first_upload": {
+    "message": "رفع بيانات هذا المتصفح"
+  },
+  "sync_first_upload_hint": {
+    "message": "استبدال ملفات تعريف الحساب بملفات تعريف هذا المتصفح على جميع الأجهزة. تُؤخذ لقطة أولًا."
+  },
+  "sync_first_upload_confirm": {
+    "message": "ستُحذف ملفات التعريف الموجودة في الحساب فقط من جميع الأجهزة. هل تريد المتابعة؟"
+  },
+  "profile_local_only": {
+    "message": "هذا الجهاز فقط"
+  },
+  "profile_local_only_hint": {
+    "message": "عدم مزامنة ملف التعريف هذا مطلقًا. ستحتفظ الأجهزة الأخرى بالنسخة الموجودة لديها."
+  },
+  "profile_local_only_referenced": {
+    "message": "توجّه ملفات التعريف المتزامنة الاتصالات إلى ملف التعريف هذا: $1. على الأجهزة الأخرى، ستشير هذه القواعد إلى ملف تعريف غير موجود."
+  },
+
+  "_": {
+    "message": "<DUMMY>"
+  }
+}

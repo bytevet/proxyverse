@@ -77,6 +77,8 @@ body[arco-theme="dark"] .script-display {
 
 .script-editor-wrapper {
   position: relative;
+  // code reads left to right, and the highlighted copy must line up
+  direction: ltr;
   flex: 1;
 
   .script-display {

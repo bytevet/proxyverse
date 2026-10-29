@@ -1,5 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 import type { FilePayload } from "../data/configFiles";
+import { popconfirmOK } from "./arco";
 
 /** The Preference page (import / export) of the config page. */
 export class Preference {
@@ -20,7 +21,7 @@ export class Preference {
   async import(file: FilePayload) {
     await this.page.getByTestId("import-profiles").click();
     const chooser = this.page.waitForEvent("filechooser");
-    await this.page.locator(".arco-popconfirm:visible .arco-btn-primary").click();
+    await popconfirmOK(this.page).click();
     await (await chooser).setFiles(file);
   }
 

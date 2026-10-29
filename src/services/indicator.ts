@@ -23,7 +23,9 @@ export const FAILURE_BADGE_INTERVAL_MS = 2000;
 /**
  * The badge of each tab. It shows the profile used for the tab, and
  * alternates with the number of failed resources while the tab has failures
- * the user hasn't seen yet.
+ * the user hasn't seen yet, unless that's turned off (`failureBadge`) or
+ * Proxyverse isn't routing traffic (System, or another extension controls
+ * the proxy).
  *
  * Note: updating the badge every couple of seconds keeps the background
  * service worker alive while some tab has unseen failures.
@@ -33,10 +35,17 @@ export class TabIndicator {
   private tabProfiles = new Map<number, ProxyProfile | undefined>();
   private timer?: ReturnType<typeof setInterval>;
   private showingCount = false;
+  private flashing = false; // set by refresh()
   private refreshing: Promise<void> = Promise.resolve();
 
   constructor(
-    private activeProfile: () => Promise<ProxyProfile | undefined>
+    private activeProfile: () => Promise<ProxyProfile | undefined>,
+    private failureBadge: () => Promise<boolean>,
+    /** The profile a tab's page goes through under `active`, e.g. for auto profiles. */
+    private predictTab: (
+      tabID: number,
+      active: ProxyProfile
+    ) => Promise<ProxyProfile | undefined> = async (_, active) => active
   ) {}
 
   /** Set the profile a tab is using, e.g. a sub-profile of an auto profile. */
@@ -48,18 +57,40 @@ export class TabIndicator {
   }
 
   /**
-   * Show the active profile again, e.g. after it changed. Profiles set per
-   * tab are forgotten until the tabs load a page again.
+   * Show the active profile again, e.g. after it or the setting changed.
+   * Every tab is repainted with the profile predicted for its page, as a
+   * tab's own badge wins over the global one; with `repaintTabs` false (the
+   * worker just started), only the tabs with failures are.
    */
-  refresh() {
+  refresh({ repaintTabs = true } = {}) {
     // one at a time, so the last trigger shows the latest state
     this.refreshing = this.refreshing
       .catch(() => undefined)
       .then(async () => {
         this.tabProfiles.clear();
         const active = await this.activeProfile();
+        this.flashing =
+          !!active &&
+          active.proxyType !== "system" &&
+          (await this.failureBadge());
+        if (this.flashing) this.startIfNeeded();
+        else this.stop();
+
         await setIndicator(active);
-        await this.updateTabs(active);
+        if (!repaintTabs) {
+          await this.paintTabs([...this.failures.keys()], active);
+          return;
+        }
+
+        const tabIDs = await Host.listTabIDs();
+        if (active) {
+          await Promise.allSettled(
+            tabIDs.map(async (tabID) =>
+              this.tabProfiles.set(tabID, await this.predictTab(tabID, active))
+            )
+          );
+        }
+        await this.paintTabs(tabIDs, active);
       });
     return this.refreshing;
   }
@@ -69,7 +100,7 @@ export class TabIndicator {
     if (count > 0) {
       const previous = this.failures.get(tabID);
       this.failures.set(tabID, count);
-      this.timer ??= setInterval(() => this.tick(), FAILURE_BADGE_INTERVAL_MS);
+      this.startIfNeeded();
       if (previous !== count && this.showingCount) {
         await this.showCount(tabID, count);
       }
@@ -77,7 +108,7 @@ export class TabIndicator {
     }
 
     if (this.failures.delete(tabID)) {
-      this.stopIfIdle();
+      if (this.failures.size === 0) this.stop();
       await this.showProfile(tabID);
     }
   }
@@ -85,33 +116,39 @@ export class TabIndicator {
   removeTab(tabID: number) {
     this.failures.delete(tabID);
     this.tabProfiles.delete(tabID);
-    this.stopIfIdle();
+    if (this.failures.size === 0) this.stop();
   }
 
-  private stopIfIdle() {
-    if (this.failures.size === 0 && this.timer) {
-      clearInterval(this.timer);
-      this.timer = undefined;
-      this.showingCount = false;
+  private startIfNeeded() {
+    if (this.flashing && this.failures.size > 0) {
+      this.timer ??= setInterval(() => this.tick(), FAILURE_BADGE_INTERVAL_MS);
     }
+  }
+
+  private stop() {
+    clearInterval(this.timer);
+    this.timer = undefined;
+    this.showingCount = false;
   }
 
   private async tick() {
     this.showingCount = !this.showingCount;
-    await this.updateTabs(
+    await this.paintTabs(
+      [...this.failures.keys()],
       this.showingCount ? undefined : await this.activeProfile()
     );
   }
 
-  /** Repaint the badges of the tabs with failures, in the current phase. */
-  private async updateTabs(active: ProxyProfile | undefined) {
+  /** Repaint the badges of `tabIDs`, in the current phase. */
+  private async paintTabs(tabIDs: number[], active: ProxyProfile | undefined) {
     // a tab may be gone meanwhile: ignore failures
     await Promise.allSettled(
-      [...this.failures].map(([tabID, count]) =>
-        this.showingCount
+      tabIDs.map((tabID) => {
+        const count = this.failures.get(tabID);
+        return count !== undefined && this.showingCount
           ? this.showCount(tabID, count)
-          : setIndicator(this.profileOf(tabID, active), tabID)
-      )
+          : setIndicator(this.profileOf(tabID, active), tabID);
+      })
     );
   }
 

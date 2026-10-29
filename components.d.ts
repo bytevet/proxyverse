@@ -18,6 +18,7 @@ declare module 'vue' {
     ACollapse: typeof import('@arco-design/web-vue')['Collapse']
     ACollapseItem: typeof import('@arco-design/web-vue')['CollapseItem']
     AColorPicker: typeof import('@arco-design/web-vue')['ColorPicker']
+    AConfigProvider: typeof import('@arco-design/web-vue')['ConfigProvider']
     ADgroup: typeof import('@arco-design/web-vue')['Dgroup']
     ADivider: typeof import('@arco-design/web-vue')['Divider']
     ADoption: typeof import('@arco-design/web-vue')['Doption']
@@ -35,6 +36,9 @@ declare module 'vue' {
     ALayoutHeader: typeof import('@arco-design/web-vue')['LayoutHeader']
     ALayoutSider: typeof import('@arco-design/web-vue')['LayoutSider']
     ALink: typeof import('@arco-design/web-vue')['Link']
+    AList: typeof import('@arco-design/web-vue')['List']
+    AListItem: typeof import('@arco-design/web-vue')['ListItem']
+    AListItemMeta: typeof import('@arco-design/web-vue')['ListItemMeta']
     AMenu: typeof import('@arco-design/web-vue')['Menu']
     AMenuItem: typeof import('@arco-design/web-vue')['MenuItem']
     AModal: typeof import('@arco-design/web-vue')['Modal']
@@ -45,6 +49,7 @@ declare module 'vue' {
     ARadioGroup: typeof import('@arco-design/web-vue')['RadioGroup']
     ASelect: typeof import('@arco-design/web-vue')['Select']
     ASpace: typeof import('@arco-design/web-vue')['Space']
+    ASwitch: typeof import('@arco-design/web-vue')['Switch']
     ATable: typeof import('@arco-design/web-vue')['Table']
     ATag: typeof import('@arco-design/web-vue')['Tag']
     ATextarea: typeof import('@arco-design/web-vue')['Textarea']
@@ -65,6 +70,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     ScriptInput: typeof import('./src/components/configs/ScriptInput.vue')['default']
+    SyncSection: typeof import('./src/components/sync/SyncSection.vue')['default']
     ThemeSwitcher: typeof import('./src/components/controls/ThemeSwitcher.vue')['default']
   }
 }

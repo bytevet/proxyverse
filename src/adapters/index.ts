@@ -31,4 +31,5 @@ export type {
   SimpleProxyServer,
   PacScript,
   ProxyRules,
+  ExtensionInfo,
 } from "./base";

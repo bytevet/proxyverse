@@ -15,6 +15,7 @@ import {
   WebRequestErrorOccurredDetails,
   WebRequestResponseStartedDetails,
   ActionBehavior,
+  ExtensionInfo,
   POPUP_PAGE,
   SIDEBAR_PAGE,
 } from "./base";
@@ -33,6 +34,10 @@ export class Chrome extends BaseAdapter {
   async get<T>(key: string): Promise<T | undefined> {
     const ret = await chrome.storage.local.get(key);
     return ret[key] as T | undefined;
+  }
+
+  async remove(key: string): Promise<void> {
+    await chrome.storage.local.remove(key);
   }
 
   onLocalStorageChanged(
@@ -105,6 +110,11 @@ export class Chrome extends BaseAdapter {
     return await chrome.tabs.get(tabID).catch(() => undefined);
   }
 
+  async listTabIDs(): Promise<number[]> {
+    const tabs = await chrome.tabs.query({});
+    return tabs.flatMap((t) => (t.id === undefined ? [] : [t.id]));
+  }
+
   async getActiveTab(): Promise<Tab | undefined> {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     return tabs[0];
@@ -151,6 +161,21 @@ export class Chrome extends BaseAdapter {
 
   async reloadTab(tabID: number): Promise<void> {
     await chrome.tabs.reload(tabID);
+  }
+
+  protected identity() {
+    // typed as always there, but absent where the browser lacks the API
+    return chrome.identity as typeof chrome.identity | undefined;
+  }
+
+  async extensionInfo(): Promise<ExtensionInfo> {
+    const { os } = await chrome.runtime.getPlatformInfo();
+    return {
+      version: chrome.runtime.getManifest().version,
+      // Edge runs this adapter too; only its user agent tells them apart
+      browser: navigator.userAgent.includes("Edg/") ? "edge" : "chrome",
+      os,
+    };
   }
 
   onMessage(
@@ -227,6 +252,10 @@ export class Chrome extends BaseAdapter {
   }
   onAlarm(callback: (name: string) => void): void {
     chrome.alarms.onAlarm.addListener((alarm) => callback(alarm.name));
+  }
+
+  onBrowserStartup(callback: () => void): void {
+    chrome.runtime.onStartup.addListener(callback);
   }
 
   protected nativeLocale(): string {

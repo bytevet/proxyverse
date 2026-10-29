@@ -4,6 +4,7 @@ import {
   BaseAdapter,
   BlockingResponse,
   BrowserFlavor,
+  ExtensionInfo,
   MessageSender,
   ProxyConfig,
   ProxyErrorDetails,
@@ -41,6 +42,12 @@ export class WebBrowser extends BaseAdapter {
     let s: any;
     s = localStorage.getItem(key);
     return s && JSON.parse(s);
+  }
+  async remove(key: string): Promise<void> {
+    const oldValue = await this.get(key);
+    localStorage.removeItem(key);
+    const changes = { [key]: { newValue: undefined, oldValue } };
+    this.storageListeners.forEach((cb) => cb(changes));
   }
 
   onLocalStorageChanged(
@@ -136,8 +143,16 @@ export class WebBrowser extends BaseAdapter {
   async reloadTab(tabID: number): Promise<void> {
     console.log(`Reload tab: ${tabID}`);
   }
+
+
+  async extensionInfo(): Promise<ExtensionInfo> {
+    return { version: "0.0.0", browser: "web", os: "unknown" };
+  }
   async getTab(_tabID: number): Promise<Tab | undefined> {
     return this.getActiveTab();
+  }
+  async listTabIDs(): Promise<number[]> {
+    return [1];
   }
   async getActiveTab(): Promise<Tab | undefined> {
     return {
@@ -215,6 +230,10 @@ export class WebBrowser extends BaseAdapter {
     return [];
   }
   onAlarm(_: (name: string) => void): void {
+    // no-op for local dev
+  }
+
+  onBrowserStartup(_: () => void): void {
     // no-op for local dev
   }
 

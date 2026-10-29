@@ -4,9 +4,11 @@ import os from "node:os";
 import { createHttpProxy } from "./httpProxy";
 import { ContentStore, RequestLog, respond } from "./routeServer";
 import { createSocks5Server } from "./socks5";
+import { createSyncServer } from "./syncApi";
 
 export { ContentStore, RequestLog } from "./routeServer";
 export type { LogEntry, Route } from "./routeServer";
+export { SyncStore } from "./syncStore";
 
 export const AUTH = { username: "e2e-user", password: "e2e-pass" };
 
@@ -40,6 +42,8 @@ export type Servers = Awaited<ReturnType<typeof startServers>>;
  * - `proxyA`, `proxyB`: HTTP proxies
  * - `auth`: HTTP proxy requiring Basic auth (`AUTH`)
  * - `socks`: SOCKS5 proxy
+ * - `sync`: fake byte.vet (OAuth + sync API), on loopback so Chrome never
+ *   proxies it, whatever profile a test activates
  */
 export async function startServers() {
   const log = new RequestLog();
@@ -52,7 +56,8 @@ export async function startServers() {
   const proxyB = createHttpProxy("proxyB", log, store);
   const auth = createHttpProxy("auth", log, store, AUTH);
   const socks = createSocks5Server("socks", log, store);
-  const all: net.Server[] = [direct, proxyA, proxyB, auth, socks];
+  const sync = createSyncServer();
+  const all: net.Server[] = [direct, proxyA, proxyB, auth, socks, sync.server];
 
   const ports = {
     // on all interfaces: fake sites (LAN IP) and loopback URLs
@@ -62,6 +67,7 @@ export async function startServers() {
     auth: await listen(auth),
     socks: await listen(socks),
     closed: await closedPort(),
+    sync: await listen(sync.server),
   };
 
   return {
@@ -72,9 +78,14 @@ export async function startServers() {
     url: (host: string, path = "/") => `http://${host}:${ports.direct}${path}`,
     /** URL served by the `direct` server on loopback, never proxied. */
     localURL: (path: string) => `http://127.0.0.1:${ports.direct}${path}`,
+    /** The fake byte.vet's state and test controls. */
+    sync: sync.store,
+    /** Origin of the fake byte.vet, e.g. for its discovery URL. */
+    syncOrigin: `http://127.0.0.1:${ports.sync}`,
     reset() {
       log.clear();
       store.clear();
+      sync.store.reset();
     },
     async close() {
       all.forEach((s) => {
