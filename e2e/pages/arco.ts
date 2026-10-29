@@ -57,6 +57,11 @@ export function toast(page: Page, text: string | RegExp) {
     .first();
 }
 
+/** The confirm button of the open popconfirm (rendered in `<body>`). */
+export function popconfirmOK(page: Page) {
+  return page.locator(".arco-popconfirm:visible .arco-btn-primary");
+}
+
 /** Fill an Arco input (the testid sits on the wrapper). */
 export async function fillInput(wrapper: Locator, value: string) {
   const input = wrapper.locator("input, textarea").first();

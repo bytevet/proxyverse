@@ -1,6 +1,11 @@
 import type { ProxyAuthInfo, ProxyProfile } from "../profile";
 import type { ProfileLoader } from "./profile2config";
 
+// Browsers report the challenger host lower-cased, while profiles keep it as
+// typed. IPv6 hosts may come with or without brackets.
+const normalizeHost = (host: string) =>
+  host.trim().toLowerCase().replace(/^\[(.*)\]$/, "$1");
+
 export class ProfileAuthProvider {
   private searchedProfiles: Set<string> = new Set();
 
@@ -50,11 +55,12 @@ export class ProfileAuthProvider {
     ];
 
     // check if there's any matching host and port
+    const challenger = normalizeHost(host);
     auths.forEach((item) => {
       if (!item) return;
 
       if (
-        item.host == host &&
+        normalizeHost(item.host) == challenger &&
         (item.port === undefined || item.port == port) &&
         item.auth
       ) {

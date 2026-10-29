@@ -109,13 +109,14 @@ const jumpTo = (to: RouteLocationRaw) => {
   window.open(`/index.html#${path}`, "_blank");
 };
 
-// open the active custom profile for editing, or the config home otherwise
+// open the active custom profile for editing, or the Preference page
+// otherwise (Direct, System, or a proxy set by another extension)
 const openConfig = () => {
   const profileID = activeProfile.value?.profileID;
   if (profileID && profiles.value[profileID]) {
     jumpTo({ name: "profile.custom", params: { id: profileID } });
   } else {
-    jumpTo({ name: "profile.home" });
+    jumpTo({ name: "preference" });
   }
 };
 

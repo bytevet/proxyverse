@@ -35,7 +35,9 @@ export type Language = "auto" | LanguageCode;
 // base languages only: the direction belongs to the language, not the region
 const RIGHT_TO_LEFT = new Set<string>(["ar"] satisfies LanguageCode[]);
 
-const keyLanguage = "ui.language";
+export const keyLanguage = "ui.language";
+/** Unset means following the browser's language. */
+export const defaultLanguage: Language = "auto";
 // the manifest's default_locale; bundled already (the dev stub uses it)
 const ENGLISH = lowerCaseKeys(englishMessages);
 
@@ -45,7 +47,7 @@ const isLanguageCode = (v: unknown): v is LanguageCode =>
 /** The chosen language, or "auto" to follow the browser. */
 export async function getLanguage(): Promise<Language> {
   const v = await Host.get<string>(keyLanguage);
-  return isLanguageCode(v) ? v : "auto";
+  return isLanguageCode(v) ? v : defaultLanguage;
 }
 
 export async function setLanguage(language: Language) {

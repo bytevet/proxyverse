@@ -8,68 +8,27 @@ import Components from "unplugin-vue-components/vite";
 import { ArcoResolver } from "unplugin-vue-components/resolvers";
 import { visualizer } from "rollup-plugin-visualizer";
 import { createRequire } from "module";
+import { readFileSync } from "fs";
+import { parseBuildEnv, syncDefines } from "./build/env.ts";
+import { buildManifest, crxVersion, needsDevKey } from "./build/manifest.ts";
 
 // Use createRequire instead of `import manifest from "./manifest.json"` to
 // work around a Rolldown panic on nested member expressions of JSON imports.
 const manifest = createRequire(import.meta.url)("./manifest.json");
 
-const env = process.env;
+const PROXYVERSE_ENV = parseBuildEnv(process.env.PROXYVERSE_ENV);
+const CRX_VERSION = crxVersion(process.env.CRX_VER);
 
-const getCRXVersion = () => {
-  const crxVer = env.CRX_VER;
-  if (crxVer) {
-    let ver = crxVer;
-    if (ver.startsWith("v")) {
-      ver = ver.slice(1);
-    }
-    return ver.slice(0, 14);
-  }
-  return "0.0.0-dev";
-};
-
-// Workaround: Rolldown (Vite 8) panics on nested member expressions like
-// `manifest.background.service_worker` during config transformation.
-// Hoist `manifest.background` into a local variable to flatten the access.
-const manifestBg = manifest.background;
-
-function transformManifestForFirefox() {
-  manifestBg.scripts = [manifestBg.service_worker];
-  delete manifestBg.service_worker;
-
-  delete (manifest as any).version_name;
-
-  // Firefox has a sidebar instead of Chrome's side panel
-  delete (manifest as any).side_panel;
-  manifest.permissions = manifest.permissions.filter((p) => p !== "sidePanel");
-  (manifest as any).sidebar_action = {
-    default_panel: "index.html#/sidebar",
-    default_icon: "mini-logo.png",
-    open_at_install: false,
-  };
-
-  (manifest as any).browser_specific_settings = {
-    gecko: {
-      id: "proxyverse@byte.vet",
-      strict_min_version: "115.0",
-    },
-  };
-}
-
-type Transformer = {
-  manifest(): void;
-};
-
-const TRANSFORMER_CONFIG: Record<string, Transformer> = {
-  firefox: {
-    manifest: transformManifestForFirefox,
-  },
-};
+// the dev public key, read only by builds that need it (see build/README.md)
+const readDevKey = () =>
+  readFileSync(resolve(import.meta.dirname, "build/dev-extension-key.pub"), "utf8").trim();
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const transformer = TRANSFORMER_CONFIG[mode];
+  const target = mode === "firefox" ? "firefox" : "chrome";
 
   return {
+    define: syncDefines(PROXYVERSE_ENV),
     plugins: [
       vue(),
       AutoImport({
@@ -91,17 +50,18 @@ export default defineConfig(({ mode }) => {
               chunk.isEntry &&
               chunk.name == "background",
           );
-          manifest.version = getCRXVersion().split("-", 1)[0];
-          manifest.version_name = getCRXVersion();
-          // avoid cache issues
-          manifestBg.service_worker = (entry as any).fileName;
-
-          transformer?.manifest();
+          const built = buildManifest(manifest, {
+            mode: target,
+            env: PROXYVERSE_ENV,
+            version: CRX_VERSION,
+            serviceWorker: (entry as any).fileName,
+            devKey: needsDevKey(target, PROXYVERSE_ENV) ? readDevKey() : undefined,
+          });
 
           this.emitFile({
             type: "asset",
             fileName: "manifest.json",
-            source: JSON.stringify(manifest, undefined, 2),
+            source: JSON.stringify(built, undefined, 2),
           });
         },
       },

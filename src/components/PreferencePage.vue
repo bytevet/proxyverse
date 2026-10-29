@@ -14,11 +14,15 @@ import {
 import {
   type ActionBehavior,
   getActionBehavior,
+  getFailureBadge,
   onActionBehaviorChanged,
+  onFailureBadgeChanged,
   setActionBehavior,
+  setFailureBadge,
 } from "@/services/ui";
 import { useFileDialog } from "@vueuse/core";
 import IconBrowserPanel from "@/components/icons/IconBrowserPanel.vue";
+import SyncSection from "@/components/sync/SyncSection.vue";
 import { Notification } from "@arco-design/web-vue";
 import {
   IconSettings,
@@ -42,19 +46,27 @@ const languageOptions = [
   },
   ...LANGUAGES.map((l) => ({ value: l.code, label: l.name })),
 ];
-let unsubscribeActionBehavior: (() => void) | undefined;
+const failureBadge = ref(true);
+const unsubscribe: (() => void)[] = [];
 onMounted(async () => {
   language.value = await getLanguage();
   actionBehavior.value = await getActionBehavior();
-  unsubscribeActionBehavior = onActionBehaviorChanged(
-    (b) => (actionBehavior.value = b)
+  failureBadge.value = await getFailureBadge();
+  unsubscribe.push(
+    onActionBehaviorChanged((b) => (actionBehavior.value = b)),
+    onFailureBadgeChanged((v) => (failureBadge.value = v))
   );
 });
-onUnmounted(() => unsubscribeActionBehavior?.());
+onUnmounted(() => unsubscribe.forEach((u) => u()));
 
 const changeActionBehavior = async (behavior: ActionBehavior) => {
   actionBehavior.value = behavior;
   await setActionBehavior(behavior);
+};
+
+const changeFailureBadge = async (enabled: boolean) => {
+  failureBadge.value = enabled;
+  await setFailureBadge(enabled);
 };
 
 // loaded on use, keeping the importers out of the popup's bundle
@@ -168,12 +180,13 @@ const exportProfiles = async () => {
       </a-space>
     </template>
 
-    <section>
-      <a-divider orientation="left">{{
-        $t("preferences_section_interface")
-      }}</a-divider>
+    <!-- one form for all sections, so their labels share one column -->
+    <a-form :model="{}" auto-label-width>
+      <section>
+        <a-divider orientation="left">{{
+          $t("preferences_section_interface")
+        }}</a-divider>
 
-      <a-form :model="{}" auto-label-width>
         <a-form-item :label="$t('preferences_language')">
           <a-select
             data-testid="pref-language"
@@ -227,49 +240,62 @@ const exportProfiles = async () => {
             </a-radio>
           </a-radio-group>
         </a-form-item>
-      </a-form>
-    </section>
 
-    <section>
-      <a-divider orientation="left">{{
-        $t("preferences_section_import_export")
-      }}</a-divider>
-
-      <a-typography-paragraph type="secondary">{{
-        $t("preferences_section_import_export_desc")
-      }}</a-typography-paragraph>
-
-      <a-typography-paragraph
-        type="secondary"
-        data-testid="import-switchyomega-note"
-      >
-        <a-tag color="orangered" size="small">{{
-          $t("preferences_tag_beta")
-        }}</a-tag>
-        {{ $t("preferences_section_import_switchyomega") }}
-      </a-typography-paragraph>
-
-      <a-space>
-        <a-button data-testid="export-profiles" @click.prevent="exportProfiles">
-          <template #icon>
-            <icon-download />
-          </template>
-          {{ $t("preferences_action_profile_export") }}
-        </a-button>
-
-        <a-popconfirm
-          :content="$t('preferences_tips_profile_overwrite')"
-          @ok="open"
+        <a-form-item
+          :label="$t('preferences_failure_badge')"
+          :extra="$t('preferences_failure_badge_hint')"
         >
-          <a-button data-testid="import-profiles">
+          <a-switch
+            data-testid="pref-failure-badge"
+            :model-value="failureBadge"
+            @change="(v) => changeFailureBadge(v as boolean)"
+          />
+        </a-form-item>
+      </section>
+
+      <section>
+        <a-divider orientation="left">{{
+          $t("preferences_section_import_export")
+        }}</a-divider>
+
+        <a-form-item
+          :label="$t('preferences_export')"
+          :extra="$t('preferences_export_hint')"
+        >
+          <a-button data-testid="export-profiles" @click.prevent="exportProfiles">
             <template #icon>
-              <icon-import />
+              <icon-download />
             </template>
-            {{ $t("preferences_action_profile_import") }}
+            {{ $t("preferences_action_profile_export") }}
           </a-button>
-        </a-popconfirm>
-      </a-space>
-    </section>
+        </a-form-item>
+
+        <a-form-item :label="$t('preferences_import')">
+          <a-popconfirm
+            :content="$t('preferences_tips_profile_overwrite')"
+            @ok="open"
+          >
+            <a-button data-testid="import-profiles">
+              <template #icon>
+                <icon-import />
+              </template>
+              {{ $t("preferences_action_profile_import") }}
+            </a-button>
+          </a-popconfirm>
+          <template #extra>
+            <div>{{ $t("preferences_import_hint") }}</div>
+            <div data-testid="import-switchyomega-note">
+              <a-tag color="orangered" size="small">{{
+                $t("preferences_tag_beta")
+              }}</a-tag>
+              {{ $t("preferences_import_switchyomega_hint") }}
+            </div>
+          </template>
+        </a-form-item>
+      </section>
+
+      <SyncSection @backup="exportProfiles" />
+    </a-form>
   </a-page-header>
 
   <a-modal

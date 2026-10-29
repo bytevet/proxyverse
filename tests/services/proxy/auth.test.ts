@@ -89,6 +89,35 @@ describe("testing auth provider", () => {
     ]);
   });
 
+  test("matches the host regardless of case and IPv6 brackets", async () => {
+    const withHost = (host: string): ProxyProfile => ({
+      profileID: "proxy",
+      color: "",
+      profileName: "",
+      proxyType: "proxy",
+      proxyRules: {
+        default: {
+          scheme: "https",
+          host,
+          port: 443,
+          auth: { username: "user", password: "pass" },
+        },
+        bypassList: [],
+      },
+    });
+
+    // browsers report the challenger host lower-cased
+    let authProvider = new ProfileAuthProvider(withHost("Proxy.Example.COM"));
+    expect(await authProvider.getAuthInfos("proxy.example.com", 443)).toEqual([
+      { username: "user", password: "pass" },
+    ]);
+
+    authProvider = new ProfileAuthProvider(withHost("::1"));
+    expect(await authProvider.getAuthInfos("[::1]", 443)).toHaveLength(1);
+    authProvider = new ProfileAuthProvider(withHost("[::1]"));
+    expect(await authProvider.getAuthInfos("::1", 443)).toHaveLength(1);
+  });
+
   test("test auth provider for auto proxy", async () => {
     const authProvider = new ProfileAuthProvider(
       profiles.autoProxy,

@@ -14,7 +14,11 @@
     "test:e2e": "playwright test -c e2e",
     "test:e2e:chromium": "E2E_TARGET=chrome playwright test -c e2e --project chromium",
     "test:e2e:firefox": "E2E_TARGET=firefox playwright test -c e2e --project firefox-smoke",
-    "test:e2e:typecheck": "tsc -p e2e"
+    "test:e2e:typecheck": "tsc -p e2e",
+    "test:e2e:live": "playwright test -c e2e/live",
+    "sync:api-types": "node scripts/sync-api-types.mjs",
+    "build:preview": "PROXYVERSE_ENV=northernlight npm run build",
+    "build:preview:firefox": "PROXYVERSE_ENV=northernlight npm run build:firefox -- --outDir dist-firefox --emptyOutDir"
   },
   "directories": {
     "test": "tests"

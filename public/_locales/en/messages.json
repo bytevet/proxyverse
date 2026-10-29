@@ -357,17 +357,34 @@
     "message": "This browser version can't open a sidebar from the toolbar icon."
   },
 
+  "preferences_failure_badge": {
+    "message": "Failed resources on the icon"
+  },
+
+  "preferences_failure_badge_hint": {
+    "message": "The toolbar icon alternates with the number of resources that failed to load in the tab, until you open the popup. Never while the System profile is active."
+  },
+
   "preferences_section_import_export": {
     "message": "Import & Export"
   },
-
-  "preferences_section_import_export_desc": {
-    "message": "Export your proxy profiles to a file for backup or sharing, or import them to restore profiles when needed."
+  "preferences_export": {
+    "message": "Export"
+  },
+  "preferences_export_hint": {
+    "message": "Save your proxy profiles to a file, for backup or sharing."
+  },
+  "preferences_import": {
+    "message": "Import"
+  },
+  "preferences_import_hint": {
+    "message": "Restore profiles from a Proxyverse file."
+  },
+  "preferences_import_switchyomega_hint": {
+    "message": "Also reads ProxySwitchyOmega / ZeroOmega backups (.bak). Anything that can't be converted exactly is listed after the import."
   },
 
-  "preferences_section_import_switchyomega": {
-    "message": "Import Profiles also accepts a ProxySwitchyOmega / ZeroOmega backup (.bak). Anything that can't be converted exactly is listed after the import."
-  },
+
 
   "preferences_tag_beta": {
     "message": "Beta"
@@ -466,6 +483,157 @@
 
   "firefox_incognito_access_error_html": {
     "message": "<div class=\"arco-typography\"> Due to Firefox's restrictions, Proxyverse does not work properly as it's not enabled in private browsing windows. </div>\n<div class=\"arco-typography\"> Please enable the extension in private windows. </div>\n<div class=\"arco-typography\"><a class=\"arco-link arco-link-status-normal\" href=\"https://mzl.la/3pbGH96\">Learn more</a></div>"
+  },
+
+  "preferences_section_sync": {
+    "message": "Sync"
+  },
+  "sync_desc": {
+    "message": "Sync your profiles and preferences across browsers and devices with a byte.vet account."
+  },
+  "sync_privacy_note": {
+    "message": "Profiles sync with everything in them, including proxy usernames and passwords. They're sent over an encrypted connection, stored encrypted, and used only to keep your devices in sync. Mark a profile \"This device only\" to keep it off the cloud."
+  },
+  "sync_action_signin": {
+    "message": "Sign in to sync"
+  },
+  "sync_signin_expired": {
+    "message": "The sign-in of $1 expired. Sign in again to keep syncing."
+  },
+  "sync_account": {
+    "message": "Account"
+  },
+  "sync_account_unknown": {
+    "message": "Signed in"
+  },
+  "sync_action_signout": {
+    "message": "Sign out"
+  },
+  "sync_signout_confirm": {
+    "message": "Stop syncing on this browser? Your profiles stay here."
+  },
+  "sync_status": {
+    "message": "Status"
+  },
+  "sync_action_now": {
+    "message": "Sync now"
+  },
+  "sync_time_recent": {
+    "message": "a few seconds ago"
+  },
+  "sync_status_never": {
+    "message": "Not synced yet."
+  },
+  "sync_status_ok": {
+    "message": "Last synced $1."
+  },
+  "sync_status_failed": {
+    "message": "$1 item(s) couldn't be synced: the server refused them. Edit them to try again."
+  },
+  "sync_status_held": {
+    "message": "$1 item(s) were synced by a newer Proxyverse and can't be read by this version. Update Proxyverse to use them."
+  },
+  "sync_error_auth": {
+    "message": "Sync stopped $1: sign in again."
+  },
+  "sync_error_clock_skew": {
+    "message": "Synced $1, but some changes were refused because this device's clock is ahead. Check the system clock."
+  },
+  "sync_error_unreachable": {
+    "message": "Sync failed $1: byte.vet can't be reached. Proxyverse will retry."
+  },
+  "sync_error_client_too_old": {
+    "message": "Sync stopped $1: this version of Proxyverse is too old. Update it to keep syncing."
+  },
+  "sync_error_quota": {
+    "message": "Sync failed $1: the account is full. Delete some profiles."
+  },
+  "sync_error_other": {
+    "message": "Sync failed $1 ($2)."
+  },
+  "sync_prefs": {
+    "message": "Sync preferences"
+  },
+  "sync_prefs_hint": {
+    "message": "Theme, language and toolbar button behavior. Turn off to keep this browser's own."
+  },
+  "sync_snapshots": {
+    "message": "Snapshots"
+  },
+  "sync_snapshots_hint": {
+    "message": "byte.vet keeps copies of your synced data, so a bad change can be undone."
+  },
+  "sync_action_snapshots": {
+    "message": "Restore…"
+  },
+  "sync_snapshots_desc": {
+    "message": "Restoring a snapshot replaces the synced data on every device. A snapshot of the current data is taken first."
+  },
+  "sync_snapshot_meta": {
+    "message": "$1, $2 item(s)"
+  },
+  "sync_snapshot_reason_daily": {
+    "message": "Daily"
+  },
+  "sync_snapshot_reason_manual": {
+    "message": "Manual"
+  },
+  "sync_snapshot_reason_before_restore": {
+    "message": "Before a restore"
+  },
+  "sync_snapshot_reason_before_overwrite": {
+    "message": "Before an upload"
+  },
+  "sync_action_restore": {
+    "message": "Restore"
+  },
+  "sync_restore_confirm": {
+    "message": "Replace the synced data on every device with this snapshot?"
+  },
+  "sync_restore_done": {
+    "message": "Restored. Other devices get it when they next sync."
+  },
+  "sync_first_title": {
+    "message": "Your account already has data"
+  },
+  "sync_first_desc": {
+    "message": "Both this browser and your byte.vet account have profiles. How should they be combined?"
+  },
+  "sync_first_merge": {
+    "message": "Merge both"
+  },
+  "sync_first_merge_hint": {
+    "message": "Keep everything. Where both have the same profile, this browser's wins."
+  },
+  "sync_first_cloud": {
+    "message": "Use the account's data"
+  },
+  "sync_first_cloud_hint": {
+    "message": "Replace this browser's profiles with the account's."
+  },
+  "sync_first_cloud_confirm": {
+    "message": "Profiles that are only in this browser will be deleted. Continue?"
+  },
+  "sync_first_backup": {
+    "message": "Download a backup first"
+  },
+  "sync_first_upload": {
+    "message": "Upload this browser's data"
+  },
+  "sync_first_upload_hint": {
+    "message": "Replace the account's profiles with this browser's, on every device. A snapshot is taken first."
+  },
+  "sync_first_upload_confirm": {
+    "message": "Profiles that are only in the account will be deleted on every device. Continue?"
+  },
+  "profile_local_only": {
+    "message": "This device only"
+  },
+  "profile_local_only_hint": {
+    "message": "Never sync this profile. Other devices keep the copy they already have."
+  },
+  "profile_local_only_referenced": {
+    "message": "Synced profiles route to this one: $1. On other devices those rules will point to a missing profile."
   },
 
   "_": {

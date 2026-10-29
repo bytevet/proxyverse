@@ -28,6 +28,7 @@
     "webRequestAuthProvider",
     "activeTab",
     "alarms",
-    "sidePanel"
+    "sidePanel",
+    "identity"
   ]
 }

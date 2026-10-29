@@ -361,14 +361,6 @@
     "message": "导入 / 导出"
   },
 
-  "preferences_section_import_export_desc": {
-    "message": "将代理配置导出成文件以便进行备份或分享，也可导入文件还原配置。"
-  },
-
-  "preferences_section_import_switchyomega": {
-    "message": "“导入配置”也支持 ProxySwitchyOmega / ZeroOmega 的备份文件（.bak）。无法完全转换的内容会在导入后列出。"
-  },
-
   "preferences_tag_beta": {
     "message": "Beta"
   },

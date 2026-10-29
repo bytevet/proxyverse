@@ -34,3 +34,23 @@ export function decodeBase64(text: string): string {
     Uint8Array.from(binary, (c) => c.charCodeAt(0))
   );
 }
+
+const fallbackLocks = new Map<string, Promise<unknown>>();
+
+/**
+ * Run `fn` holding the named lock, so read-modify-write sequences on storage
+ * don't interleave. Web Locks span every extension context (pages and the
+ * background); where they're missing, fall back to a lock local to this context.
+ */
+export function withLock<T>(name: string, fn: () => Promise<T>): Promise<T> {
+  const locks = globalThis.navigator?.locks;
+  if (locks) return locks.request(name, fn);
+
+  const prev = fallbackLocks.get(name) ?? Promise.resolve();
+  const run = prev.then(fn, fn);
+  fallbackLocks.set(
+    name,
+    run.catch(() => undefined)
+  );
+  return run;
+}
