@@ -486,7 +486,7 @@
   },
 
   "preferences_section_sync": {
-    "message": "مزامنة"
+    "message": "المزامنة والمزيد"
   },
   "sync_desc": {
     "message": "زامن ملفات تعريفك وتفضيلاتك عبر المتصفحات والأجهزة باستخدام حساب byte.vet."
@@ -634,6 +634,179 @@
   },
   "profile_local_only_referenced": {
     "message": "توجّه ملفات التعريف المتزامنة الاتصالات إلى ملف التعريف هذا: $1. على الأجهزة الأخرى، ستشير هذه القواعد إلى ملف تعريف غير موجود."
+  },
+
+  "sync_signin_true_privacy": {
+    "message": "يتيح لك تسجيل الدخول أيضًا استخدام True Privacy Proxy."
+  },
+  "true_privacy_name": {
+    "message": "True Privacy Proxy"
+  },
+  "true_privacy_pref_hint": {
+    "message": "أخفِ هويتك عن المواقع التي تزورها. يسلك تصفحك مسارًا عشوائيًا عبر محطات يديرها متطوعون حول العالم. يتبع هذا الإعداد حسابك على byte.vet في كل متصفح."
+  },
+  "true_privacy_pref_link": {
+    "message": "عرض الاستخدام وكيفية العمل"
+  },
+  "true_privacy_usage_tooltip": {
+    "message": "$1% · تم استخدام $2 من $3 · يُعاد التعيين في $4"
+  },
+  "true_privacy_tag_slowed": {
+    "message": "تم إبطاؤه"
+  },
+  "true_privacy_tag_paused": {
+    "message": "متوقف مؤقتًا"
+  },
+  "true_privacy_tag_suspended": {
+    "message": "معلّق"
+  },
+  "true_privacy_status_in_use": {
+    "message": "قيد الاستخدام"
+  },
+  "true_privacy_status_by_rules": {
+    "message": "تستخدمه القواعد"
+  },
+  "true_privacy_status_not_in_use": {
+    "message": "غير مستخدم"
+  },
+  "true_privacy_this_month": {
+    "message": "هذا الشهر"
+  },
+  "true_privacy_used": {
+    "message": "المستخدم"
+  },
+  "true_privacy_remaining": {
+    "message": "المتبقي"
+  },
+  "true_privacy_resets_on": {
+    "message": "يُعاد التعيين في"
+  },
+  "true_privacy_after_allowance": {
+    "message": "بعد استنفاد الحصة"
+  },
+  "true_privacy_after_throttle": {
+    "message": "أبطأ، $1 كيلوبايت/ثانية"
+  },
+  "true_privacy_after_block": {
+    "message": "متوقف مؤقتًا حتى إعادة التعيين"
+  },
+  "true_privacy_of_quota": {
+    "message": "من $1"
+  },
+  "true_privacy_counts_all": {
+    "message": "يحسب ما ترسله وتستقبله عبر جميع متصفحاتك. تُحدّث البيانات خلال دقيقة."
+  },
+  "true_privacy_usage_loading": {
+    "message": "جارٍ تحميل الاستخدام…"
+  },
+  "true_privacy_warn_80": {
+    "message": "لقد استخدمت $1% من حصة هذا الشهر."
+  },
+  "true_privacy_warn_slowed": {
+    "message": "لقد استنفدت حصة هذا الشهر. سيستمر تحميل الصفحات عبر True Privacy Proxy بسرعة أقل حتى $1"
+  },
+  "true_privacy_warn_paused": {
+    "message": "لقد استنفدت حصة هذا الشهر. True Privacy Proxy متوقف مؤقتًا حتى $1"
+  },
+  "true_privacy_warn_suspended": {
+    "message": "تم تعليق True Privacy Proxy لحسابك. لن تُحمّل المواقع التي توجّهها القواعد إليه."
+  },
+  "true_privacy_warn_unavailable": {
+    "message": "يتعذر الوصول إلى True Privacy Proxy الآن. لن تُحمّل المواقع التي تستخدمه حتى يعود للعمل."
+  },
+  "true_privacy_how_title": {
+    "message": "كيف يحافظ على خصوصيتك"
+  },
+  "true_privacy_how_pause": {
+    "message": "إيقاف مؤقت"
+  },
+  "true_privacy_how_play": {
+    "message": "تشغيل"
+  },
+  "true_privacy_how_you": {
+    "message": "أنت"
+  },
+  "true_privacy_how_entry": {
+    "message": "نقطة دخول Proxyverse"
+  },
+  "true_privacy_how_stops": {
+    "message": "محطات يديرها متطوعون حول العالم"
+  },
+  "true_privacy_how_website": {
+    "message": "الموقع الإلكتروني"
+  },
+  "true_privacy_how_sees": {
+    "message": "يرى زائرًا من $1"
+  },
+  "true_privacy_how_aria": {
+    "message": "ينتقل طلبك إلى نقطة دخول Proxyverse، ثم عبر ثلاث محطات تُختار عشوائيًا، ثم إلى الموقع الإلكتروني."
+  },
+  "true_privacy_step1_title": {
+    "message": "مغلّف بطبقات"
+  },
+  "true_privacy_step1": {
+    "message": "يغلّف متصفحك كل طلب بثلاث طبقات من التشفير ويرسله إلى نقطة دخول Proxyverse."
+  },
+  "true_privacy_step2_title": {
+    "message": "مسار عشوائي"
+  },
+  "true_privacy_step2": {
+    "message": "تختار نقطة الدخول عشوائيًا ثلاث محطات يديرها متطوعون في بلدان مختلفة."
+  },
+  "true_privacy_step3_title": {
+    "message": "طبقة واحدة لكل محطة"
+  },
+  "true_privacy_step3": {
+    "message": "تفتح كل محطة طبقة واحدة. ولا تعرف أي محطة هويتك والموقع الذي تزوره معًا."
+  },
+  "true_privacy_step4_title": {
+    "message": "يرى الموقع المحطة الأخيرة"
+  },
+  "true_privacy_step4": {
+    "message": "يرى الموقع المحطة الأخيرة بدلًا منك. ويسلك اتصالك التالي مسارًا جديدًا."
+  },
+  "true_privacy_tor_note": {
+    "message": "يعتمد على شبكة Tor. تحظرها بعض المواقع."
+  },
+  "true_privacy_toggle_on": {
+    "message": "True Privacy Proxy مفعّل لحسابك."
+  },
+  "true_privacy_toggle_label": {
+    "message": "إيقاف"
+  },
+  "true_privacy_off_confirm": {
+    "message": "هل تريد إيقاف True Privacy Proxy في جميع متصفحاتك؟"
+  },
+  "true_privacy_off_confirm_active": {
+    "message": "هل تريد إيقاف True Privacy Proxy في جميع متصفحاتك؟ ستنتقل إلى الاتصال المباشر."
+  },
+  "true_privacy_off": {
+    "message": "تم إيقاف True Privacy Proxy."
+  },
+  "true_privacy_signed_out": {
+    "message": "سجّل الدخول إلى byte.vet لاستخدام True Privacy Proxy."
+  },
+  "true_privacy_open_preference": {
+    "message": "فتح التفضيلات"
+  },
+  "true_privacy_rule_unavailable": {
+    "message": "True Privacy Proxy متوقف أو غير متاح. لن تُحمّل المواقع المطابقة حتى يتم تفعيله مجددًا أو تغيير هذه القاعدة."
+  },
+
+  "true_privacy_webrtc_title": {
+    "message": "حماية عنوان IP من WebRTC"
+  },
+  "true_privacy_webrtc_desc": {
+    "message": "قد تستخدم المواقع WebRTC (مكالمات الفيديو والدردشة المباشرة) لمعرفة عنوان IP الحقيقي متجاوزةً True Privacy Proxy. اسمح لـ Proxyverse بتغيير إعدادات خصوصية المتصفح لمنع ذلك. أثناء استخدام True Privacy Proxy، قد لا تتصل المكالمات على بعض المواقع."
+  },
+  "true_privacy_webrtc_allow": {
+    "message": "سماح"
+  },
+  "true_privacy_webrtc_popup": {
+    "message": "قد يكشف WebRTC عن عنوان IP الخاص بك."
+  },
+  "true_privacy_webrtc_fix": {
+    "message": "إصلاح"
   },
 
   "_": {
