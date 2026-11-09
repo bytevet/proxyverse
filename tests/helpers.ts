@@ -20,6 +20,25 @@ export const jsonResponse = (body: unknown, status = 200) =>
   });
 
 /**
+ * Back `Host`'s session storage with a plain object, returned for
+ * inspection; values are copied in and out. Restore with
+ * `vi.restoreAllMocks()`.
+ */
+export function fakeSessionStorage(initial: Record<string, unknown> = {}) {
+  const store: Record<string, unknown> = { ...initial };
+  vi.spyOn(Host, "getSession").mockImplementation(async (key: string) =>
+    structuredClone(store[key]) as never
+  );
+  vi.spyOn(Host, "setSession").mockImplementation(async (key, value) => {
+    store[key] = structuredClone(value);
+  });
+  vi.spyOn(Host, "removeSession").mockImplementation(async (key) => {
+    delete store[key];
+  });
+  return store;
+}
+
+/**
  * Back `Host`'s local storage with a plain object, returned for inspection.
  * Values are copied in and out, as browser storage does. Restore with
  * `vi.restoreAllMocks()`.

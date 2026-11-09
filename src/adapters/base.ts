@@ -174,6 +174,18 @@ export abstract class BaseAdapter {
   ): void;
   abstract getProxySettings(): Promise<ProxySettingResultDetails>;
 
+  // optional permissions; requesting one needs a user gesture
+  abstract hasPermission(permission: string): Promise<boolean>;
+  abstract requestPermission(permission: string): Promise<boolean>;
+  abstract onPermissionsChanged(callback: () => void): () => void;
+
+  /**
+   * Keep WebRTC from bypassing the proxy (`privacy` permission): it then
+   * uses UDP only when it can go through the proxy, so it can't reveal the
+   * real IP. `false` gives the browser's default back.
+   */
+  abstract setWebRTCProxyOnly(on: boolean): Promise<void>;
+
   // indicator
   abstract setBadge(text: string, color: string, tabID?: number): Promise<void>;
 

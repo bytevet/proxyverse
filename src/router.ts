@@ -29,6 +29,11 @@ const routes: RouteRecordRaw[] = [
       },
 
       { path: "preference", name: "preference", component: PreferencePage },
+      {
+        path: "trueprivacy",
+        name: "trueprivacy",
+        component: () => import("./pages/TruePrivacyPage.vue"),
+      },
       { path: "/:pathMatch(.*)*", name: "NotFound", redirect: "/" },
     ],
   },

@@ -6,16 +6,33 @@ import type { ProfileLoader } from "./profile2config";
 const normalizeHost = (host: string) =>
   host.trim().toLowerCase().replace(/^\[(.*)\]$/, "$1");
 
+/**
+ * Credentials a profile gets at runtime rather than from storage (e.g. True
+ * Privacy Proxy's token), for the servers it has no stored ones for. One per
+ * attempt so far: the browser asks again when the last ones were refused.
+ */
+export type DynamicAuth = (
+  profile: ProxyProfile,
+  attempt: number
+) => Promise<ProxyAuthInfo[]>;
+
 export class ProfileAuthProvider {
   private searchedProfiles: Set<string> = new Set();
+  private attempt = 0;
 
   constructor(
     private profile: ProxyProfile,
-    private profileLoader?: ProfileLoader
+    private profileLoader?: ProfileLoader,
+    private dynamicAuth?: DynamicAuth
   ) {}
 
-  async getAuthInfos(host: string, port: number): Promise<ProxyAuthInfo[]> {
+  async getAuthInfos(
+    host: string,
+    port: number,
+    attempt = 0
+  ): Promise<ProxyAuthInfo[]> {
     this.searchedProfiles.clear();
+    this.attempt = attempt;
     return this.getAuthInfosForProfile(host, port, this.profile);
   }
 
@@ -52,22 +69,27 @@ export class ProfileAuthProvider {
       profile.proxyRules.ftp,
       profile.proxyRules.http,
       profile.proxyRules.https,
+      ...(profile.failover ?? []),
     ];
 
     // check if there's any matching host and port
     const challenger = normalizeHost(host);
+    let needsDynamic = false;
     auths.forEach((item) => {
       if (!item) return;
-
       if (
-        normalizeHost(item.host) == challenger &&
-        (item.port === undefined || item.port == port) &&
-        item.auth
+        normalizeHost(item.host) != challenger ||
+        (item.port !== undefined && item.port != port)
       ) {
-        ret.push(item.auth);
+        return;
       }
+      if (item.auth) ret.push(item.auth);
+      else needsDynamic = true;
     });
 
+    if (needsDynamic && this.dynamicAuth) {
+      ret.push(...(await this.dynamicAuth(profile, this.attempt)));
+    }
     return ret;
   }
 

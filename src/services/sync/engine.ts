@@ -8,6 +8,7 @@ import {
   collectLocalRecords,
   decodeRemote,
   hashPayload,
+  isPrefSynced,
   mergeIncomingProfile,
   normalizeProfile,
   parseRecordID,
@@ -452,7 +453,7 @@ export class SyncEngine {
         expected.set(parsed.profileID, { id: r.id, mine });
         if (r.deleted) deletes.add(parsed.profileID);
         else puts.set(parsed.profileID, payload as ProfilePayload);
-      } else if (!r.deleted && settings.syncPrefs) {
+      } else if (!r.deleted && isPrefSynced(parsed.key, settings.syncPrefs)) {
         prefWrites.set(parsed.key, (payload as { value: unknown }).value);
       }
       state.base[r.id] = theirs;
@@ -545,13 +546,15 @@ export class SyncEngine {
     return true;
   }
 
-  /** A record this device doesn't sync: a local-only profile, or a pref with prefs off. */
+  /** A record this device doesn't sync: a local-only profile, or a device pref with prefs off. */
   private isDetached({ settings }: Local, id: string): boolean {
     const parsed = parseRecordID(id);
     if (parsed?.kind === "profile") {
       return settings.localOnly.includes(parsed.profileID);
     }
-    return parsed?.kind === "pref" && !settings.syncPrefs;
+    return (
+      parsed?.kind === "pref" && !isPrefSynced(parsed.key, settings.syncPrefs)
+    );
   }
 
   private isDirty(state: SyncState, id: string): boolean {

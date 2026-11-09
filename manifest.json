@@ -30,5 +30,6 @@
     "alarms",
     "sidePanel",
     "identity"
-  ]
+  ],
+  "optional_permissions": ["privacy"]
 }

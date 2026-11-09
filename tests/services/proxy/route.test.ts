@@ -3,14 +3,24 @@ import type {
   ProfileAutoSwitch,
   ProfilesStorage,
   ProfileSimple,
+  ProxyEndpoint,
   ProxyServer,
 } from "@/services/profile";
 
 let store: ProfilesStorage = {};
-vi.mock("@/services/profile", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/services/profile")>()),
-  listProfiles: vi.fn(async () => store),
-}));
+let truePrivacyEndpoints: ProxyEndpoint[] = [];
+vi.mock("@/services/profile", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/services/profile")>();
+  return {
+    ...actual,
+    listProfiles: vi.fn(async () => store),
+    getProfile: vi.fn(async (id: string) =>
+      id === "trueprivacy"
+        ? actual.truePrivacyProfile(truePrivacyEndpoints)
+        : actual.getSystemProfile(id) ?? store[id]
+    ),
+  };
+});
 
 const { createRouteResolver, routeFactsOf } = await import(
   "@/services/proxy/route"
@@ -207,6 +217,37 @@ describe("createRouteResolver", () => {
       );
       expect((await resolve("http://d.test/", { ...local, fromCache: true })).uncertain).toBe(
         false
+      );
+    });
+  });
+
+  describe("True Privacy Proxy", () => {
+    beforeEach(() => {
+      truePrivacyEndpoints = [
+        { host: "node-a.vpn.test", port: 443 },
+        { host: "203.0.113.9", port: 443 },
+      ];
+      store.auto = auto(
+        [{ type: "domain", condition: "tp.test", profileID: "trueprivacy" }],
+        "direct"
+      );
+    });
+
+    test("the rules route to it", async () => {
+      expect(await id("http://tp.test/")).toBe("trueprivacy");
+    });
+
+    test("Firefox: confirmed by any of its current nodes", async () => {
+      const facts = { proxyInfo: { type: "https", host: "203.0.113.9", port: 443 } };
+      expect(await resolve("http://other.test/", facts)).toEqual({
+        profile: expect.objectContaining({ profileID: "trueprivacy" }),
+        uncertain: false,
+      });
+    });
+
+    test("Chrome: confirmed by the IP of a node set by IP", async () => {
+      expect(await id("http://tp.test/", { ip: "203.0.113.9" })).toBe(
+        "trueprivacy"
       );
     });
   });

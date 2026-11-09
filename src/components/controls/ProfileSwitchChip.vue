@@ -2,11 +2,12 @@
 import {
   IconDesktop,
   IconSwap,
+  IconSafe,
   IconDown,
   IconQuestionCircle,
 } from "@arco-design/web-vue/es/icon";
 import { computed, ref } from "vue";
-import { ProfileAutoSwitch, ProxyProfile } from "@/services/profile";
+import { ProfileAutoSwitch, ProxyProfile, TRUE_PRIVACY_ID } from "@/services/profile";
 import { siteDomain, type RuleScope } from "@/services/proxy/ruleEditor";
 import ProfileOptions from "../configs/ProfileOptions.vue";
 import { useProfileOptions } from "../configs/useProfileOptions";
@@ -74,6 +75,10 @@ const onSelect = async (profileID: string) => {
         <template v-else-if="profile?.proxyType == 'system'">
           <icon-desktop />
           <span>{{ $t("mode_system") }}</span>
+        </template>
+        <template v-else-if="profile?.profileID == TRUE_PRIVACY_ID">
+          <icon-safe />
+          <span class="profile-name">{{ $t("true_privacy_name") }}</span>
         </template>
         <template v-else-if="profile">
           <span class="color-indicator"></span>

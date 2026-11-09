@@ -486,7 +486,7 @@
   },
 
   "preferences_section_sync": {
-    "message": "Sync"
+    "message": "Sync and more"
   },
   "sync_desc": {
     "message": "Sync your profiles and preferences across browsers and devices with a byte.vet account."
@@ -634,6 +634,179 @@
   },
   "profile_local_only_referenced": {
     "message": "Synced profiles route to this one: $1. On other devices those rules will point to a missing profile."
+  },
+
+  "sync_signin_true_privacy": {
+    "message": "Signing in also lets you use True Privacy Proxy."
+  },
+  "true_privacy_name": {
+    "message": "True Privacy Proxy"
+  },
+  "true_privacy_pref_hint": {
+    "message": "Hide who you are from the websites you visit. Your browsing takes a random path through stops run by volunteers around the world. This setting follows your byte.vet account on every browser."
+  },
+  "true_privacy_pref_link": {
+    "message": "See usage and how it works"
+  },
+  "true_privacy_usage_tooltip": {
+    "message": "$1% · $2 of $3 used · resets on $4"
+  },
+  "true_privacy_tag_slowed": {
+    "message": "Slowed"
+  },
+  "true_privacy_tag_paused": {
+    "message": "Paused"
+  },
+  "true_privacy_tag_suspended": {
+    "message": "Suspended"
+  },
+  "true_privacy_status_in_use": {
+    "message": "In use"
+  },
+  "true_privacy_status_by_rules": {
+    "message": "Used by rules"
+  },
+  "true_privacy_status_not_in_use": {
+    "message": "Not in use"
+  },
+  "true_privacy_this_month": {
+    "message": "This month"
+  },
+  "true_privacy_used": {
+    "message": "Used"
+  },
+  "true_privacy_remaining": {
+    "message": "Remaining"
+  },
+  "true_privacy_resets_on": {
+    "message": "Resets on"
+  },
+  "true_privacy_after_allowance": {
+    "message": "After the allowance"
+  },
+  "true_privacy_after_throttle": {
+    "message": "Slower, $1 KB/s"
+  },
+  "true_privacy_after_block": {
+    "message": "Paused until it resets"
+  },
+  "true_privacy_of_quota": {
+    "message": "of $1"
+  },
+  "true_privacy_counts_all": {
+    "message": "Counts what you send and receive on all your browsers. Updated within a minute."
+  },
+  "true_privacy_usage_loading": {
+    "message": "Loading usage…"
+  },
+  "true_privacy_warn_80": {
+    "message": "You've used $1% of this month's allowance."
+  },
+  "true_privacy_warn_slowed": {
+    "message": "You've used this month's allowance. Pages still load through True Privacy Proxy, only slower, until $1."
+  },
+  "true_privacy_warn_paused": {
+    "message": "You've used this month's allowance. True Privacy Proxy is paused until $1."
+  },
+  "true_privacy_warn_suspended": {
+    "message": "True Privacy Proxy is suspended for your account. Sites that rules send to it won't load."
+  },
+  "true_privacy_warn_unavailable": {
+    "message": "True Privacy Proxy can't be reached right now. Sites that use it won't load until it's back."
+  },
+  "true_privacy_how_title": {
+    "message": "How it keeps you private"
+  },
+  "true_privacy_how_pause": {
+    "message": "Pause"
+  },
+  "true_privacy_how_play": {
+    "message": "Play"
+  },
+  "true_privacy_how_you": {
+    "message": "You"
+  },
+  "true_privacy_how_entry": {
+    "message": "Proxyverse Entry Point"
+  },
+  "true_privacy_how_stops": {
+    "message": "Volunteer stops around the world"
+  },
+  "true_privacy_how_website": {
+    "message": "Website"
+  },
+  "true_privacy_how_sees": {
+    "message": "Sees a visitor from $1"
+  },
+  "true_privacy_how_aria": {
+    "message": "Your request goes to the Proxyverse Entry Point, then through three randomly chosen stops, then to the website."
+  },
+  "true_privacy_step1_title": {
+    "message": "Sealed in layers"
+  },
+  "true_privacy_step1": {
+    "message": "Your browser wraps each request in three layers of encryption and sends it to the Proxyverse Entry Point."
+  },
+  "true_privacy_step2_title": {
+    "message": "A random path"
+  },
+  "true_privacy_step2": {
+    "message": "The Entry Point picks three stops at random, run by volunteers in different countries."
+  },
+  "true_privacy_step3_title": {
+    "message": "One layer per stop"
+  },
+  "true_privacy_step3": {
+    "message": "Each stop opens one layer. No stop knows both who you are and which site you're visiting."
+  },
+  "true_privacy_step4_title": {
+    "message": "The site sees the last stop"
+  },
+  "true_privacy_step4": {
+    "message": "The website sees the last stop, not you. Your next connection takes a new path."
+  },
+  "true_privacy_tor_note": {
+    "message": "Built on the Tor network. Some sites block it."
+  },
+  "true_privacy_toggle_on": {
+    "message": "True Privacy Proxy is on for your account."
+  },
+  "true_privacy_toggle_label": {
+    "message": "Turn off"
+  },
+  "true_privacy_off_confirm": {
+    "message": "Turn off True Privacy Proxy on all your browsers?"
+  },
+  "true_privacy_off_confirm_active": {
+    "message": "Turn off True Privacy Proxy on all your browsers? You'll switch to Direct."
+  },
+  "true_privacy_off": {
+    "message": "True Privacy Proxy is turned off."
+  },
+  "true_privacy_signed_out": {
+    "message": "Sign in to byte.vet to use True Privacy Proxy."
+  },
+  "true_privacy_open_preference": {
+    "message": "Open Preference"
+  },
+  "true_privacy_rule_unavailable": {
+    "message": "True Privacy Proxy is off or unavailable. Matching sites won't load until it's on again or you change this rule."
+  },
+
+  "true_privacy_webrtc_title": {
+    "message": "Protect your IP address from WebRTC"
+  },
+  "true_privacy_webrtc_desc": {
+    "message": "Websites can use WebRTC (video calls, live chat) to find your real IP address, around True Privacy Proxy. Allow Proxyverse to change your browser's privacy settings to stop it. While True Privacy Proxy is in use, calls on some sites may not connect."
+  },
+  "true_privacy_webrtc_allow": {
+    "message": "Allow"
+  },
+  "true_privacy_webrtc_popup": {
+    "message": "WebRTC can reveal your IP address."
+  },
+  "true_privacy_webrtc_fix": {
+    "message": "Fix"
   },
 
   "_": {

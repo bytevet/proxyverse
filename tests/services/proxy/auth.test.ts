@@ -157,3 +157,54 @@ describe("testing auth provider", () => {
     ]);
   });
 });
+
+describe("dynamic credentials", () => {
+  const tokenProxy: ProxyProfile = {
+    profileID: "trueprivacy",
+    color: "",
+    profileName: "",
+    proxyType: "proxy",
+    proxyRules: {
+      default: { scheme: "https", host: "Node-A.vpn.test", port: 443 },
+      bypassList: [],
+    },
+    failover: [{ scheme: "https", host: "node-b.vpn.test", port: 443 }],
+  };
+  const auto: ProxyProfile = {
+    profileID: "auto",
+    color: "",
+    profileName: "",
+    proxyType: "auto",
+    rules: [{ type: "domain", condition: "*.onion", profileID: "trueprivacy" }],
+    defaultProfileID: "direct",
+  };
+  const loader = async (id: string) =>
+    ({ trueprivacy: tokenProxy, auto })[id] as ProxyProfile | undefined;
+  const dynamic = async (p: ProxyProfile, attempt: number) =>
+    p.profileID === "trueprivacy"
+      ? Array.from({ length: attempt + 1 }, (_, i) => ({ username: "pv", password: `t${i}` }))
+      : [];
+
+  test("for the servers of a profile without stored ones, failover included", async () => {
+    const provider = new ProfileAuthProvider(tokenProxy, loader, dynamic);
+    expect(await provider.getAuthInfos("node-a.vpn.test", 443)).toEqual([
+      { username: "pv", password: "t0" },
+    ]);
+    expect(await provider.getAuthInfos("node-b.vpn.test", 443, 1)).toEqual([
+      { username: "pv", password: "t0" },
+      { username: "pv", password: "t1" },
+    ]);
+  });
+
+  test("not for other proxies", async () => {
+    const provider = new ProfileAuthProvider(tokenProxy, loader, dynamic);
+    expect(await provider.getAuthInfos("other.test", 443)).toEqual([]);
+  });
+
+  test("through an auto profile", async () => {
+    const provider = new ProfileAuthProvider(auto, loader, dynamic);
+    expect(await provider.getAuthInfos("node-a.vpn.test", 443)).toEqual([
+      { username: "pv", password: "t0" },
+    ]);
+  });
+});
