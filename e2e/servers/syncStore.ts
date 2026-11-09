@@ -30,6 +30,23 @@ export type DeviceInput = Schemas["DeviceInput"];
 export type SnapshotMeta = Schemas["SnapshotMeta"];
 export type SnapshotReason = SnapshotMeta["reason"];
 export type SyncErrorCode = Schemas["Problem"]["code"];
+export type ProxyUsage = Schemas["ProxyUsage"];
+export type ProxyEndpoint = Schemas["ProxyEndpoint"];
+
+/** The account's True Privacy Proxy, as the fake serves it. */
+export type ProxyAccount = Omit<ProxyUsage, "period"> & {
+  /** Nodes named with each token; `null` answers `503 unavailable`. */
+  endpoints: ProxyEndpoint[] | null;
+};
+
+const DEFAULT_PROXY: ProxyAccount = {
+  used: 0,
+  quota: 5 * 1024 ** 3,
+  mode: "throttle",
+  rate: 16000,
+  status: "active",
+  endpoints: [],
+};
 
 export const SYNC_ERROR_STATUS: Record<SyncErrorCode, number> = {
   invalid_request: 400,
@@ -39,6 +56,7 @@ export const SYNC_ERROR_STATUS: Record<SyncErrorCode, number> = {
   cursor_expired: 410,
   quota_exceeded: 413,
   client_too_old: 426,
+  proxy_suspended: 403,
   rate_limited: 429,
   unavailable: 503,
 };
@@ -51,6 +69,7 @@ const PROBLEM_TITLES: Record<string, string> = {
   cursor_expired: "Cursor expired",
   quota_exceeded: "Quota exceeded",
   client_too_old: "Client too old",
+  proxy_suspended: "Proxy access suspended",
   rate_limited: "Rate limited",
   unavailable: "Service unavailable",
 };
@@ -121,7 +140,9 @@ export const SYNC_LIMITS = {
 } as const;
 
 export const KNOWN_SCHEMAS = new Set(["2025-01"]);
-const RESERVED_PROFILES = new Set(["direct", "system"]);
+const RESERVED_PROFILES = new Set(["direct", "system", "trueprivacy"]);
+/** Lifetime of a proxy access token, as on byte.vet. */
+export const PROXY_TOKEN_TTL_S = 3600;
 
 export const SYNC_BASE_PATH = "/api/proxyverse/v1";
 export const OAUTH_BASE_PATH = "/api/auth/oauth2";
@@ -250,6 +271,7 @@ const PREF_VALIDATORS: Record<string, (v: unknown) => boolean> = {
     v === "auto" || (typeof v === "string" && /^[a-z]{2,3}(_[A-Z]{2})?$/.test(v)),
   "ui.actionBehavior": (v) => v === "popup" || v === "sidebar",
   "ui.failureBadge": (v) => typeof v === "boolean",
+  "proxy.truePrivacy": (v) => typeof v === "boolean",
 };
 
 type Validated =
@@ -408,6 +430,11 @@ export class SyncStore {
   private codes = new Map<string, AuthCode>();
   private tokens = new Map<string, TokenEntry>();
 
+  // True Privacy Proxy
+  private proxy: ProxyAccount = clone(DEFAULT_PROXY);
+  /** Issued proxy access tokens → expiry (ms). */
+  private proxyTokenExpiry = new Map<string, number>();
+
   // test controls
   private fixedNow: number | null = null;
   private failures: Failure[] = [];
@@ -432,9 +459,51 @@ export class SyncStore {
     this.snapSeq = 0;
     this.codes.clear();
     this.tokens.clear();
+    this.proxy = clone(DEFAULT_PROXY);
+    this.proxyTokenExpiry.clear();
     this.fixedNow = null;
     this.failures = [];
     this.log = [];
+  }
+
+  /** Change the account's proxy usage, entitlement or nodes. */
+  configureProxy(account: Partial<ProxyAccount>) {
+    this.proxy = { ...this.proxy, ...clone(account) };
+  }
+
+  /** Proxy access tokens issued so far, oldest first. */
+  proxyTokens(): string[] {
+    return [...this.proxyTokenExpiry.keys()];
+  }
+
+  /** Whether a proxy node would accept `token` now. */
+  isValidProxyToken(token: string): boolean {
+    const exp = this.proxyTokenExpiry.get(token);
+    return (
+      exp !== undefined && exp > this.now() && this.proxy.status === "active"
+    );
+  }
+
+  /** Revoke every proxy access token (e.g. the user revoked the grant). */
+  revokeProxyTokens() {
+    this.proxyTokenExpiry.clear();
+  }
+
+  private issueProxyToken() {
+    if (this.proxy.endpoints === null)
+      throw new SyncProblem("unavailable", "The proxy is not configured here");
+    if (this.proxy.status === "suspended")
+      throw new SyncProblem("proxy_suspended", "Proxy access is suspended");
+    const token = `pt_${randomBytes(24).toString("base64url")}`;
+    const expiresAt = Math.floor(this.now() / 1000) + PROXY_TOKEN_TTL_S;
+    this.proxyTokenExpiry.set(token, expiresAt * 1000);
+    return { token, expiresAt, endpoints: clone(this.proxy.endpoints) };
+  }
+
+  private proxyUsage(): ProxyUsage {
+    const { used, quota, mode, rate, status } = this.proxy;
+    const period = new Date(this.now()).toISOString().slice(0, 7);
+    return { period, used, quota, mode, rate, status };
   }
 
   /** Override options until the next `reset()`. */
@@ -1124,6 +1193,9 @@ export class SyncStore {
         throw new SyncProblem("invalid_request", "Body must be { records: [...] } with 1 to 100 records");
       return jsonResponse(this.push(body.records, deviceID));
     }
+
+    if (sub === "/proxy/token" && method === "POST") return jsonResponse(this.issueProxyToken());
+    if (sub === "/proxy/usage" && method === "GET") return jsonResponse(this.proxyUsage());
 
     if (sub === "/snapshots" && method === "GET") return jsonResponse(this.listSnapshots());
     if (sub === "/snapshots" && method === "POST") {

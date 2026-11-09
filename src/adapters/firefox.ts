@@ -112,6 +112,33 @@ export class Firefox extends BaseAdapter {
     browser.proxy.settings.onChange.addListener(callback as any);
   }
 
+  async hasPermission(permission: string): Promise<boolean> {
+    return browser.permissions.contains({
+      permissions: [permission as never],
+    });
+  }
+
+  async requestPermission(permission: string): Promise<boolean> {
+    return browser.permissions.request({ permissions: [permission as never] });
+  }
+
+  onPermissionsChanged(callback: () => void): () => void {
+    browser.permissions.onAdded.addListener(callback);
+    browser.permissions.onRemoved.addListener(callback);
+    return () => {
+      browser.permissions.onAdded.removeListener(callback);
+      browser.permissions.onRemoved.removeListener(callback);
+    };
+  }
+
+  async setWebRTCProxyOnly(on: boolean): Promise<void> {
+    // undefined without the `privacy` permission
+    const setting = browser.privacy?.network.webRTCIPHandlingPolicy;
+    if (!setting) return;
+    if (on) await setting.set({ value: "disable_non_proxied_udp" });
+    else await setting.clear({});
+  }
+
   async setBadge(text: string, color: string, tabID?: number): Promise<void> {
     await browser.action.setBadgeText({
       text,

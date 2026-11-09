@@ -8,15 +8,18 @@ import {
   IconRelation,
   IconPlus,
   IconTool,
+  IconSafe,
 } from "@arco-design/web-vue/es/icon";
 import ThemeSwitcher from "../components/controls/ThemeSwitcher.vue";
 import {
   ProfilesStorage,
   listProfiles,
   SystemProfile,
+  TRUE_PRIVACY_ID,
   ProxyProfile,
   onProfileUpdate,
 } from "../services/profile";
+import { useTruePrivacy } from "@/components/sync/useTruePrivacy";
 import {
   setProxy,
   getCurrentProxySetting,
@@ -39,6 +42,7 @@ const props = defineProps<{
 }>();
 
 const router = useRouter();
+const truePrivacy = useTruePrivacy({ withUsage: true });
 const route = useRoute();
 const profiles = ref<ProfilesStorage>({});
 const currentTab = ref<Tab | undefined>();
@@ -160,6 +164,48 @@ const setProxyByProfile = async (val: ProxyProfile) => {
           <template #icon><icon-desktop /></template>
           {{ $t("mode_system") }}
         </a-menu-item>
+        <a-menu-item
+          v-if="truePrivacy.shown.value"
+          :key="TRUE_PRIVACY_ID"
+          data-testid="popup-profile-trueprivacy"
+          @click.prevent="setProxyByProfile(SystemProfile.TRUE_PRIVACY)"
+          :style="{ '--indicator-color': SystemProfile.TRUE_PRIVACY.color }"
+        >
+          <template #icon><icon-safe /></template>
+          <a-space fill class="profile-name">
+            <span>{{ $t("true_privacy_name") }}</span>
+            <a-space :size="6">
+              <a-tag v-if="truePrivacy.suspended.value" size="small" color="red">
+                {{ $t("true_privacy_tag_suspended") }}
+              </a-tag>
+              <a-tag
+                v-else-if="truePrivacy.overQuota.value"
+                size="small"
+                color="orangered"
+                data-testid="popup-true-privacy-over"
+              >
+                {{
+                  truePrivacy.usage.value?.mode === "block"
+                    ? $t("true_privacy_tag_paused")
+                    : $t("true_privacy_tag_slowed")
+                }}
+              </a-tag>
+              <a-tooltip :content="truePrivacy.tooltip.value" :mouse-enter-delay="500">
+                <a-progress
+                  type="circle"
+                  size="mini"
+                  :stroke-width="3"
+                  :path-stroke-width="3"
+                  track-color="var(--color-fill-3)"
+                  data-testid="popup-true-privacy-usage"
+                  :percent="truePrivacy.percent.value / 100"
+                  :color="truePrivacy.ringColor.value"
+                  :show-text="false"
+                />
+              </a-tooltip>
+            </a-space>
+          </a-space>
+        </a-menu-item>
 
         <a-divider>
           <a-space>
@@ -211,6 +257,20 @@ const setProxyByProfile = async (val: ProxyProfile) => {
         @switched="(p) => (activeProfile = p)"
       />
       <failed-resources-alert v-if="tabStats" :stats="tabStats" />
+      <!-- the permission prompt would close the popup: fix it on the screen -->
+      <a-alert
+        v-if="truePrivacy.shown.value && !truePrivacy.webRTCProtected.value"
+        type="warning"
+        banner
+        data-testid="popup-webrtc"
+      >
+        {{ $t("true_privacy_webrtc_popup") }}
+        <template #action>
+          <a-link @click="jumpTo({ name: 'trueprivacy' })">{{
+            $t("true_privacy_webrtc_fix")
+          }}</a-link>
+        </template>
+      </a-alert>
       <section class="settings">
         <a-button-group type="text" size="large">
           <a-button data-testid="popup-config" @click="openConfig">

@@ -197,7 +197,10 @@ export class ProfileConverter {
           ...this.genBypassList(),
           ...this.genAdvancedRules(),
           PACScriptHelper.newReturnStatement(
-            newProxyString(this.profile.proxyRules.default)
+            newProxyString(
+              this.profile.proxyRules.default,
+              this.profile.failover
+            )
           )
         );
         break;

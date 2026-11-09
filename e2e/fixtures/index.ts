@@ -52,6 +52,8 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
           // fake sites (requests going through a proxy never resolve them),
           // and hostnames for the test proxies
           `--host-resolver-rules=MAP *.test ${LAN_IP ?? "127.0.0.1"}, MAP *.proxy.internal 127.0.0.1`,
+          // the HTTPS test proxy (True Privacy Proxy) has a self-signed cert
+          "--ignore-certificate-errors",
         ],
       });
       await use(context);

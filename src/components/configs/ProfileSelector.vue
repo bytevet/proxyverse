@@ -2,10 +2,11 @@
 import {
   IconDesktop,
   IconSwap,
+  IconSafe,
   IconExclamationPolygonFill,
   IconDown,
 } from "@arco-design/web-vue/es/icon";
-import { ProxyProfile } from "@/services/profile";
+import { ProxyProfile, TRUE_PRIVACY_ID } from "@/services/profile";
 import { computed } from "vue";
 import ProfileOptions from "./ProfileOptions.vue";
 import { useProfileOptions } from "./useProfileOptions";
@@ -50,6 +51,10 @@ const handleSelect = (key: any) => {
         <template v-else-if="selectedProfile.proxyType == 'direct'">
           <icon-swap />
           <span>{{ $t("mode_direct") }}</span>
+        </template>
+        <template v-else-if="selectedProfile.profileID == TRUE_PRIVACY_ID">
+          <icon-safe />
+          <span>{{ $t("true_privacy_name") }}</span>
         </template>
         <template v-else>
           <span class="color-indicator"></span>

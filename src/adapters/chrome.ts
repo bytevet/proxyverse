@@ -95,6 +95,40 @@ export class Chrome extends BaseAdapter {
     chrome.proxy.settings.onChange.addListener(callback);
   }
 
+  async hasPermission(permission: string): Promise<boolean> {
+    return chrome.permissions.contains({
+      permissions: [permission as chrome.runtime.ManifestPermission],
+    });
+  }
+
+  async requestPermission(permission: string): Promise<boolean> {
+    return chrome.permissions.request({
+      permissions: [permission as chrome.runtime.ManifestPermission],
+    });
+  }
+
+  onPermissionsChanged(callback: () => void): () => void {
+    chrome.permissions.onAdded.addListener(callback);
+    chrome.permissions.onRemoved.addListener(callback);
+    return () => {
+      chrome.permissions.onAdded.removeListener(callback);
+      chrome.permissions.onRemoved.removeListener(callback);
+    };
+  }
+
+  async setWebRTCProxyOnly(on: boolean): Promise<void> {
+    // undefined without the `privacy` permission
+    const setting = chrome.privacy?.network.webRTCIPHandlingPolicy;
+    if (!setting) return;
+    if (on) {
+      await setting.set({
+        value: chrome.privacy.IPHandlingPolicy.DISABLE_NON_PROXIED_UDP,
+      });
+    } else {
+      await setting.clear({});
+    }
+  }
+
   async setBadge(text: string, color: string, tabID?: number): Promise<void> {
     await chrome.action.setBadgeText({
       text,

@@ -3,6 +3,13 @@ import { newProxyString } from "@/services/proxy/scriptHelper";
 import type { ProxyServer } from "@/services/profile";
 
 describe("newProxyString", () => {
+  test("lists failover servers after the main one", () => {
+    const https = (host: string): ProxyServer => ({ host, port: 443, scheme: "https" });
+    expect(newProxyString(https("a.test"), [https("b.test")]).value).toBe(
+      "HTTPS a.test:443; HTTPS b.test:443"
+    );
+  });
+
   test("generates DIRECT for direct scheme", () => {
     const cfg: ProxyServer = { host: "", scheme: "direct" };
     expect(newProxyString(cfg).value).toBe("DIRECT");

@@ -130,9 +130,19 @@ async function handle(message: SyncMessage): Promise<unknown> {
 }
 
 async function withApi(): Promise<SyncApi> {
+  const api = await currentSyncApi();
+  if (!api) throw Error("Not synced yet");
+  return api;
+}
+
+/**
+ * A client of the byte.vet API for this device, for calls outside the sync
+ * engine (e.g. True Privacy Proxy); undefined until the first sync has
+ * registered the device.
+ */
+export async function currentSyncApi(): Promise<SyncApi | undefined> {
   const state = await getSyncState();
-  if (!state) throw Error("Not synced yet");
-  return api(state.deviceID);
+  return state ? api(state.deviceID) : undefined;
 }
 
 /** Answer sync messages; call once, in the background. */

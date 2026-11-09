@@ -22,7 +22,8 @@ describe("buildManifest", () => {
     expect(m).toEqual(chromeExpected());
     // sync's sign-in window; no install or update warning on Chrome
     expect(m.permissions).toContain("identity");
-    expect(m).not.toHaveProperty("optional_permissions");
+    // only asked for when True Privacy Proxy is turned on (WebRTC)
+    expect(m.optional_permissions).toEqual(["privacy"]);
     expect(m).not.toHaveProperty("key");
   });
 
@@ -37,7 +38,8 @@ describe("buildManifest", () => {
     const m: any = buildManifest(base, { ...common, mode: "firefox", env: "production" });
     expect(m.permissions).toContain("identity");
     expect(m.permissions).not.toContain("sidePanel");
-    expect(m).not.toHaveProperty("optional_permissions");
+    // only asked for when True Privacy Proxy is turned on (WebRTC)
+    expect(m.optional_permissions).toEqual(["privacy"]);
     expect(m.background).toEqual({ type: "module", scripts: ["assets/bg-abc.js"] });
     expect(m).not.toHaveProperty("version_name");
     expect(m.version).toBe("1.2.3");
@@ -100,6 +102,7 @@ describe("build env", () => {
       __SYNC_ORIGIN__: '"https://byte.vet"',
       __SYNC_CLIENT_ID__: '"proxyverse-extension"',
       __SYNC_ORIGIN_OVERRIDE__: "false",
+      __TRUE_PRIVACY_ENDPOINT__: '{"host":"anonymous.vpn.bvet.cc","port":443}',
     });
     expect(BUILD_ENVS.northernlight.clientID).toBe("proxyverse-extension-dev");
     expect(syncDefines("e2e").__SYNC_ORIGIN_OVERRIDE__).toBe("true");

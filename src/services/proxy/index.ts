@@ -8,10 +8,12 @@ import {
   lookupProfile,
   ProfileAutoSwitch,
   ProfilesStorage,
+  getSystemProfile,
+  serversOf,
 } from "../profile";
 import { ProxySettingResultDetails } from "@/adapters";
 import { ProfileConverter } from "./profile2config";
-import { ProfileAuthProvider } from "./auth";
+import { ProfileAuthProvider, type DynamicAuth } from "./auth";
 import { deepClone } from "../utils";
 
 export type ProxySetting = {
@@ -58,7 +60,18 @@ export async function getCurrentProxySetting() {
   return await wrapProxySetting(setting);
 }
 
+/**
+ * A built-in profile as it currently is (e.g. True Privacy Proxy through the
+ * nodes it uses now); user profiles as given.
+ */
+async function currentDefinition(profile: ProxyProfile): Promise<ProxyProfile> {
+  return getSystemProfile(profile.profileID)
+    ? (await getProfile(profile.profileID)) ?? profile
+    : profile;
+}
+
 export async function setProxy(val: ProxyProfile) {
+  val = await currentDefinition(val);
   const config =
     val.proxyType === "system"
       ? undefined
@@ -125,6 +138,21 @@ export function profileTreeIDs(
 }
 
 /**
+ * The active profile, and whether it is `profileID` or routes to it (through
+ * auto switch profiles).
+ */
+export async function activeRoutesTo(profileID: string) {
+  const [{ activeProfile }, profiles] = await Promise.all([
+    getCurrentProxySetting(),
+    listProfiles(),
+  ]);
+  if (!activeProfile) return { activeProfile, routes: false };
+  profiles[activeProfile.profileID] ??= activeProfile;
+  const routes = profileTreeIDs(activeProfile.profileID, profiles).has(profileID);
+  return { activeProfile, routes };
+}
+
+/**
  * Whether a change of the profiles storage affects the proxy config generated
  * for `rootID`.
  */
@@ -162,15 +190,22 @@ export async function previewAutoSwitchPac(val: ProfileAutoSwitch) {
 
 export async function getAuthInfos(
   host: string,
-  port: number
+  port: number,
+  attempt = 0,
+  dynamicAuth?: DynamicAuth
 ): Promise<ProxyAuthInfo[]> {
-  const profile = await Host.get<ProxyProfile>(keyActiveProfile);
-  if (!profile) {
+  const stored = await Host.get<ProxyProfile>(keyActiveProfile);
+  if (!stored) {
     return [];
   }
 
-  const authProvider = new ProfileAuthProvider(profile, getProfile);
-  return await authProvider.getAuthInfos(host, port);
+  const profile = await currentDefinition(stored);
+  const authProvider = new ProfileAuthProvider(
+    profile,
+    getProfile,
+    dynamicAuth
+  );
+  return await authProvider.getAuthInfos(host, port, attempt);
 }
 
 const keyAuthWarmedUp = "proxy-auth-warmed-up";
@@ -192,12 +227,12 @@ export async function warmUpProxyAuth(force = false) {
   if (!activeProfile) return;
   const profiles = await listProfiles();
   profiles[activeProfile.profileID] = activeProfile;
+  // stored credentials, or ones a built-in gets at runtime (True Privacy
+  // Proxy's token): those are servers of built-ins with none stored
   const hasAuth = [...profileTreeIDs(activeProfile.profileID, profiles)].some(
     (id) => {
-      const p = profiles[id];
-      if (p?.proxyType !== "proxy") return false;
-      const { default: d, http, https, ftp } = p.proxyRules;
-      return [d, http, https, ftp].some((server) => server?.auth);
+      const p = getSystemProfile(id) ?? profiles[id];
+      return !!p && serversOf(p).some((s) => s.auth || getSystemProfile(id));
     }
   );
   if (!hasAuth) return;

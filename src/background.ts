@@ -34,6 +34,10 @@ import {
   onFailureBadgeChanged,
 } from "./services/ui";
 import { initSync } from "./services/sync/background";
+import {
+  initTruePrivacy,
+  truePrivacyAuth,
+} from "./services/truePrivacy/background";
 
 // indicator
 const activeProfile = async () =>
@@ -107,6 +111,8 @@ initPacRefresh();
 
 // cloud sync of profiles and preferences through byte.vet
 initSync();
+// True Privacy Proxy: its access token and usage
+initTruePrivacy();
 
 // proxy auth provider
 class ProxyAuthProvider {
@@ -137,11 +143,15 @@ class ProxyAuthProvider {
       ProxyAuthProvider.requests[details.requestId]++;
     }
 
-    getAuthInfos(details.challenger.host, details.challenger.port).then(
+    const attempt = ProxyAuthProvider.requests[details.requestId];
+    getAuthInfos(
+      details.challenger.host,
+      details.challenger.port,
+      attempt,
+      truePrivacyAuth,
+    ).then(
       (authInfos) => {
-        const auth = authInfos.at(
-          ProxyAuthProvider.requests[details.requestId],
-        );
+        const auth = authInfos.at(attempt);
         if (!auth) {
           asyncCallback && asyncCallback({});
           return;

@@ -161,7 +161,7 @@ test.describe("firefox smoke", () => {
 
     await setLanguage("auto");
   });
-  // last: it leaves the extension signed in to sync
+  // last two: they leave the extension signed in to sync
   test("syncs profiles with the fake byte.vet", async () => {
     const { proxyA, proxyB } = standardProfiles(servers);
     const local = (items: Record<string, unknown>) =>
@@ -192,5 +192,15 @@ test.describe("firefox smoke", () => {
         { timeout: 15_000 }
       )
       .toEqual(["proxyA", "proxyB"]);
+  });
+
+  test("True Privacy Proxy shows in the popup once turned on", async () => {
+    await ff.openExtensionPage("/popup");
+    await ff.driver.executeAsyncScript(
+      `const [done] = arguments;
+      browser.storage.local.set({ "proxy.truePrivacy": true }).then(() => done());`
+    );
+    await ff.driver.navigate().refresh();
+    await ff.byTestId("popup-profile-trueprivacy");
   });
 });

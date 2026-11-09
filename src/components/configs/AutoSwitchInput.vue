@@ -4,6 +4,7 @@ import {
   IconPlus,
   IconDelete,
   IconQuestionCircle,
+  IconExclamationCircleFill,
 } from "@arco-design/web-vue/es/icon";
 import type { FieldRule } from "@arco-design/web-vue";
 
@@ -13,8 +14,10 @@ import {
   AutoSwitchRule,
   ProxyConfigAutoSwitch,
   SystemProfile,
+  TRUE_PRIVACY_ID,
 } from "@/services/profile";
 import ProfileSelector from "./ProfileSelector.vue";
+import { useTruePrivacy } from "@/components/sync/useTruePrivacy";
 import { BrowserFlavor } from "@/adapters/base";
 import { isValidCIDR } from "ipaddr.js";
 import { urlRegExp } from "@/services/proxy/pacSimulator";
@@ -24,6 +27,12 @@ const props = defineProps<{
 }>();
 
 const config = defineModel<ProxyConfigAutoSwitch>({ required: true });
+
+// rules routing to True Privacy Proxy fail closed while it's unavailable
+const truePrivacy = useTruePrivacy();
+const blockedByTruePrivacy = (profileID: string) =>
+  profileID === TRUE_PRIVACY_ID &&
+  !truePrivacy.available.value;
 
 const getPlaceholder = (type: AutoSwitchType) => {
   switch (type) {
@@ -259,7 +268,17 @@ const getConditionInputRule = (type: AutoSwitchType): FieldRule<string> => {
           rowIndex: number,
         }"
       >
-        <a-form-item hide-label :field="`rules[${rowIndex}].profileID`">
+        <a-form-item
+          hide-label
+          :field="`rules[${rowIndex}].profileID`"
+          :validate-status="blockedByTruePrivacy(record.profileID) ? 'warning' : undefined"
+          :help="
+            blockedByTruePrivacy(record.profileID)
+              ? $t('true_privacy_rule_unavailable')
+              : undefined
+          "
+          :data-testid="`rule-${rowIndex}-route-item`"
+        >
           <ProfileSelector
             :data-testid="`rule-${rowIndex}-route`"
             v-model="record.profileID"
@@ -327,6 +346,15 @@ const getConditionInputRule = (type: AutoSwitchType): FieldRule<string> => {
               v-model="config.defaultProfileID"
               :currentProfileID="props.currentProfileID"
             />
+            <a-tooltip
+              v-if="blockedByTruePrivacy(config.defaultProfileID)"
+              :content="$t('true_privacy_rule_unavailable')"
+            >
+              <icon-exclamation-circle-fill
+                data-testid="rule-default-warning"
+                :style="{ color: 'rgb(var(--warning-6))' }"
+              />
+            </a-tooltip>
           </a-space>
         </div>
       </template>

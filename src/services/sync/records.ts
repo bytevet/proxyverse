@@ -13,6 +13,10 @@ import {
   keyFailureBadge,
 } from "@/services/ui";
 import { deepClone } from "@/services/utils";
+import {
+  defaultTruePrivacy,
+  keyTruePrivacy,
+} from "@/services/truePrivacy/setting";
 
 /**
  * The records of sync (spec §3): what local storage turns into on the wire,
@@ -30,8 +34,16 @@ export const SYNCED_PREFS = [
   keyLanguage,
   keyActionBehavior,
   keyFailureBadge,
+  keyTruePrivacy,
 ] as const;
 export type SyncedPref = (typeof SYNCED_PREFS)[number];
+
+/** Prefs of the account rather than the device: they sync even with prefs off. */
+const ACCOUNT_PREFS: readonly SyncedPref[] = [keyTruePrivacy];
+
+/** Whether pref `key` syncs, given the device's "Sync preferences" switch. */
+export const isPrefSynced = (key: SyncedPref, syncPrefs: boolean) =>
+  syncPrefs || ACCOUNT_PREFS.includes(key);
 
 /** Each synced pref's value when unset, from the module that owns it. */
 export const SYNCED_PREF_DEFAULTS: Record<SyncedPref, unknown> = {
@@ -39,6 +51,7 @@ export const SYNCED_PREF_DEFAULTS: Record<SyncedPref, unknown> = {
   [keyLanguage]: defaultLanguage,
   [keyActionBehavior]: defaultActionBehavior,
   [keyFailureBadge]: defaultFailureBadge,
+  [keyTruePrivacy]: defaultTruePrivacy,
 };
 
 export type ProfilePayload = ProxyProfile;
@@ -94,6 +107,7 @@ export function isValidPrefValue(key: SyncedPref, value: unknown): boolean {
     case keyActionBehavior:
       return value === "popup" || value === "sidebar";
     case keyFailureBadge:
+    case keyTruePrivacy:
       return typeof value === "boolean";
   }
 }
@@ -254,12 +268,11 @@ export async function collectLocalRecords({
     payloads.push([profileRecordID(key), payload]);
   }
 
-  if (syncPrefs) {
-    for (const key of SYNCED_PREFS) {
-      const value = prefs[key];
-      if (value === undefined || !isValidPrefValue(key, value)) continue;
-      payloads.push([prefRecordID(key), { value: value as PrefPayload["value"] }]);
-    }
+  for (const key of SYNCED_PREFS) {
+    if (!isPrefSynced(key, syncPrefs)) continue;
+    const value = prefs[key];
+    if (value === undefined || !isValidPrefValue(key, value)) continue;
+    payloads.push([prefRecordID(key), { value: value as PrefPayload["value"] }]);
   }
 
   const hashes = await Promise.all(payloads.map(([, p]) => hashPayload(p)));

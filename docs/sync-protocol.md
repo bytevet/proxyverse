@@ -127,15 +127,17 @@ instead, Chrome would show a vague "wants to access your content" prompt. API ca
 | `pref:ui.language` | `ui.language` | `{ "value": "auto" \| <LanguageCode> }` |
 | `pref:ui.actionBehavior` | `ui.actionBehavior` | `{ "value": "popup" \| "sidebar" }` |
 | `pref:ui.failureBadge` | `ui.failureBadge` | `{ "value": <boolean> }` |
+| `pref:proxy.truePrivacy` | `proxy.truePrivacy` | `{ "value": <boolean> }` |
 
 Preference payloads: `theme.darkmode` `{value: 0|1|2}`, `ui.language`
 `{value: "auto" | /^[a-z]{2,3}(_[A-Z]{2})?$/}` (lenient, so a new locale needs
 no schema bump), `ui.actionBehavior` `{value: "popup"|"sidebar"}`,
-`ui.failureBadge` `{value: true|false}`. Any other
+`ui.failureBadge` and `proxy.truePrivacy` `{value: true|false}`. Any other
 `pref:` key is `invalid_record`. Tombstones must have `data: null`.
 
 Never synced: `active-profile`, `tabstats:*`, `sync.*`, and the reserved
-profiles `direct` / `system` (server rejects them). New preference keys are
+profiles `direct` / `system` / `trueprivacy` (server rejects them), and the
+True Privacy Proxy runtime keys (`trueprivacy.*`). New preference keys are
 added to this table explicitly; nothing syncs by default.
 
 A record id is at most 200 bytes. `profileID` is used as-is, so profiles
@@ -418,7 +420,8 @@ remote and local:
   skips missing profiles with a warning (`profile2config.ts`). The UI warns when
   marking a profile local-only that a synced profile references, and shows
   "missing profile" for such rules on other devices.
-- `syncPrefs: false` turns off all `pref:*` records on this device, both ways.
+- `syncPrefs: false` turns off the device's `pref:*` records, both ways.
+  `pref:proxy.truePrivacy` belongs to the account and syncs regardless.
 
 ### 5.7 First sign-in
 

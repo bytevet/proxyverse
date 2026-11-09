@@ -167,7 +167,7 @@ test.describe("PAC profiles", () => {
 
       await editor.setPacInterval("Disabled (manual only)");
       await editor.saveOK();
-      expect(
+      await expect.poll(async () =>
         (await stored(sw, id, "pac")).pacScript.refreshIntervalMinutes,
       ).toBe(0);
       await expect
