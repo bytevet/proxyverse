@@ -486,7 +486,7 @@
   },
 
   "preferences_section_sync": {
-    "message": "Sincronização"
+    "message": "Sincronização e mais"
   },
   "sync_desc": {
     "message": "Sincronize seus perfis e preferências entre navegadores e dispositivos com uma conta byte.vet."
@@ -634,6 +634,179 @@
   },
   "profile_local_only_referenced": {
     "message": "Estes perfis sincronizados direcionam o tráfego para este perfil: $1. Nos outros dispositivos, essas regras apontarão para um perfil inexistente."
+  },
+
+  "sync_signin_true_privacy": {
+    "message": "Entrar também permite usar o True Privacy Proxy."
+  },
+  "true_privacy_name": {
+    "message": "True Privacy Proxy"
+  },
+  "true_privacy_pref_hint": {
+    "message": "Oculte sua identidade dos sites que você visita. Sua navegação segue um caminho aleatório por pontos operados por voluntários ao redor do mundo. Esta configuração acompanha sua conta byte.vet em todos os navegadores."
+  },
+  "true_privacy_pref_link": {
+    "message": "Ver uso e como funciona"
+  },
+  "true_privacy_usage_tooltip": {
+    "message": "$1% · $2 de $3 usados · renova em $4"
+  },
+  "true_privacy_tag_slowed": {
+    "message": "Velocidade reduzida"
+  },
+  "true_privacy_tag_paused": {
+    "message": "Pausado"
+  },
+  "true_privacy_tag_suspended": {
+    "message": "Suspenso"
+  },
+  "true_privacy_status_in_use": {
+    "message": "Em uso"
+  },
+  "true_privacy_status_by_rules": {
+    "message": "Usado por regras"
+  },
+  "true_privacy_status_not_in_use": {
+    "message": "Fora de uso"
+  },
+  "true_privacy_this_month": {
+    "message": "Este mês"
+  },
+  "true_privacy_used": {
+    "message": "Usado"
+  },
+  "true_privacy_remaining": {
+    "message": "Restante"
+  },
+  "true_privacy_resets_on": {
+    "message": "Renova em"
+  },
+  "true_privacy_after_allowance": {
+    "message": "Após esgotar a franquia"
+  },
+  "true_privacy_after_throttle": {
+    "message": "Mais lento, $1 KB/s"
+  },
+  "true_privacy_after_block": {
+    "message": "Pausado até a renovação"
+  },
+  "true_privacy_of_quota": {
+    "message": "de $1"
+  },
+  "true_privacy_counts_all": {
+    "message": "Contabiliza o que você envia e recebe em todos os navegadores. Atualizado em até um minuto."
+  },
+  "true_privacy_usage_loading": {
+    "message": "Carregando uso…"
+  },
+  "true_privacy_warn_80": {
+    "message": "Você usou $1% da franquia deste mês."
+  },
+  "true_privacy_warn_slowed": {
+    "message": "Você esgotou a franquia deste mês. As páginas continuam carregando pelo True Privacy Proxy, mas com velocidade reduzida, até $1."
+  },
+  "true_privacy_warn_paused": {
+    "message": "Você esgotou a franquia deste mês. O True Privacy Proxy está pausado até $1."
+  },
+  "true_privacy_warn_suspended": {
+    "message": "O True Privacy Proxy está suspenso na sua conta. Os sites que as regras direcionam a ele não serão carregados."
+  },
+  "true_privacy_warn_unavailable": {
+    "message": "Não é possível acessar o True Privacy Proxy no momento. Os sites que o utilizam não serão carregados até que ele volte a funcionar."
+  },
+  "true_privacy_how_title": {
+    "message": "Como ele protege sua privacidade"
+  },
+  "true_privacy_how_pause": {
+    "message": "Pausar"
+  },
+  "true_privacy_how_play": {
+    "message": "Reproduzir"
+  },
+  "true_privacy_how_you": {
+    "message": "Você"
+  },
+  "true_privacy_how_entry": {
+    "message": "Ponto de entrada do Proxyverse"
+  },
+  "true_privacy_how_stops": {
+    "message": "Pontos operados por voluntários ao redor do mundo"
+  },
+  "true_privacy_how_website": {
+    "message": "Site"
+  },
+  "true_privacy_how_sees": {
+    "message": "Vê um visitante de $1"
+  },
+  "true_privacy_how_aria": {
+    "message": "Sua solicitação vai para o ponto de entrada do Proxyverse, passa por três pontos escolhidos aleatoriamente e depois chega ao site."
+  },
+  "true_privacy_step1_title": {
+    "message": "Proteção em camadas"
+  },
+  "true_privacy_step1": {
+    "message": "Seu navegador envolve cada solicitação em três camadas de criptografia e a envia ao ponto de entrada do Proxyverse."
+  },
+  "true_privacy_step2_title": {
+    "message": "Um caminho aleatório"
+  },
+  "true_privacy_step2": {
+    "message": "O ponto de entrada escolhe aleatoriamente três pontos operados por voluntários de diferentes países."
+  },
+  "true_privacy_step3_title": {
+    "message": "Uma camada por ponto"
+  },
+  "true_privacy_step3": {
+    "message": "Cada ponto abre uma camada. Nenhum ponto sabe ao mesmo tempo quem você é e qual site está visitando."
+  },
+  "true_privacy_step4_title": {
+    "message": "O site vê o último ponto"
+  },
+  "true_privacy_step4": {
+    "message": "O site vê o último ponto, não você. Sua próxima conexão segue um novo caminho."
+  },
+  "true_privacy_tor_note": {
+    "message": "Baseado na rede Tor. Alguns sites a bloqueiam."
+  },
+  "true_privacy_toggle_on": {
+    "message": "O True Privacy Proxy está ativado na sua conta."
+  },
+  "true_privacy_toggle_label": {
+    "message": "Desativar"
+  },
+  "true_privacy_off_confirm": {
+    "message": "Desativar o True Privacy Proxy em todos os seus navegadores?"
+  },
+  "true_privacy_off_confirm_active": {
+    "message": "Desativar o True Privacy Proxy em todos os seus navegadores? Você passará a usar a conexão direta."
+  },
+  "true_privacy_off": {
+    "message": "O True Privacy Proxy está desativado."
+  },
+  "true_privacy_signed_out": {
+    "message": "Entre no byte.vet para usar o True Privacy Proxy."
+  },
+  "true_privacy_open_preference": {
+    "message": "Abrir preferências"
+  },
+  "true_privacy_rule_unavailable": {
+    "message": "O True Privacy Proxy está desativado ou indisponível. Os sites correspondentes não serão carregados até que ele seja reativado ou você altere esta regra."
+  },
+
+  "true_privacy_webrtc_title": {
+    "message": "Proteja seu endereço IP contra o WebRTC"
+  },
+  "true_privacy_webrtc_desc": {
+    "message": "Sites podem usar o WebRTC (videochamadas e chat ao vivo) para descobrir seu endereço IP real, contornando o True Privacy Proxy. Permita que o Proxyverse altere as configurações de privacidade do navegador para impedir isso. Enquanto o True Privacy Proxy estiver em uso, chamadas em alguns sites podem não conectar."
+  },
+  "true_privacy_webrtc_allow": {
+    "message": "Permitir"
+  },
+  "true_privacy_webrtc_popup": {
+    "message": "O WebRTC pode revelar seu endereço IP."
+  },
+  "true_privacy_webrtc_fix": {
+    "message": "Corrigir"
   },
 
   "_": {
