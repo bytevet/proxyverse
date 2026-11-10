@@ -125,6 +125,17 @@ export class WebBrowser extends BaseAdapter {
     throw new Error("Method not implemented.");
   }
 
+  async hasPermission(_: string): Promise<boolean> {
+    return true;
+  }
+  async requestPermission(_: string): Promise<boolean> {
+    return true;
+  }
+  onPermissionsChanged(_: () => void): () => void {
+    return () => {};
+  }
+  async setWebRTCProxyOnly(_: boolean): Promise<void> {}
+
   async setBadge(text: string, color: string, tabID?: number): Promise<void> {
     return console.log(`Badge: ${text}, ${color}, ${tabID}`);
   }

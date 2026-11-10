@@ -5,6 +5,7 @@ import {
   IconRelation,
   IconPlus,
   IconEdit,
+  IconSafe,
 } from "@arco-design/web-vue/es/icon";
 import { onMounted, ref } from "vue";
 import {
@@ -14,10 +15,12 @@ import {
 } from "../services/profile";
 import ThemeSwitcher from "../components/controls/ThemeSwitcher.vue";
 import { isRightToLeft } from "../services/i18n";
+import { useTruePrivacy } from "../components/sync/useTruePrivacy";
 
 const profiles = ref<ProfilesStorage>({});
 // the sidebar sits at the start of the line, its resize handle at the end
 const rtl = isRightToLeft();
+const truePrivacy = useTruePrivacy({ withUsage: true });
 
 onMounted(async () => {
   profiles.value = await listProfiles();
@@ -62,6 +65,34 @@ onMounted(async () => {
                 {{ $t("mode_auto_switch") }}
               </a-menu-item>
             </RouterLink>
+
+            <template v-if="truePrivacy.shown.value">
+              <RouterLink :to="{ name: 'trueprivacy' }">
+                <a-menu-item
+                  :key="$router.resolve({ name: 'trueprivacy' }).path"
+                  data-testid="sidebar-trueprivacy"
+                  class="true-privacy-item"
+                >
+                  <template #icon><icon-safe /></template>
+                  <a-space fill class="true-privacy-name">
+                    <span>{{ $t("true_privacy_name") }}</span>
+                    <a-tooltip :content="truePrivacy.tooltip.value" :mouse-enter-delay="500">
+                      <a-progress
+                        type="circle"
+                        size="mini"
+                        :stroke-width="3"
+                        :path-stroke-width="3"
+                        track-color="var(--color-fill-3)"
+                        :percent="truePrivacy.percent.value / 100"
+                        :color="truePrivacy.ringColor.value"
+                        :show-text="false"
+                      />
+                    </a-tooltip>
+                  </a-space>
+                </a-menu-item>
+              </RouterLink>
+              <a-divider :margin="4" />
+            </template>
 
             <RouterLink
               v-for="(p, idx) in profiles"
@@ -117,6 +148,9 @@ onMounted(async () => {
 <style lang="scss">
 .config-layout {
   background-color: var(--color-bg-1);
+  // the sidebar and the content scroll on their own
+  height: 100vh;
+  overflow: hidden;
 
   .sidebar {
     background-color: var(--color-bg-3);
@@ -124,12 +158,18 @@ onMounted(async () => {
     width: 24em;
     min-width: 18em;
     max-width: 36em;
+    height: 100%;
+
+    .arco-layout-sider-children {
+      overflow-y: auto;
+    }
   }
 
   .content-wrapper {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    height: 100%;
+    overflow-y: auto;
 
     > .arco-layout-content {
       flex: 1;
@@ -168,6 +208,10 @@ onMounted(async () => {
       }
     }
   }
+}
+
+.true-privacy-name {
+  justify-content: space-between;
 }
 
 .custom-profiles {

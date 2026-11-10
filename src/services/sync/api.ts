@@ -15,6 +15,9 @@ type PushResult = Schemas["PushResult"];
 type ChangesResult = Schemas["ChangesResult"];
 type Device = Schemas["Device"];
 type DeviceInput = Schemas["DeviceInput"];
+export type ProxyToken = Schemas["ProxyToken"];
+export type ProxyEndpoint = Schemas["ProxyEndpoint"];
+export type ProxyUsage = Schemas["ProxyUsage"];
 type RestoreResult = { rev: number; written: number };
 
 /** A problem `code` (spec §4.5), or one of the client's own. */
@@ -80,6 +83,16 @@ export class SyncApi {
   restoreSnapshot(id: string): Promise<RestoreResult> {
     const path = `/snapshots/${encodeURIComponent(id)}/restore`;
     return this.request("POST", path);
+  }
+
+  /** A short-lived access token for the True Privacy Proxy nodes. */
+  issueProxyToken(): Promise<ProxyToken> {
+    return this.request("POST", "/proxy/token");
+  }
+
+  /** This month's True Privacy Proxy usage and quota. */
+  getProxyUsage(): Promise<ProxyUsage> {
+    return this.request("GET", "/proxy/usage");
   }
 
   /**

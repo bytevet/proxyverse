@@ -39,27 +39,31 @@ export function parsePACScript(script: string): Statement[] {
   return ret;
 }
 
-export const newProxyString = (cfg: ProxyServer) => {
+/** The PAC result for one server, e.g. `HTTPS host:443`. */
+export const proxyString = (cfg: ProxyServer): string => {
   const scheme = cfg.scheme || "http";
   if (scheme == "direct") {
-    return PACScriptHelper.newSimpleLiteral("DIRECT");
+    return "DIRECT";
   }
 
-  let host = cfg.host;
+  // a stray space breaks the proxy in Firefox (Chrome ignores it)
+  let host = cfg.host.trim();
   if (cfg.port !== undefined) {
     host += `:${cfg.port}`;
   }
 
   if (["http", "https"].includes(scheme)) {
-    return PACScriptHelper.newSimpleLiteral(
-      `${scheme == "http" ? "PROXY" : "HTTPS"} ${host}`
-    );
+    return `${scheme == "http" ? "PROXY" : "HTTPS"} ${host}`;
   }
 
-  return PACScriptHelper.newSimpleLiteral(
-    `${scheme.toUpperCase()} ${host}; SOCKS ${host}`
-  );
+  return `${scheme.toUpperCase()} ${host}; SOCKS ${host}`;
 };
+
+/** The PAC result for `cfg`, then each failover server in order. */
+export const newProxyString = (cfg: ProxyServer, failover: ProxyServer[] = []) =>
+  PACScriptHelper.newSimpleLiteral(
+    [cfg, ...failover].map(proxyString).join("; ")
+  );
 
 export class PACScriptHelper {
   static newAssignmentExpression(

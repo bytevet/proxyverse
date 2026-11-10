@@ -6,6 +6,9 @@ import {
   ProxyProfile,
   ProxyServer,
   SystemProfile,
+  TRUE_PRIVACY_ID,
+  getProfile,
+  serversOf as allServersOf,
 } from "../profile";
 import { createProfileFinder, profileTreeIDs, type ResolvedProfile } from "./index";
 import { ProfileConverter } from "./profile2config";
@@ -45,17 +48,12 @@ const DEFAULT_PORTS: Record<string, number> = {
 
 /** "host:port" of a proxy server, with the browser's default port if unset. */
 function serverKey(host: string, port?: number, scheme = "http") {
-  return `${host.toLowerCase()}:${port ?? DEFAULT_PORTS[scheme] ?? 80}`;
+  return `${host.trim().toLowerCase()}:${port ?? DEFAULT_PORTS[scheme] ?? 80}`;
 }
 
 /** The proxy servers a proxy profile uses. */
-function serversOf(profile: ProxyProfile): ProxyServer[] {
-  if (profile.proxyType !== "proxy") return [];
-  const { default: d, http, https, ftp } = profile.proxyRules;
-  return [d, http, https, ftp].filter(
-    (s): s is ProxyServer => !!s && s.scheme !== "direct" && !!s.host
-  );
-}
+const serversOf = (profile: ProxyProfile): ProxyServer[] =>
+  allServersOf(profile).filter((s) => s.scheme !== "direct" && !!s.host);
 
 /** An IP literal, possibly in brackets, or undefined for a hostname. */
 function parseIP(host: string) {
@@ -74,12 +72,17 @@ const isLoopback = (host: string) =>
  * rules say.
  */
 export async function createRouteResolver(active: ProxyProfile) {
-  const [profiles, find] = await Promise.all([
+  const [profiles, find, truePrivacy] = await Promise.all([
     listProfiles(),
     createProfileFinder(active),
+    getProfile(TRUE_PRIVACY_ID),
   ]);
   const tree = profileTreeIDs(active.profileID, profiles);
-  const { byServer, byIP } = indexServers(profiles);
+  // the built-in proxy too, through the nodes it currently uses
+  const { byServer, byIP } = indexServers({
+    ...profiles,
+    ...(truePrivacy && { [TRUE_PRIVACY_ID]: truePrivacy }),
+  });
 
   // the rules don't change for this resolver: predict each URL once
   const predictions = new Map<string, Promise<ResolvedProfile>>();

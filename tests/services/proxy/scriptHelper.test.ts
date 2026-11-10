@@ -3,6 +3,13 @@ import { newProxyString } from "@/services/proxy/scriptHelper";
 import type { ProxyServer } from "@/services/profile";
 
 describe("newProxyString", () => {
+  test("lists failover servers after the main one", () => {
+    const https = (host: string): ProxyServer => ({ host, port: 443, scheme: "https" });
+    expect(newProxyString(https("a.test"), [https("b.test")]).value).toBe(
+      "HTTPS a.test:443; HTTPS b.test:443"
+    );
+  });
+
   test("generates DIRECT for direct scheme", () => {
     const cfg: ProxyServer = { host: "", scheme: "direct" };
     expect(newProxyString(cfg).value).toBe("DIRECT");
@@ -16,6 +23,16 @@ describe("newProxyString", () => {
   test("generates HTTPS for https scheme", () => {
     const cfg: ProxyServer = {
       host: "proxy.example.com",
+      port: 443,
+      scheme: "https",
+    };
+    expect(newProxyString(cfg).value).toBe("HTTPS proxy.example.com:443");
+  });
+
+  test("ignores spaces around the host", () => {
+    // Firefox can't parse "HTTPS proxy.example.com :443"
+    const cfg: ProxyServer = {
+      host: " proxy.example.com ",
       port: 443,
       scheme: "https",
     };

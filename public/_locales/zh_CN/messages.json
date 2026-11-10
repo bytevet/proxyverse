@@ -486,7 +486,7 @@
   },
 
   "preferences_section_sync": {
-    "message": "同步"
+    "message": "同步及更多功能"
   },
   "sync_desc": {
     "message": "使用 byte.vet 账号在不同浏览器和设备间同步配置与偏好设置。"
@@ -634,6 +634,179 @@
   },
   "profile_local_only_referenced": {
     "message": "以下已同步的配置会将流量转发到此配置：$1。在其他设备上，这些规则将指向不存在的配置。"
+  },
+
+  "sync_signin_true_privacy": {
+    "message": "登录后还可使用 True Privacy Proxy。"
+  },
+  "true_privacy_name": {
+    "message": "True Privacy Proxy"
+  },
+  "true_privacy_pref_hint": {
+    "message": "向您访问的网站隐藏身份。您的浏览流量会随机经过由世界各地志愿者运行的中转节点。此设置会随您的 byte.vet 账户同步到所有浏览器。"
+  },
+  "true_privacy_pref_link": {
+    "message": "查看用量和工作原理"
+  },
+  "true_privacy_usage_tooltip": {
+    "message": "$1% · 已用 $2，共 $3 · $4 重置"
+  },
+  "true_privacy_tag_slowed": {
+    "message": "已限速"
+  },
+  "true_privacy_tag_paused": {
+    "message": "已暂停"
+  },
+  "true_privacy_tag_suspended": {
+    "message": "已停用"
+  },
+  "true_privacy_status_in_use": {
+    "message": "使用中"
+  },
+  "true_privacy_status_by_rules": {
+    "message": "规则使用中"
+  },
+  "true_privacy_status_not_in_use": {
+    "message": "未使用"
+  },
+  "true_privacy_this_month": {
+    "message": "本月"
+  },
+  "true_privacy_used": {
+    "message": "已用"
+  },
+  "true_privacy_remaining": {
+    "message": "剩余"
+  },
+  "true_privacy_resets_on": {
+    "message": "重置日期"
+  },
+  "true_privacy_after_allowance": {
+    "message": "超出额度后"
+  },
+  "true_privacy_after_throttle": {
+    "message": "限速至 $1 KB/s"
+  },
+  "true_privacy_after_block": {
+    "message": "暂停至额度重置"
+  },
+  "true_privacy_of_quota": {
+    "message": "共 $1"
+  },
+  "true_privacy_counts_all": {
+    "message": "统计所有浏览器的上传和下载流量。一分钟内更新。"
+  },
+  "true_privacy_usage_loading": {
+    "message": "正在加载用量…"
+  },
+  "true_privacy_warn_80": {
+    "message": "您已使用本月额度的 $1%。"
+  },
+  "true_privacy_warn_slowed": {
+    "message": "本月额度已用完。在 $1 前，仍可通过True Privacy Proxy加载页面，但速度会降低。"
+  },
+  "true_privacy_warn_paused": {
+    "message": "本月额度已用完。True Privacy Proxy已暂停，将于 $1 恢复。"
+  },
+  "true_privacy_warn_suspended": {
+    "message": "您的账户已被停用True Privacy Proxy。规则指定通过此代理访问的网站将无法加载。"
+  },
+  "true_privacy_warn_unavailable": {
+    "message": "目前无法连接 True Privacy Proxy。使用此代理的网站将无法加载，直至服务恢复。"
+  },
+  "true_privacy_how_title": {
+    "message": "如何保护您的隐私"
+  },
+  "true_privacy_how_pause": {
+    "message": "暂停"
+  },
+  "true_privacy_how_play": {
+    "message": "播放"
+  },
+  "true_privacy_how_you": {
+    "message": "您"
+  },
+  "true_privacy_how_entry": {
+    "message": "Proxyverse 入口节点"
+  },
+  "true_privacy_how_stops": {
+    "message": "由世界各地志愿者运行的中转节点"
+  },
+  "true_privacy_how_website": {
+    "message": "网站"
+  },
+  "true_privacy_how_sees": {
+    "message": "看到一位来自 $1 的访客"
+  },
+  "true_privacy_how_aria": {
+    "message": "您的请求先到达 Proxyverse 入口节点，再随机经过三个中转节点，最后到达目标网站。"
+  },
+  "true_privacy_step1_title": {
+    "message": "层层加密"
+  },
+  "true_privacy_step1": {
+    "message": "浏览器将每个请求包裹在三层加密中，再发送至 Proxyverse 入口节点。"
+  },
+  "true_privacy_step2_title": {
+    "message": "随机路径"
+  },
+  "true_privacy_step2": {
+    "message": "入口节点会随机选取三个由不同国家的志愿者运行的中转节点。"
+  },
+  "true_privacy_step3_title": {
+    "message": "每个节点解开一层"
+  },
+  "true_privacy_step3": {
+    "message": "每个中转节点仅解开一层加密，没有任何一个节点能同时得知您的身份和访问的网站。"
+  },
+  "true_privacy_step4_title": {
+    "message": "网站看到最后一个节点"
+  },
+  "true_privacy_step4": {
+    "message": "网站看到的是最后一个中转节点，而非您本人。下次连接会采用新的路径。"
+  },
+  "true_privacy_tor_note": {
+    "message": "基于 Tor 网络。部分网站会封锁此网络。"
+  },
+  "true_privacy_toggle_on": {
+    "message": "您的账户已开启True Privacy Proxy。"
+  },
+  "true_privacy_toggle_label": {
+    "message": "关闭"
+  },
+  "true_privacy_off_confirm": {
+    "message": "要在所有浏览器中关闭True Privacy Proxy吗？"
+  },
+  "true_privacy_off_confirm_active": {
+    "message": "要在所有浏览器中关闭True Privacy Proxy吗？您将切换为直连。"
+  },
+  "true_privacy_off": {
+    "message": "True Privacy Proxy已关闭。"
+  },
+  "true_privacy_signed_out": {
+    "message": "登录 byte.vet 以使用True Privacy Proxy。"
+  },
+  "true_privacy_open_preference": {
+    "message": "打开偏好设置"
+  },
+  "true_privacy_rule_unavailable": {
+    "message": "True Privacy Proxy已关闭或不可用。匹配的网站将无法加载，直到重新开启代理或修改此规则。"
+  },
+
+  "true_privacy_webrtc_title": {
+    "message": "防止 WebRTC 泄露您的 IP 地址"
+  },
+  "true_privacy_webrtc_desc": {
+    "message": "网站可通过 WebRTC（视频通话、实时聊天）绕过 True Privacy Proxy，获取您的真实 IP 地址。允许 Proxyverse 更改浏览器的隐私设置以防止泄露。使用 True Privacy Proxy 时，某些网站的通话可能无法连接。"
+  },
+  "true_privacy_webrtc_allow": {
+    "message": "允许"
+  },
+  "true_privacy_webrtc_popup": {
+    "message": "WebRTC 可能泄露您的 IP 地址。"
+  },
+  "true_privacy_webrtc_fix": {
+    "message": "修复"
   },
 
   "_": {

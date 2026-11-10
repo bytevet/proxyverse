@@ -206,6 +206,19 @@ describe("two devices", () => {
     await b.sync();
     expect(b.data.prefs["theme.darkmode"]).toBeUndefined();
   });
+
+  test("True Privacy Proxy follows the account even with prefs off", async () => {
+    const a = new FakeDevice();
+    const b = new FakeDevice();
+    a.syncSettings.syncPrefs = false;
+    b.syncSettings.syncPrefs = false;
+    a.data.prefs["proxy.truePrivacy"] = true;
+    a.data.prefs["theme.darkmode"] = 1;
+    await a.sync();
+    await b.sync();
+    expect(b.data.prefs["proxy.truePrivacy"]).toBe(true);
+    expect(b.data.prefs["theme.darkmode"]).toBeUndefined();
+  });
 });
 
 describe("first sync", () => {

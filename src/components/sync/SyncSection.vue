@@ -21,6 +21,7 @@ import {
   updateSyncSettings,
 } from "@/services/sync/state";
 import { useSyncStatus } from "./useSyncStatus";
+import { useTruePrivacy } from "./useTruePrivacy";
 import { relativeTime } from "./relativeTime";
 
 const emit = defineEmits<{
@@ -63,6 +64,8 @@ const choose = (choice: FirstChoice) => withBusy("choice", () => chooseFirstSync
 
 const toggleSyncPrefs = (on: boolean) =>
   updateSyncSettings((s) => (s.syncPrefs = on));
+
+const truePrivacy = useTruePrivacy();
 
 // --- status ---
 
@@ -158,6 +161,7 @@ const snapshotReason = (r: SnapshotMeta["reason"]) =>
       </a-space>
       <template #extra>
         <div>{{ $t("sync_desc") }}</div>
+        <div>{{ $t("sync_signin_true_privacy") }}</div>
         <div>{{ $t("sync_privacy_note") }}</div>
       </template>
     </a-form-item>
@@ -224,6 +228,28 @@ const snapshotReason = (r: SnapshotMeta["reason"]) =>
           <template #icon><icon-history /></template>
           {{ $t("sync_action_snapshots") }}
         </a-button>
+      </a-form-item>
+
+      <a-form-item>
+        <template #label>
+          {{ $t("true_privacy_name") }}
+          <a-tag size="small" color="orangered" data-testid="pref-true-privacy-beta">{{ $t("preferences_tag_beta") }}</a-tag>
+        </template>
+        <a-switch
+          data-testid="pref-true-privacy"
+          :model-value="truePrivacy.enabled.value"
+          @change="(v) => truePrivacy.setEnabled(v as boolean)"
+        />
+        <template #extra>
+          <div>{{ $t("true_privacy_pref_hint") }}</div>
+          <router-link
+            v-if="truePrivacy.enabled.value"
+            :to="{ name: 'trueprivacy' }"
+            data-testid="pref-true-privacy-link"
+          >
+            <a-link>{{ $t("true_privacy_pref_link") }}</a-link>
+          </router-link>
+        </template>
       </a-form-item>
     </template>
   </section>

@@ -1,5 +1,6 @@
 import { Host, SimpleProxyServer } from "@/adapters";
 import { deepClone, withLock } from "./utils";
+import type { ProxyEndpoint } from "./sync/api";
 
 export type ProxyAuthInfo = {
   username: string;
@@ -52,6 +53,8 @@ export type ProxyConfigMeta = {
   color: string;
   profileName: string;
   proxyType: "proxy" | "pac" | "system" | "direct" | "auto";
+  /** What the toolbar badge shows; the name's first 2 characters if unset. */
+  badge?: string;
 };
 
 // the basic proxy config, with authentication and pac script support
@@ -65,6 +68,11 @@ export type ProxyConfigSimple =
         ftp?: ProxyServer;
         bypassList: string[];
       };
+      /**
+       * Servers the browser tries in order when `proxyRules.default` doesn't
+       * answer. The editor doesn't offer them (built-in profiles use them).
+       */
+      failover?: ProxyServer[];
       pacScript?: PacScriptConfig;
     }
   | {
@@ -104,6 +112,59 @@ export type ProfileAutoSwitch = ProxyConfigMeta & {
 
 export type ProxyProfile = ProfileSimple | ProfilePreset | ProfileAutoSwitch;
 
+export const TRUE_PRIVACY_ID = "trueprivacy";
+
+/** Where the True Privacy Proxy nodes are, as the last token named them. */
+const keyTruePrivacyEndpoints = "trueprivacy.endpoints";
+export type { ProxyEndpoint };
+
+/**
+ * Stands in for the nodes until byte.vet names them with a token: it never
+ * resolves, so requests routed to True Privacy Proxy fail rather than go
+ * anywhere else (RFC 6761 `.invalid`).
+ */
+const NO_TRUE_PRIVACY_NODE: ProxyEndpoint = {
+  host: "trueprivacy.invalid",
+  port: 443,
+};
+
+/**
+ * True Privacy Proxy through `endpoints`, in preference order, as byte.vet
+ * named them with the last token; nowhere when there are none. Its
+ * credentials (a short-lived token) are never part of the profile: the auth
+ * provider asks for them.
+ */
+export function truePrivacyProfile(
+  endpoints: ProxyEndpoint[] = []
+): ProfileSimple {
+  const servers: ProxyServer[] = (
+    endpoints.length ? endpoints : [NO_TRUE_PRIVACY_NODE]
+  ).map(({ host, port }) => ({ scheme: "https", host, port }));
+  return {
+    profileID: TRUE_PRIVACY_ID,
+    color: "#0B8F80",
+    profileName: "True Privacy Proxy",
+    badge: "TP",
+    proxyType: "proxy",
+    proxyRules: { default: servers[0], bypassList: [] },
+    ...(servers.length > 1 ? { failover: servers.slice(1) } : {}),
+  };
+}
+
+export async function getTruePrivacyEndpoints(): Promise<ProxyEndpoint[]> {
+  return (await Host.get<ProxyEndpoint[]>(keyTruePrivacyEndpoints)) ?? [];
+}
+
+/** Remember the nodes a token named; true when they changed. */
+export async function setTruePrivacyEndpoints(
+  endpoints: ProxyEndpoint[]
+): Promise<boolean> {
+  const old = await getTruePrivacyEndpoints();
+  if (JSON.stringify(old) === JSON.stringify(endpoints)) return false;
+  await Host.set(keyTruePrivacyEndpoints, endpoints);
+  return true;
+}
+
 export const SystemProfile: Record<string, ProxyProfile> = {
   DIRECT: {
     profileID: "direct",
@@ -117,6 +178,8 @@ export const SystemProfile: Record<string, ProxyProfile> = {
     profileName: "", // should be empty
     proxyType: "system",
   },
+  // with no node; getProfile() gives the current ones
+  TRUE_PRIVACY: truePrivacyProfile(),
 };
 
 const keyProfileStorage = "profiles";
@@ -190,6 +253,15 @@ export async function saveManyProfiles(profiles: ProxyProfile[]) {
   });
 }
 
+/** Every proxy server a proxy profile may use, failover included. */
+export function serversOf(profile: ProxyProfile): ProxyServer[] {
+  if (profile.proxyType !== "proxy") return [];
+  const { default: d, http, https, ftp } = profile.proxyRules;
+  return [d, http, https, ftp, ...(profile.failover ?? [])].filter(
+    (s): s is ProxyServer => !!s
+  );
+}
+
 export function getSystemProfile(profileID: string): ProxyProfile | undefined {
   return Object.values(SystemProfile).find((p) => p.profileID === profileID);
 }
@@ -207,6 +279,9 @@ export async function getProfile(
   userProfileOnly?: boolean
 ): Promise<ProxyProfile | undefined> {
   if (!userProfileOnly) {
+    if (profileID === TRUE_PRIVACY_ID) {
+      return truePrivacyProfile(await getTruePrivacyEndpoints());
+    }
     const p = getSystemProfile(profileID);
     if (p) {
       return p;

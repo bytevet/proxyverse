@@ -42,6 +42,8 @@ export type Servers = Awaited<ReturnType<typeof startServers>>;
  * - `proxyA`, `proxyB`: HTTP proxies
  * - `auth`: HTTP proxy requiring Basic auth (`AUTH`)
  * - `socks`: SOCKS5 proxy
+ * - `trueprivacy`: HTTPS proxy taking the fake byte.vet's proxy tokens
+ *   (`pv:<token>`), as a True Privacy Proxy node
  * - `sync`: fake byte.vet (OAuth + sync API), on loopback so Chrome never
  *   proxies it, whatever profile a test activates
  */
@@ -57,7 +59,14 @@ export async function startServers() {
   const auth = createHttpProxy("auth", log, store, AUTH);
   const socks = createSocks5Server("socks", log, store);
   const sync = createSyncServer();
-  const all: net.Server[] = [direct, proxyA, proxyB, auth, socks, sync.server];
+  const trueprivacy = createHttpProxy(
+    "trueprivacy",
+    log,
+    store,
+    (user, token) => user === "pv" && sync.store.isValidProxyToken(token),
+    { tls: true }
+  );
+  const all: net.Server[] = [direct, proxyA, proxyB, auth, socks, sync.server, trueprivacy];
 
   const ports = {
     // on all interfaces: fake sites (LAN IP) and loopback URLs
@@ -68,6 +77,7 @@ export async function startServers() {
     socks: await listen(socks),
     closed: await closedPort(),
     sync: await listen(sync.server),
+    trueprivacy: await listen(trueprivacy),
   };
 
   return {
@@ -82,6 +92,15 @@ export async function startServers() {
     sync: sync.store,
     /** Origin of the fake byte.vet, e.g. for its discovery URL. */
     syncOrigin: `http://127.0.0.1:${ports.sync}`,
+    /**
+     * Have the fake byte.vet name the `trueprivacy` node, as `host` (a
+     * *.proxy.internal name: Chrome caches credentials per proxy host).
+     */
+    useTruePrivacyNode(host: string) {
+      sync.store.configureProxy({
+        endpoints: [{ host, port: ports.trueprivacy }],
+      });
+    },
     reset() {
       log.clear();
       store.clear();
@@ -89,7 +108,7 @@ export async function startServers() {
     },
     async close() {
       all.forEach((s) => {
-        if (s instanceof http.Server) s.closeAllConnections();
+        if ("closeAllConnections" in s) (s as http.Server).closeAllConnections();
       });
       await Promise.all(all.map((s) => new Promise((r) => s.close(r))));
     },

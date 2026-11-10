@@ -279,6 +279,16 @@ describe("collectLocalRecords", () => {
     expect(records.size).toBe(0);
   });
 
+  test("keeps account prefs when device prefs don't sync", async () => {
+    const records = await collectLocalRecords({
+      profiles: {},
+      prefs: { ...prefs, "proxy.truePrivacy": true },
+      localOnly: [],
+      syncPrefs: false,
+    });
+    expect([...records.keys()]).toEqual(["pref:proxy.truePrivacy"]);
+  });
+
   test("a stored remote profile hashes like the remote payload", async () => {
     const remote = decodeRemote("profile:pac1", pacURL) as ProfilePayload;
     const stored = mergeIncomingProfile(remote, pacURL);

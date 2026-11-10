@@ -233,6 +233,43 @@ paths:
                   written: { type: integer, description: Records written. }
         default: { $ref: "#/components/responses/Problem" }
 
+  /proxy/token:
+    post:
+      operationId: issueProxyToken
+      summary: Issue a proxy access token
+      description: |
+        Short-lived Ed25519 JWT (`typ pv-proxy+jwt`, `aud pvproxy`) for the
+        anonymous proxy nodes, carrying the account's pseudonymous subject and
+        entitlements (`docs/proxy-hub-protocol.md` §3). Send it as the Basic
+        `Proxy-Authorization` password (username `pv`) and request a new one
+        when a node answers `407`. `endpoints` lists the proxy nodes to use,
+        in preference order; it may be empty. `403 proxy_suspended` when the account's
+        proxy access is suspended; `503 unavailable` when the proxy is not
+        configured on this environment.
+      parameters:
+        - $ref: "#/components/parameters/Device"
+        - $ref: "#/components/parameters/Version"
+      responses:
+        "200":
+          description: A new access token.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProxyToken" }
+        default: { $ref: "#/components/responses/Problem" }
+  /proxy/usage:
+    get:
+      operationId: getProxyUsage
+      summary: This month's proxy usage and quota
+      parameters:
+        - $ref: "#/components/parameters/Device"
+        - $ref: "#/components/parameters/Version"
+      responses:
+        "200":
+          description: Usage of the current UTC calendar month.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProxyUsage" }
+        default: { $ref: "#/components/responses/Problem" }
 components:
   securitySchemes:
     oauth2:
@@ -290,9 +327,10 @@ components:
       type: string
       description: |
         `profile:<profileID>` or `pref:<key>` (`theme.darkmode`,
-        `ui.language`, `ui.actionBehavior`, `ui.failureBadge`). At most 200
-        UTF-8 bytes.
-        `profile:direct` and `profile:system` are reserved.
+        `ui.language`, `ui.actionBehavior`, `ui.failureBadge`,
+        `proxy.truePrivacy`). At most 200 UTF-8 bytes.
+        `profile:direct`, `profile:system` and `profile:trueprivacy` are
+        reserved.
       pattern: "^(profile:.+|pref:.+)$"
     HLC:
       type: string
@@ -404,6 +442,42 @@ components:
         createdBy:
           type: string
           description: Device id, or `server` for automatic snapshots.
+    ProxyToken:
+      type: object
+      required: [token, expiresAt, endpoints]
+      properties:
+        token: { type: string, description: Compact JWS. }
+        expiresAt:
+          type: integer
+          description: Expiry, Unix seconds (the token's `exp`).
+        endpoints:
+          type: array
+          description: |
+            HTTPS proxy nodes, in the order to try them. Use the first one
+            that answers; replace the list on every token refresh. Empty when
+            this environment has no nodes configured.
+          items: { $ref: "#/components/schemas/ProxyEndpoint" }
+    ProxyEndpoint:
+      type: object
+      required: [host, port]
+      properties:
+        host: { type: string, examples: ["fra.proxy.example"] }
+        port: { type: integer, minimum: 1, maximum: 65535, examples: [443] }
+    ProxyUsage:
+      type: object
+      required: [period, used, quota, mode, rate, status]
+      properties:
+        period:
+          { type: string, pattern: "^\\d{4}-\\d{2}$", examples: ["2026-11"] }
+        used: { type: integer, description: Bytes (up + down) this period. }
+        quota: { type: integer, description: Bytes per period. }
+        mode:
+          type: string
+          enum: [throttle, block]
+          description: What happens once `used` reaches `quota`.
+        rate:
+          { type: integer, description: Throttle rate, bytes/s per direction. }
+        status: { type: string, enum: [active, suspended] }
     Problem:
       type: object
       description: RFC 9457 problem details; extra members may appear.
@@ -426,6 +500,7 @@ components:
               cursor_expired,
               quota_exceeded,
               client_too_old,
+              proxy_suspended,
               rate_limited,
               unavailable,
             ]

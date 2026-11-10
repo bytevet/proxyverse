@@ -1,13 +1,17 @@
 import { Host } from "@/adapters";
 import { ProxyProfile, SystemProfile } from "./profile";
 
+/** The 2 characters of a profile on the badge: its own, or its initials. */
+const badgeText = (profile: ProxyProfile) =>
+  profile.badge ?? profile.profileName.trimStart().substring(0, 2);
+
 export async function setIndicator(
   profile: ProxyProfile | undefined,
   tabID?: number
 ) {
   if (profile) {
     await Host.setBadge(
-      profile.profileName.trimStart().substring(0, 2),
+      badgeText(profile),
       profile.color,
       tabID
     );
