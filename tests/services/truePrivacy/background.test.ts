@@ -149,6 +149,33 @@ describe("access token", () => {
     expect(local["trueprivacy.endpoints"]).toEqual([{ host: "node-a.vpn.test", port: 443 }]);
     expect(refreshProxy).toHaveBeenCalledTimes(1);
   });
+
+  test("no nodes named: unavailable, and nowhere to send traffic", async () => {
+    store.configureProxy({ endpoints: [{ host: "node-a.vpn.test", port: 443 }] });
+    const t = await getProxyToken();
+    store.configureProxy({ endpoints: [] });
+    expect(await getProxyToken(t)).toBeUndefined();
+    expect(session["trueprivacy.status"]).toMatchObject({ state: "unavailable" });
+    expect(session["trueprivacy.token"]).toBeUndefined();
+    expect(local["trueprivacy.endpoints"]).toEqual([]);
+  });
+});
+
+describe("profile", () => {
+  test("points nowhere until byte.vet names a node", () => {
+    expect(tp.proxyType === "proxy" && tp.proxyRules.default).toMatchObject({
+      scheme: "https",
+      host: "trueprivacy.invalid",
+    });
+    const named = truePrivacyProfile([
+      { host: "a.vpn.test", port: 443 },
+      { host: "b.vpn.test", port: 8443 },
+    ]);
+    expect(named).toMatchObject({
+      proxyRules: { default: { host: "a.vpn.test" } },
+      failover: [{ scheme: "https", host: "b.vpn.test", port: 8443 }],
+    });
+  });
 });
 
 describe("auth provider credentials", () => {

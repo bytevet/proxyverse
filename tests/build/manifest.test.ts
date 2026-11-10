@@ -102,7 +102,6 @@ describe("build env", () => {
       __SYNC_ORIGIN__: '"https://byte.vet"',
       __SYNC_CLIENT_ID__: '"proxyverse-extension"',
       __SYNC_ORIGIN_OVERRIDE__: "false",
-      __TRUE_PRIVACY_ENDPOINT__: '{"host":"anonymous.vpn.bvet.cc","port":443}',
     });
     expect(BUILD_ENVS.northernlight.clientID).toBe("proxyverse-extension-dev");
     expect(syncDefines("e2e").__SYNC_ORIGIN_OVERRIDE__).toBe("true");

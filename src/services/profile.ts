@@ -1,6 +1,5 @@
 import { Host, SimpleProxyServer } from "@/adapters";
 import { deepClone, withLock } from "./utils";
-import { SYNC_BUILD } from "./sync/buildEnv";
 import type { ProxyEndpoint } from "./sync/api";
 
 export type ProxyAuthInfo = {
@@ -120,15 +119,26 @@ const keyTruePrivacyEndpoints = "trueprivacy.endpoints";
 export type { ProxyEndpoint };
 
 /**
- * True Privacy Proxy through `endpoints`, in preference order; the build's
- * fallback node when there are none. Its credentials (a short-lived token)
- * are never part of the profile: the auth provider asks for them.
+ * Stands in for the nodes until byte.vet names them with a token: it never
+ * resolves, so requests routed to True Privacy Proxy fail rather than go
+ * anywhere else (RFC 6761 `.invalid`).
+ */
+const NO_TRUE_PRIVACY_NODE: ProxyEndpoint = {
+  host: "trueprivacy.invalid",
+  port: 443,
+};
+
+/**
+ * True Privacy Proxy through `endpoints`, in preference order, as byte.vet
+ * named them with the last token; nowhere when there are none. Its
+ * credentials (a short-lived token) are never part of the profile: the auth
+ * provider asks for them.
  */
 export function truePrivacyProfile(
   endpoints: ProxyEndpoint[] = []
 ): ProfileSimple {
   const servers: ProxyServer[] = (
-    endpoints.length ? endpoints : [SYNC_BUILD.truePrivacyEndpoint]
+    endpoints.length ? endpoints : [NO_TRUE_PRIVACY_NODE]
   ).map(({ host, port }) => ({ scheme: "https", host, port }));
   return {
     profileID: TRUE_PRIVACY_ID,
@@ -168,7 +178,7 @@ export const SystemProfile: Record<string, ProxyProfile> = {
     profileName: "", // should be empty
     proxyType: "system",
   },
-  // with the build's fallback node; getProfile() gives the current nodes
+  // with no node; getProfile() gives the current ones
   TRUE_PRIVACY: truePrivacyProfile(),
 };
 

@@ -12,11 +12,6 @@ export type SyncTarget = {
   clientID: string;
   /** Whether the origin may be overridden at runtime (e2e only). */
   originOverride: boolean;
-  /**
-   * The True Privacy Proxy node used until byte.vet names one with a token
-   * (`/proxy/token` `endpoints`).
-   */
-  truePrivacyEndpoint: { host: string; port: number };
 };
 
 export const BUILD_ENVS: Record<BuildEnv, SyncTarget> = {
@@ -24,24 +19,17 @@ export const BUILD_ENVS: Record<BuildEnv, SyncTarget> = {
     origin: "https://byte.vet",
     clientID: "proxyverse-extension",
     originOverride: false,
-    truePrivacyEndpoint: { host: "anonymous.vpn.bvet.cc", port: 443 },
   },
   northernlight: {
     origin: "https://northernlight.byte.vet",
     clientID: "proxyverse-extension-dev",
     originOverride: false,
-    truePrivacyEndpoint: {
-      host: "anonymous.vpn.northernlight.bvet.cc",
-      port: 443,
-    },
   },
   e2e: {
     // placeholder: the e2e suite sets the real origin at runtime
     origin: "http://127.0.0.1",
     clientID: "proxyverse-extension-dev",
     originOverride: true,
-    // placeholder: the fake byte.vet names the e2e proxy with each token
-    truePrivacyEndpoint: { host: "trueprivacy.proxy.internal", port: 443 },
   },
 };
 
@@ -58,12 +46,10 @@ export function parseBuildEnv(value: string | undefined): BuildEnv {
 
 /** Vite `define` entries for src/services/sync/buildEnv.ts. */
 export function syncDefines(env: BuildEnv): Record<string, string> {
-  const { origin, clientID, originOverride, truePrivacyEndpoint } =
-    BUILD_ENVS[env];
+  const { origin, clientID, originOverride } = BUILD_ENVS[env];
   return {
     __SYNC_ORIGIN__: JSON.stringify(origin),
     __SYNC_CLIENT_ID__: JSON.stringify(clientID),
     __SYNC_ORIGIN_OVERRIDE__: JSON.stringify(originOverride),
-    __TRUE_PRIVACY_ENDPOINT__: JSON.stringify(truePrivacyEndpoint),
   };
 }

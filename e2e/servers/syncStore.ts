@@ -35,7 +35,10 @@ export type ProxyEndpoint = Schemas["ProxyEndpoint"];
 
 /** The account's True Privacy Proxy, as the fake serves it. */
 export type ProxyAccount = Omit<ProxyUsage, "period"> & {
-  /** Nodes named with each token; `null` answers `503 unavailable`. */
+  /**
+   * Nodes named with each token: `[]` names none (no nodes configured),
+   * `null` answers `503 unavailable`.
+   */
   endpoints: ProxyEndpoint[] | null;
 };
 
@@ -45,7 +48,8 @@ const DEFAULT_PROXY: ProxyAccount = {
   mode: "throttle",
   rate: 16000,
   status: "active",
-  endpoints: [],
+  // a node by default, as on a configured byte.vet; e2e names its own
+  endpoints: [{ host: "trueprivacy.proxy.internal", port: 443 }],
 };
 
 export const SYNC_ERROR_STATUS: Record<SyncErrorCode, number> = {

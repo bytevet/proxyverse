@@ -111,15 +111,23 @@ export function getProxyToken(rejected?: string): Promise<string | undefined> {
 
     try {
       const issued = await api.issueProxyToken();
+      if (await setTruePrivacyEndpoints(issued.endpoints)) {
+        await reapplyIfUsed();
+      }
+      if (!issued.endpoints.length) {
+        // no nodes on this environment: nothing to use the token with
+        await Host.removeSession(keyToken);
+        await setStatus({
+          state: "unavailable",
+          retryAt: now() + ERROR_BACKOFF_MS,
+        });
+        return undefined;
+      }
       await Host.setSession<StoredToken>(keyToken, {
         token: issued.token,
         expiresAt: issued.expiresAt * 1000,
       });
       await setStatus(OK_STATUS);
-      // `endpoints` is new: a server without it names no nodes
-      if (await setTruePrivacyEndpoints(issued.endpoints ?? [])) {
-        await reapplyIfUsed();
-      }
       return issued.token;
     } catch (e) {
       const failed = await failure(e);
