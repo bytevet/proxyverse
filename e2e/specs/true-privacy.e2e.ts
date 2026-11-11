@@ -82,6 +82,35 @@ test.describe("True Privacy Proxy", () => {
     expect(servers.sync.proxyTokens().length).toBe(before + 1);
   });
 
+  // the extension's own requests follow the proxy settings: through the
+  // proxy, a refused token could never be replaced
+  for (const via of ["trueprivacy", "auto"] as const) {
+    test(`gets new tokens from byte.vet directly while traffic goes through it (${via})`, async ({
+      sw,
+      servers,
+      page,
+      activate,
+    }) => {
+      await enableTruePrivacy(sw, servers);
+      // byte.vet where the browser would proxy it, before the PAC script
+      // is generated with its host
+      await sw.eval(
+        (origin) => chrome.storage.local.set({ "sync.devOrigin": origin }),
+        servers.syncLANOrigin
+      );
+      if (via === "auto") {
+        await sw.setProfiles([autoProfile({ profileID: "auto" }, [], "trueprivacy")]);
+      }
+      await activate(via);
+      await expectRoute(page, servers.url(freshHost()), "trueprivacy");
+
+      servers.sync.revokeProxyTokens();
+      const before = servers.sync.proxyTokens().length;
+      await expectRoute(page, servers.url(freshHost()), "trueprivacy");
+      expect(servers.sync.proxyTokens().length).toBe(before + 1);
+    });
+  }
+
   test("Auto rules route to it, and fail closed once signed out", async ({
     sw,
     servers,

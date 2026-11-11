@@ -1,6 +1,8 @@
 import { Host, SimpleProxyServer } from "@/adapters";
 import { deepClone, withLock } from "./utils";
 import type { ProxyEndpoint } from "./sync/api";
+import { SYNC_BUILD } from "./sync/buildEnv";
+import { syncOrigin } from "./sync/config";
 
 export type ProxyAuthInfo = {
   username: string;
@@ -133,9 +135,14 @@ const NO_TRUE_PRIVACY_NODE: ProxyEndpoint = {
  * named them with the last token; nowhere when there are none. Its
  * credentials (a short-lived token) are never part of the profile: the auth
  * provider asks for them.
+ *
+ * `apiHost` (byte.vet) bypasses it: the extension's own requests follow the
+ * proxy settings, and through the proxy a refused token could never be
+ * replaced, as the request for a new one would be refused too.
  */
 export function truePrivacyProfile(
-  endpoints: ProxyEndpoint[] = []
+  endpoints: ProxyEndpoint[] = [],
+  apiHost = new URL(SYNC_BUILD.origin).hostname
 ): ProfileSimple {
   const servers: ProxyServer[] = (
     endpoints.length ? endpoints : [NO_TRUE_PRIVACY_NODE]
@@ -146,7 +153,7 @@ export function truePrivacyProfile(
     profileName: "True Privacy Proxy",
     badge: "TP",
     proxyType: "proxy",
-    proxyRules: { default: servers[0], bypassList: [] },
+    proxyRules: { default: servers[0], bypassList: [apiHost] },
     ...(servers.length > 1 ? { failover: servers.slice(1) } : {}),
   };
 }
@@ -280,7 +287,11 @@ export async function getProfile(
 ): Promise<ProxyProfile | undefined> {
   if (!userProfileOnly) {
     if (profileID === TRUE_PRIVACY_ID) {
-      return truePrivacyProfile(await getTruePrivacyEndpoints());
+      const [endpoints, origin] = await Promise.all([
+        getTruePrivacyEndpoints(),
+        syncOrigin(),
+      ]);
+      return truePrivacyProfile(endpoints, new URL(origin).hostname);
     }
     const p = getSystemProfile(profileID);
     if (p) {

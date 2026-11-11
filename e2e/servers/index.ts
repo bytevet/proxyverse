@@ -76,7 +76,8 @@ export async function startServers() {
     auth: await listen(auth),
     socks: await listen(socks),
     closed: await closedPort(),
-    sync: await listen(sync.server),
+    // on all interfaces too: `syncLANOrigin`
+    sync: await listen(sync.server, "0.0.0.0"),
     trueprivacy: await listen(trueprivacy),
   };
 
@@ -92,6 +93,11 @@ export async function startServers() {
     sync: sync.store,
     /** Origin of the fake byte.vet, e.g. for its discovery URL. */
     syncOrigin: `http://127.0.0.1:${ports.sync}`,
+    /**
+     * The fake byte.vet on a *.test host (LAN IP): unlike loopback, the
+     * browser proxies it, as it would byte.vet.
+     */
+    syncLANOrigin: `http://bytevet.test:${ports.sync}`,
     /**
      * Have the fake byte.vet name the `trueprivacy` node, as `host` (a
      * *.proxy.internal name: Chrome caches credentials per proxy host).

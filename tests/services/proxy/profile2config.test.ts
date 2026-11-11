@@ -3,6 +3,7 @@ import {
   ProxyProfile,
   SystemProfile,
   ProfileAutoSwitch,
+  truePrivacyProfile,
 } from "@/services/profile";
 import { ProfileConverter } from "@/services/proxy/profile2config";
 
@@ -430,5 +431,47 @@ describe("URL regex rules", () => {
       (await invalid.findProfile(new URL("http://a.com/"))).profile?.profile
         .profileID
     ).toBe("direct");
+  });
+});
+
+describe("True Privacy Proxy", () => {
+  // the extension gets its tokens from byte.vet: through the proxy, a
+  // refused token could never be replaced
+  const tp = truePrivacyProfile([{ host: "node.vpn.test", port: 443 }]);
+
+  test("byte.vet goes direct, everything else through the node", async () => {
+    const pac = await new ProfileConverter(tp).toPAC();
+    expect(pac).toMatch(/shExpMatch\(host, 'byte\.vet'\)\) {\s*return 'DIRECT';/);
+    const converter = new ProfileConverter(tp);
+    expect(converter.findServer(new URL("https://byte.vet/api/v1/proxy/token"))).toEqual({
+      direct: true,
+    });
+    expect(converter.findServer(new URL("https://example.com/"))).toEqual({
+      server: { scheme: "https", host: "node.vpn.test", port: 443 },
+    });
+  });
+
+  test("also when an Auto profile routes byte.vet to it", async () => {
+    const auto: ProfileAutoSwitch = {
+      profileID: "tpAuto",
+      color: "",
+      profileName: "",
+      proxyType: "auto",
+      rules: [],
+      defaultProfileID: tp.profileID,
+    };
+    const loader = async (id: string) => (id === tp.profileID ? tp : undefined);
+    const { profile } = await new ProfileConverter(auto, loader).findProfile(
+      new URL("https://byte.vet/")
+    );
+    expect(profile?.profile.profileID).toBe(tp.profileID);
+    expect(profile?.findServer(new URL("https://byte.vet/"))).toEqual({ direct: true });
+  });
+
+  test("the API host comes from the sync origin", () => {
+    const preview = truePrivacyProfile([], "northernlight.byte.vet");
+    expect(preview.proxyType === "proxy" && preview.proxyRules.bypassList).toEqual([
+      "northernlight.byte.vet",
+    ]);
   });
 });
