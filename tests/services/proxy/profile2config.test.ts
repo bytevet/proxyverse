@@ -3,6 +3,7 @@ import {
   ProxyProfile,
   SystemProfile,
   ProfileAutoSwitch,
+  truePrivacyProfile,
 } from "@/services/profile";
 import { ProfileConverter } from "@/services/proxy/profile2config";
 
@@ -430,5 +431,61 @@ describe("URL regex rules", () => {
       (await invalid.findProfile(new URL("http://a.com/"))).profile?.profile
         .profileID
     ).toBe("direct");
+  });
+});
+
+describe("True Privacy Proxy", () => {
+  // the extension gets its tokens from byte.vet: through the proxy, a
+  // refused token could never be replaced
+  const tp = truePrivacyProfile([{ host: "node.vpn.test", port: 443 }]);
+
+  test("points nowhere until byte.vet names a node, then fails over in order", () => {
+    expect(truePrivacyProfile()).toMatchObject({
+      proxyRules: { default: { scheme: "https", host: "trueprivacy.invalid" } },
+    });
+    const named = truePrivacyProfile([
+      { host: "a.vpn.test", port: 443 },
+      { host: "b.vpn.test", port: 8443 },
+    ]);
+    expect(named).toMatchObject({
+      proxyRules: { default: { host: "a.vpn.test" } },
+      failover: [{ scheme: "https", host: "b.vpn.test", port: 8443 }],
+    });
+  });
+
+  test("byte.vet goes direct, everything else through the node", async () => {
+    const converter = new ProfileConverter(tp);
+    const pac = await converter.toPAC();
+    expect(pac).toMatch(/shExpMatch\(host, 'byte\.vet'\)\) {\s*return 'DIRECT';/);
+    expect(converter.findServer(new URL("https://byte.vet/api/v1/proxy/token"))).toEqual({
+      direct: true,
+    });
+    expect(converter.findServer(new URL("https://example.com/"))).toEqual({
+      server: { scheme: "https", host: "node.vpn.test", port: 443 },
+    });
+  });
+
+  test("also when an Auto profile routes byte.vet to it", async () => {
+    const auto: ProfileAutoSwitch = {
+      profileID: "tpAuto",
+      color: "",
+      profileName: "",
+      proxyType: "auto",
+      rules: [],
+      defaultProfileID: tp.profileID,
+    };
+    const loader = async (id: string) => (id === tp.profileID ? tp : undefined);
+    const { profile } = await new ProfileConverter(auto, loader).findProfile(
+      new URL("https://byte.vet/")
+    );
+    expect(profile?.profile.profileID).toBe(tp.profileID);
+    expect(profile?.findServer(new URL("https://byte.vet/"))).toEqual({ direct: true });
+  });
+
+  test("bypasses the given API host", () => {
+    const preview = truePrivacyProfile([], "northernlight.byte.vet");
+    expect(preview.proxyType === "proxy" && preview.proxyRules.bypassList).toEqual([
+      "northernlight.byte.vet",
+    ]);
   });
 });

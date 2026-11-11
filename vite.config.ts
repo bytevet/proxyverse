@@ -68,15 +68,15 @@ export default defineConfig(({ mode }) => {
     ],
     resolve: {
       alias: {
-        "@": path.resolve(__dirname, "./src"),
+        "@": path.resolve(import.meta.dirname, "./src"),
       },
     },
     build: {
       sourcemap: true,
       rollupOptions: {
         input: {
-          index: resolve(__dirname, "index.html"),
-          popup: resolve(__dirname, "popup.html"),
+          index: resolve(import.meta.dirname, "index.html"),
+          popup: resolve(import.meta.dirname, "popup.html"),
           background: "src/background.ts",
         },
         output: {},

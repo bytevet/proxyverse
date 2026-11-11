@@ -2,7 +2,7 @@ import { test, expect } from "../fixtures";
 import { expectRoute, routeOf } from "../fixtures/routing";
 import { autoProfile, rule } from "../data/profiles";
 import { freshHost, freshProxyHost } from "../data/hosts";
-import { expectSynced, signInDirectly } from "../pages/sync";
+import { expectSynced, signInDirectly, useFakeByteVet } from "../pages/sync";
 import { pickProfile, popconfirmOK, profileOption } from "../pages/arco";
 import type { Servers } from "../servers";
 import type { ServiceWorker } from "../fixtures/sw";
@@ -81,6 +81,32 @@ test.describe("True Privacy Proxy", () => {
     await expectRoute(page, servers.url(freshHost()), "trueprivacy");
     expect(servers.sync.proxyTokens().length).toBe(before + 1);
   });
+
+  // the extension's own requests follow the proxy settings: through the
+  // proxy, a refused token could never be replaced
+  for (const via of ["trueprivacy", "auto"] as const) {
+    test(`gets new tokens from byte.vet directly while traffic goes through it (${via})`, async ({
+      sw,
+      servers,
+      page,
+      activate,
+    }) => {
+      await enableTruePrivacy(sw, servers);
+      // byte.vet where the browser would proxy it, before the PAC script
+      // is generated with its host
+      await useFakeByteVet(sw, servers, servers.syncLANOrigin);
+      if (via === "auto") {
+        await sw.setProfiles([autoProfile({ profileID: "auto" }, [], "trueprivacy")]);
+      }
+      await activate(via);
+      await expectRoute(page, servers.url(freshHost()), "trueprivacy");
+
+      servers.sync.revokeProxyTokens();
+      const before = servers.sync.proxyTokens().length;
+      await expectRoute(page, servers.url(freshHost()), "trueprivacy");
+      expect(servers.sync.proxyTokens().length).toBe(before + 1);
+    });
+  }
 
   test("Auto rules route to it, and fail closed once signed out", async ({
     sw,

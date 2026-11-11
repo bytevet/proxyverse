@@ -26,10 +26,14 @@ export function signedInStorage(servers: Servers) {
 }
 
 /** Point the extension at the fake byte.vet (e2e builds only). */
-export async function useFakeByteVet(sw: ServiceWorker, servers: Servers) {
+export async function useFakeByteVet(
+  sw: ServiceWorker,
+  servers: Servers,
+  origin = servers.syncOrigin
+) {
   await sw.eval(
     (origin) => chrome.storage.local.set({ "sync.devOrigin": origin }),
-    servers.syncOrigin
+    origin
   );
 }
 
