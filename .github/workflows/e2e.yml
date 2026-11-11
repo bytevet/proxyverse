@@ -10,22 +10,25 @@ jobs:
   chromium:
     name: Chromium
     runs-on: ubuntu-latest
+    # Chromium and its system libraries come with the image: no download or
+    # apt install per run. Keep the tag at the locked @playwright/test version:
+    # on a mismatch Playwright fails, naming the image to use.
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      options: --ipc=host
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Setup Node.js
+      # the image's Node; only the npm cache is set up
+      - name: Setup npm cache
         uses: actions/setup-node@v7
         with:
-          node-version: "latest"
           cache: "npm"
           cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci --ignore-scripts
-
-      - name: Install Playwright Chromium
-        run: npx playwright install --with-deps chromium
 
       # global setup builds the extension before the tests run
       - name: Run e2e tests
