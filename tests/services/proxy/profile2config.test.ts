@@ -439,10 +439,24 @@ describe("True Privacy Proxy", () => {
   // refused token could never be replaced
   const tp = truePrivacyProfile([{ host: "node.vpn.test", port: 443 }]);
 
+  test("points nowhere until byte.vet names a node, then fails over in order", () => {
+    expect(truePrivacyProfile()).toMatchObject({
+      proxyRules: { default: { scheme: "https", host: "trueprivacy.invalid" } },
+    });
+    const named = truePrivacyProfile([
+      { host: "a.vpn.test", port: 443 },
+      { host: "b.vpn.test", port: 8443 },
+    ]);
+    expect(named).toMatchObject({
+      proxyRules: { default: { host: "a.vpn.test" } },
+      failover: [{ scheme: "https", host: "b.vpn.test", port: 8443 }],
+    });
+  });
+
   test("byte.vet goes direct, everything else through the node", async () => {
-    const pac = await new ProfileConverter(tp).toPAC();
-    expect(pac).toMatch(/shExpMatch\(host, 'byte\.vet'\)\) {\s*return 'DIRECT';/);
     const converter = new ProfileConverter(tp);
+    const pac = await converter.toPAC();
+    expect(pac).toMatch(/shExpMatch\(host, 'byte\.vet'\)\) {\s*return 'DIRECT';/);
     expect(converter.findServer(new URL("https://byte.vet/api/v1/proxy/token"))).toEqual({
       direct: true,
     });
@@ -468,7 +482,7 @@ describe("True Privacy Proxy", () => {
     expect(profile?.findServer(new URL("https://byte.vet/"))).toEqual({ direct: true });
   });
 
-  test("the API host comes from the sync origin", () => {
+  test("bypasses the given API host", () => {
     const preview = truePrivacyProfile([], "northernlight.byte.vet");
     expect(preview.proxyType === "proxy" && preview.proxyRules.bypassList).toEqual([
       "northernlight.byte.vet",

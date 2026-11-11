@@ -116,12 +116,7 @@ export function getProxyToken(rejected?: string): Promise<string | undefined> {
       }
       if (!issued.endpoints.length) {
         // no nodes on this environment: nothing to use the token with
-        await Host.removeSession(keyToken);
-        await setStatus({
-          state: "unavailable",
-          retryAt: now() + ERROR_BACKOFF_MS,
-        });
-        return undefined;
+        throw new SyncApiError(503, "unavailable", "no proxy nodes");
       }
       await Host.setSession<StoredToken>(keyToken, {
         token: issued.token,

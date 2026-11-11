@@ -130,6 +130,8 @@ const NO_TRUE_PRIVACY_NODE: ProxyEndpoint = {
   port: 443,
 };
 
+const hostOf = (origin: string) => new URL(origin).hostname;
+
 /**
  * True Privacy Proxy through `endpoints`, in preference order, as byte.vet
  * named them with the last token; nowhere when there are none. Its
@@ -142,7 +144,7 @@ const NO_TRUE_PRIVACY_NODE: ProxyEndpoint = {
  */
 export function truePrivacyProfile(
   endpoints: ProxyEndpoint[] = [],
-  apiHost = new URL(SYNC_BUILD.origin).hostname
+  apiHost = hostOf(SYNC_BUILD.origin)
 ): ProfileSimple {
   const servers: ProxyServer[] = (
     endpoints.length ? endpoints : [NO_TRUE_PRIVACY_NODE]
@@ -291,7 +293,7 @@ export async function getProfile(
         getTruePrivacyEndpoints(),
         syncOrigin(),
       ]);
-      return truePrivacyProfile(endpoints, new URL(origin).hostname);
+      return truePrivacyProfile(endpoints, hostOf(origin));
     }
     const p = getSystemProfile(profileID);
     if (p) {

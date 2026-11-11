@@ -2,7 +2,7 @@ import { test, expect } from "../fixtures";
 import { expectRoute, routeOf } from "../fixtures/routing";
 import { autoProfile, rule } from "../data/profiles";
 import { freshHost, freshProxyHost } from "../data/hosts";
-import { expectSynced, signInDirectly } from "../pages/sync";
+import { expectSynced, signInDirectly, useFakeByteVet } from "../pages/sync";
 import { pickProfile, popconfirmOK, profileOption } from "../pages/arco";
 import type { Servers } from "../servers";
 import type { ServiceWorker } from "../fixtures/sw";
@@ -94,10 +94,7 @@ test.describe("True Privacy Proxy", () => {
       await enableTruePrivacy(sw, servers);
       // byte.vet where the browser would proxy it, before the PAC script
       // is generated with its host
-      await sw.eval(
-        (origin) => chrome.storage.local.set({ "sync.devOrigin": origin }),
-        servers.syncLANOrigin
-      );
+      await useFakeByteVet(sw, servers, servers.syncLANOrigin);
       if (via === "auto") {
         await sw.setProfiles([autoProfile({ profileID: "auto" }, [], "trueprivacy")]);
       }
